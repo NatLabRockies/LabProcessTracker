@@ -2,6 +2,7 @@ import subprocess
 import os
 import shutil
 import sys
+import tomllib
 
 # Allow overriding output paths via environment variables
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,6 +28,18 @@ for folder in [DIST_PATH, BUILD_PATH]:
         print(f"Error cleaning folder '{folder}': {e}")
         sys.exit(1)
 
+# Read version from pyproject.toml
+PYPROJECT_PATH = os.path.join(BASE_DIR, "pyproject.toml")
+try:
+    with open(PYPROJECT_PATH, "rb") as f:
+        pyproject = tomllib.load(f)
+    version = pyproject["project"]["version"]
+except Exception as e:
+    print(f"Error reading version from pyproject.toml: {e}")
+    version = "unknown"
+
+exe_name = f"process_tracker_v{version}"
+
 # Run PyInstaller with error handling
 try:
     result = subprocess.run([
@@ -34,7 +47,8 @@ try:
         '--onefile',
         SCRIPT_PATH,
         '--distpath', DIST_PATH,
-        '--workpath', BUILD_PATH
+        '--workpath', BUILD_PATH,
+        '--name', exe_name
     ], check=True)
 except subprocess.CalledProcessError as e:
     print(f"PyInstaller failed with exit code {e.returncode}")
