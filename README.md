@@ -1,7 +1,7 @@
 # Lab Process Tracker
 
 A simple command-line tool for tracking lab processes and sample scans using
-QR code input. The scan log is saved to a a .csv file in the `outputs` folder.
+QR code input. The scan log is saved to a .csv file in the `outputs` folder.
 
 ## Features
 
@@ -44,12 +44,15 @@ succesfully identified as a process or sample scan event, respectively.
 ## Folder Structure
 
 ```
-process_tracking/
 ├── outputs/
 │   └── scan_log.csv
 ├── scripts/
 │   └── process_tracker.py
-└── README.md
+├── exe/
+│   └── dist/
+│       └── process_tracker_v<version>.exe
+├── README.md
+└── ...
 ```
 
 ## Requirements
