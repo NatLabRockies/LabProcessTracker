@@ -1,15 +1,30 @@
 import datetime
 import csv
 import os
+import sys
+import argparse
 
-# TODO : add undo last scan feature
-# TODO : add auto-save feature when switching processes
-# TODO : add print summary / session stats at end of session
+# --- Output Directory Logic ---
+def get_default_output_dir():
+    # Determine project outputs path
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_outputs = os.path.join(project_root, "outputs")
+    # Check if running from a temp directory (PyInstaller .exe)
+    temp_dirs = [os.environ.get('TEMP'), os.environ.get('TMP')]
+    is_temp = any(project_root.lower().startswith(td.lower()) for td in temp_dirs if td)
+    if os.path.isdir(project_outputs) and not is_temp:
+        return project_outputs
+    # Else, fallback to user's Documents
+    user_docs = os.path.expanduser("~\Documents\process_tracking_outputs")
+    return user_docs
 
-# --- Configuration ---
-# Define folder paths relative to the project root
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUTPUTS_FOLDER = os.path.join(PROJECT_ROOT, "outputs")
+def parse_args():
+    parser = argparse.ArgumentParser(description="Lab Process Tracker")
+    parser.add_argument("--output-dir", type=str, help="Custom output directory for scan logs")
+    return parser.parse_args()
+
+args = parse_args()
+OUTPUTS_FOLDER = args.output_dir if args.output_dir else get_default_output_dir()
 LOG_FILE = os.path.join(OUTPUTS_FOLDER, "scan_log.csv")
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
