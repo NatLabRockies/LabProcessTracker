@@ -51,9 +51,24 @@ succesfully identified as a process or sample scan event, respectively.
 
 ## Output
 
-- All logs are saved in `outputs/scan_log.csv` (created automatically if missing).
+- By default, logs are saved in `outputs/scan_log.csv`:
+  - **If running from source (with project folder):** logs are saved to the `outputs`
+    folder in the project directory (created automatically if missing).
+  - **If running as a standalone executable (.exe) without the project folder:** logs
+    are saved to a folder named `process_tracking_outputs` in your user's Documents
+    directory (e.g., `~/Documents/process_tracking_outputs/scan_log.csv`).
 - If a scan log .csv file already exists, new session outputs will be appended to the
   existing file.
+- **Custom output location:** You can specify a custom output directory by providing a
+  command-line argument when starting the tracker:
+
+  ```bash
+  python scripts/process_tracker.py --output-dir /path/to/your/folder
+  ```
+  or, for the executable:
+  ```
+  process_tracker_v<version>.exe --output-dir C:\path\to\your\folder
+  ```
 
 ## Folder Structure
 
@@ -85,7 +100,8 @@ customization), you can install it using pip:
 pip install .
 ```
 
-If you also want to install optional dependencies for building a standalone executable (using PyInstaller), use:
+If you also want to install optional dependencies for building a standalone executable
+(using PyInstaller), use:
 
 ```bash
 pip install .[build]
@@ -95,6 +111,6 @@ pip install .[build]
 
 - Add auto-save feature when switching processes
 - Print session summary/stats at end of session
-- Add user entry field for operator at start of session
+- Add platen and position tracking
 
 ---
