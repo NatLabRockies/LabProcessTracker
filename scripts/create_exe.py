@@ -45,6 +45,7 @@ try:
     result = subprocess.run([
         'pyinstaller',
         '--onefile',
+        '--clean',
         SCRIPT_PATH,
         '--distpath', DIST_PATH,
         '--workpath', BUILD_PATH,
