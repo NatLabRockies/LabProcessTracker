@@ -7,7 +7,7 @@ name = "process_tracking"
 version = "0.1.0"
 description = "A tracking application that logs scan events for samples and processes."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = "==3.13.*"
 authors = [
     { name="Rajiv Daxini", email="Rajiv.Daxini@nrel.gov" }
 ]
