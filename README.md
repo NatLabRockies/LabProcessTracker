@@ -68,12 +68,19 @@ succesfully identified as a process or sample scan event, respectively.
 
 - Python 3.13.
 
-### Optional
+### For Developers
 
-- For building a standalone executable with PyInstaller, install with:
-  ```bash
-  pip install .[build]
-  ```
+If you want to install and run the repository directly (for development or customization), you can install it using pip:
+
+```bash
+pip install .
+```
+
+If you also want to install optional dependencies for building a standalone executable (using PyInstaller), use:
+
+```bash
+pip install .[build]
+```
 
 Developed and tested in Python 3.13 only.
 No external dependencies required unless using optional features.
