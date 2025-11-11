@@ -13,13 +13,18 @@ QR code input. The scan log is saved to a .csv file in the `outputs` folder.
 
 ## Start the tracker
 
-You can run the tracker in two ways:
+after downloading the repository from GitHub, you can run the tracker in two ways:
 
 ### 1. Run the standalone executable
 
-Navigate to the `exe/dist` folder and double-click the `process_tracker_v<version>.exe` file to start the tracker.
+Navigate to the `exe/dist` folder and double-click the `process_tracker_v<version>.exe`
+file to start the tracker.
+
+No additional installations are required.
 
 ### 2. Run the Python script directly
+To run the Python script directly out of a terminal, after downloading the repository
+and installing Python:
 
 #### Navigate to the repository directory:
 ```bash
@@ -70,7 +75,8 @@ succesfully identified as a process or sample scan event, respectively.
 
 ### For Developers
 
-If you want to install and run the repository directly (for development or customization), you can install it using pip:
+If you want to install and run the repository directly (for development or
+customization), you can install it using pip:
 
 ```bash
 pip install .
