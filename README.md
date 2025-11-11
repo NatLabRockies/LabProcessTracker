@@ -73,6 +73,9 @@ succesfully identified as a process or sample scan event, respectively.
 
 - Python 3.13.
 
+Developed and tested in Python 3.13 only.
+No external dependencies required unless using optional features.
+
 ### For Developers
 
 If you want to install and run the repository directly (for development or
@@ -87,9 +90,6 @@ If you also want to install optional dependencies for building a standalone exec
 ```bash
 pip install .[build]
 ```
-
-Developed and tested in Python 3.13 only.
-No external dependencies required unless using optional features.
 
 ## TODO
 
