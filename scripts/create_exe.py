@@ -6,7 +6,7 @@ import tomllib
 
 # Allow overriding output paths via environment variables
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCRIPT_PATH = os.path.join(BASE_DIR, 'scripts', 'process_tracker.py')
+SCRIPT_PATH = os.path.join(BASE_DIR, 'src', 'process_tracker.py')
 DIST_PATH = os.environ.get('DIST_PATH', os.path.join(BASE_DIR, 'exe', 'dist'))
 BUILD_PATH = os.environ.get('BUILD_PATH', os.path.join(BASE_DIR, 'exe', 'build'))
 
