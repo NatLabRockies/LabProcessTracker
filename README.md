@@ -33,7 +33,7 @@ cd path/to/process_tracking
 
 #### Run the tracker:
 ```bash
-python scripts/process_tracker.py
+python src/process_tracker.py
 ```
 
 ## How to use
@@ -63,7 +63,7 @@ succesfully identified as a process or sample scan event, respectively.
   command-line argument when starting the tracker:
 
   ```bash
-  python scripts/process_tracker.py --output-dir /path/to/your/folder
+  python src/process_tracker.py --output-dir /path/to/your/folder
   ```
   or, for the executable:
   ```
@@ -73,23 +73,30 @@ succesfully identified as a process or sample scan event, respectively.
 ## Folder Structure
 
 ```
-├── outputs/
-│   └── scan_log.csv
-├── scripts/
-│   └── process_tracker.py
-├── exe/
+process_tracking/
+├── src/                           # Main application code
+│   └── process_tracker.py         # Core tracker application
+├── scripts/                       # Utility and build scripts
+│   ├── create_exe.py              # Build script for creating executables
+│   └── run_tests.py               # Test runner script
+├── tests/                         # Test suite
+│   ├── __init__.py
+│   └── test_process_tracker.py    # Unit and integration tests
+├── outputs/                       # Default output location (auto-created)
+│   └── scan_log.csv               # Scan log CSV file
+├── exe/                           # Compiled executables
 │   └── dist/
 │       └── process_tracker_v<version>.exe
+├── requirements.txt               # Python dependencies
 ├── README.md
 └── ...
 ```
 
 ## Requirements
 
-- Python 3.13.
+- Python 3.10 or higher.
 
-Developed and tested in Python 3.13 only.
-No external dependencies required unless using optional features.
+No external dependencies required unless using optional features or development tools.
 
 ### For Developers
 
@@ -101,11 +108,35 @@ pip install .
 ```
 
 If you also want to install optional dependencies for building a standalone executable
-(using PyInstaller), use:
+(using PyInstaller) or running tests (using pytest), use:
 
 ```bash
+# Install build dependencies (PyInstaller)
 pip install .[build]
+
+# Install test dependencies (pytest, pytest-cov)
+pip install .[test]
+
+# Install all development dependencies (build + test)
+pip install .[dev]
 ```
+
+#### Running Tests
+
+To run the test suite:
+
+```bash
+# Using the test runner script
+python scripts/run_tests.py
+
+# Or directly with pytest
+pytest tests/ -v
+
+# With coverage report (requires pytest-cov)
+pytest tests/ -v --cov=src --cov-report=term-missing
+```
+
+**Note:** You need to install the test dependencies first: `pip install .[test]`
 
 ## TODO
 
