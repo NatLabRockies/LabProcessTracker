@@ -15,7 +15,7 @@ def get_default_output_dir():
     if os.path.isdir(project_outputs) and not is_temp:
         return project_outputs
     # Else, fallback to user's Documents
-    user_docs = os.path.expanduser("~\Documents\process_tracking_outputs")
+    user_docs = os.path.expanduser(r"~\Documents\process_tracking_outputs")  # Added 'r' prefix for raw string
     return user_docs
 
 def parse_args():
