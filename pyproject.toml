@@ -7,14 +7,29 @@ name = "process_tracking"
 version = "0.1.0"
 description = "A tracking application that logs scan events for samples and processes."
 readme = "README.md"
-requires-python = "==3.13.*"
+requires-python = ">=3.10"
 authors = [
     { name="Rajiv Daxini", email="Rajiv.Daxini@nrel.gov" }
 ]
 dependencies = []
 
 [project.optional-dependencies]
-build = ["pyinstaller"]
+build = [
+    "pyinstaller>=5.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+dev = [
+    "pyinstaller>=5.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
 
 [tool.setuptools.packages.find]
-where = ["scripts"]
+where = ["src"]
+include = ["*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.py"]

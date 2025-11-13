@@ -1,3 +1,20 @@
+Metadata-Version: 2.4
+Name: process_tracking
+Version: 0.1.0
+Summary: A tracking application that logs scan events for samples and processes.
+Author-email: Rajiv Daxini <Rajiv.Daxini@nrel.gov>
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Provides-Extra: build
+Requires-Dist: pyinstaller>=5.0; extra == "build"
+Provides-Extra: test
+Requires-Dist: pytest>=7.0.0; extra == "test"
+Requires-Dist: pytest-cov>=4.0.0; extra == "test"
+Provides-Extra: dev
+Requires-Dist: pyinstaller>=5.0; extra == "dev"
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+
 # Lab Process Tracker
 
 A simple command-line tool for tracking lab processes and sample scans using
