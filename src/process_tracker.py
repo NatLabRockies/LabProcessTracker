@@ -23,9 +23,9 @@ def parse_args():
     parser.add_argument("--output-dir", type=str, help="Custom output directory for scan logs")
     return parser.parse_args()
 
-args = parse_args()
-OUTPUTS_FOLDER = args.output_dir if args.output_dir else get_default_output_dir()
-LOG_FILE = os.path.join(OUTPUTS_FOLDER, "scan_log.csv")
+# --- Global Variables ---
+OUTPUTS_FOLDER = None
+LOG_FILE = None
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 # The separator used in the simulated QR code input
@@ -115,7 +115,12 @@ def save_log():
 
 def main():
     """Main loop for the scanning control process."""
-    global current_process, operator_name
+    global current_process, operator_name, OUTPUTS_FOLDER, LOG_FILE
+
+    # Parse args and set up paths
+    args = parse_args()
+    OUTPUTS_FOLDER = args.output_dir if args.output_dir else get_default_output_dir()
+    LOG_FILE = os.path.join(OUTPUTS_FOLDER, "scan_log.csv")
 
     # Ensure the outputs folder exists at startup
     os.makedirs(OUTPUTS_FOLDER, exist_ok=True)
