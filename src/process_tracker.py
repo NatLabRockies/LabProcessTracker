@@ -15,7 +15,7 @@ def get_default_output_dir():
     if os.path.isdir(project_outputs) and not is_temp:
         return project_outputs
     # Else, fallback to user's Documents
-    user_docs = os.path.expanduser("~\Documents\process_tracking_outputs")
+    user_docs = os.path.expanduser(r"~\Documents\process_tracking_outputs")
     return user_docs
 
 def parse_args():
@@ -49,7 +49,7 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
         # Split the input (e.g., "PROCESS:Example Process" -> ["PROCESS", "Example Process"])
         parts = qr_text.strip().split(DATA_SEPARATOR, 1)
         if len(parts) == 2:
-            data_type = parts[0].upper()
+            data_type = parts[0].strip().upper()
             data_id = parts[1].strip()
             return data_type, data_id
 
