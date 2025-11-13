@@ -81,13 +81,13 @@ process_tracking/
 │   └── run_tests.py               # Test runner script
 ├── tests/                         # Test suite
 │   ├── __init__.py
-│   └── test_process_tracker.py    # Unit and integration tests
+│   └── test_process_tracker.py    # Pytest-based tests
 ├── outputs/                       # Default output location (auto-created)
 │   └── scan_log.csv               # Scan log CSV file
 ├── exe/                           # Compiled executables
 │   └── dist/
 │       └── process_tracker_v<version>.exe
-├── requirements.txt               # Python dependencies
+├── pyproject.toml                 # Project metadata and dependencies
 ├── README.md
 └── ...
 ```
@@ -96,6 +96,7 @@ process_tracking/
 
 - Python 3.10 or higher.
 
+All dependencies are managed via `pyproject.toml`.
 No external dependencies required unless using optional features or development tools.
 
 ### For Developers
