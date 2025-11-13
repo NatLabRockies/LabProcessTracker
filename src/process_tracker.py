@@ -113,6 +113,18 @@ def save_log():
     except Exception as e:
         print(f"\n[CRITICAL ERROR] Could not save log to file: {e}")
 
+def is_running_as_exe():
+    """Check if the script is running as a compiled executable."""
+    return getattr(sys, 'frozen', False)
+
+def pause_before_exit(message="Press Enter to exit..."):
+    """Pause execution to allow user to read messages before window closes."""
+    if is_running_as_exe():
+        try:
+            input(f"\n{message}")
+        except:
+            pass
+
 def main():
     """Main loop for the scanning control process."""
     global current_process, operator_name, OUTPUTS_FOLDER, LOG_FILE
@@ -153,6 +165,7 @@ def main():
                 if log_records and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
                     save_log()
                 print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
+                pause_before_exit()
                 break
 
             if qr_input.upper() == SAVE_CMD:
@@ -186,10 +199,12 @@ def main():
         except EOFError:
             print("\nReceived EOF. Saving and exiting.")
             save_log()
+            pause_before_exit()
             break
         except KeyboardInterrupt:
             print("\n\nProcess interrupted. Saving and exiting.")
             save_log()
+            pause_before_exit()
             break
 
 if __name__ == "__main__":
