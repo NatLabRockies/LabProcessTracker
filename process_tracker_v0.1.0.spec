@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['C:\\Users\\rdaxini\\Documents\\GitHub\\process_tracking\\scripts\\process_tracker.py'],
+    ['C:\\Users\\rdaxini\\Documents\\GitHub\\process_tracking\\src\\process_tracker.py'],
     pathex=[],
     binaries=[],
     datas=[],
