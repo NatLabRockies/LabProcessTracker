@@ -1,0 +1,37 @@
+.. _whatsnew_0100:
+
+
+v0.1.0 (XXXX, 2025)
+------------------------
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Bug fixes
+~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+
+
+Documentation
+~~~~~~~~~~~~~
+
+
+Requirements
+~~~~~~~~~~~~
+
+
+Testing
+~~~~~~~
+
+
+Maintenance
+~~~~~~~~~~~
+
+
+Contributors
+~~~~~~~~~~~~
+
