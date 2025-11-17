@@ -2,9 +2,14 @@ name: pytest
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: tandems-runners
+    timeout-minutes: 10
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
