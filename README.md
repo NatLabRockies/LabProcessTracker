@@ -145,5 +145,4 @@ pytest tests/ -v --cov=src --cov-report=term-missing
 - Add auto-save feature when switching processes
 - Print session summary/stats at end of session
 - Add platen and position tracking
-- Update README.md for tox testing on multiple python versions
 ---
