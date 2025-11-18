@@ -9,9 +9,6 @@ from tracker_utils import (
 OUTPUTS_FOLDER = get_default_output_dir()
 LOG_FILE = os.path.join(OUTPUTS_FOLDER, "scan_log.csv")
 
-# --- Data Storage ---
-log_records = []
-
 # --- GUI Class ---
 class ProcessTrackerGUI(tk.Tk):
     def __init__(self):
@@ -19,9 +16,10 @@ class ProcessTrackerGUI(tk.Tk):
         self.title("Lab Process Tracker GUI")
         self.geometry("700x650")
         self.configure(bg="#f0f0f0")
-        self.create_widgets()
         self.current_process = None
         self.operator_name = None
+        self.log_records = []  # Move into class instead of global
+        self.create_widgets()
 
     def create_widgets(self):
         # Operator Name Entry
@@ -122,28 +120,28 @@ class ProcessTrackerGUI(tk.Tk):
 
     def log_scan_event(self, process_name, sample_id):
         record = create_log_record(self.operator_name, process_name, sample_id)
-        log_records.append(record)
+        self.log_records.append(record)
         self.print_terminal(f"[LOGGED] {record['Timestamp']} | Operator: '{self.operator_name}' | Process: '{process_name}' | Sample: '{sample_id}'")
 
     def undo_last_scan(self):
-        if not log_records:
+        if not self.log_records:
             self.print_terminal("[INFO] No scans to undo.")
             return
-        removed_record = log_records.pop()
+        removed_record = self.log_records.pop()
         self.print_terminal(f"[UNDO] Removed last scan: {removed_record['Timestamp']} | Process: '{removed_record['ProcessName']}' | Sample: '{removed_record['SampleID']}'")
         self.update_sample_block("Last scan undone", status_type="UNDO")
 
     def save_log(self):
-        success, message = save_log_to_csv(log_records, LOG_FILE, OUTPUTS_FOLDER)
+        success, message = save_log_to_csv(self.log_records, LOG_FILE, OUTPUTS_FOLDER)
 
         if success:
             self.print_terminal(f"[SUCCESS] {message}")
-            log_records.clear()
+            self.log_records.clear()
         else:
             self.print_terminal(f"[CRITICAL ERROR] {message}")
 
     def exit_app(self):
-        if log_records:
+        if self.log_records:
             if messagebox.askyesno("Unsaved Data", "Unsaved data exists. Save before exiting?"):
                 self.save_log()
         self.destroy()
