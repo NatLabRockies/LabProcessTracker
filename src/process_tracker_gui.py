@@ -1,16 +1,76 @@
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
+import datetime
+import csv
 import os
-from internal.tracker_utils import (
-    DATE_FORMAT, DATA_SEPARATOR, EXIT_CMD, SAVE_CMD, UNDO_CMD,
-    get_default_output_dir, parse_input, create_log_record, save_log_to_csv
-)
+
+# --- Constants ---
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+DATA_SEPARATOR = ':'
+EXIT_CMD = 'EXIT'
+SAVE_CMD = 'SAVE'
+UNDO_CMD = 'UNDO'
+
+# --- Output Directory Logic ---
+def get_default_output_dir():
+    """Determine the appropriate output directory for log files."""
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_outputs = os.path.join(project_root, "outputs")
+    # Check if running from a temp directory (PyInstaller .exe)
+    temp_dirs = [os.environ.get('TEMP'), os.environ.get('TMP')]
+    is_temp = any(project_root.lower().startswith(td.lower()) for td in temp_dirs if td)
+    if os.path.isdir(project_outputs) and not is_temp:
+        return project_outputs
+    # Fallback to user's Documents
+    user_docs = os.path.expanduser(r"~\Documents\process_tracking_outputs")
+    return user_docs
 
 OUTPUTS_FOLDER = get_default_output_dir()
 LOG_FILE = os.path.join(OUTPUTS_FOLDER, "scan_log.csv")
 
 # --- Data Storage ---
 log_records = []
+
+def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
+    """Parse QR code text to determine type and ID."""
+    try:
+        parts = qr_text.strip().split(DATA_SEPARATOR, 1)
+        if len(parts) == 2:
+            data_type = parts[0].strip().upper()
+            data_id = parts[1].strip()
+            return data_type, data_id
+        return None, None
+    except Exception:
+        return None, None
+
+def create_log_record(operator_name: str, process_name: str, sample_id: str) -> dict:
+    """Create a log record dictionary with current timestamp."""
+    scan_time = datetime.datetime.now().strftime(DATE_FORMAT)
+    return {
+        'Timestamp': scan_time,
+        'Operator': operator_name,
+        'ProcessName': process_name,
+        'SampleID': sample_id,
+    }
+
+def save_log_to_csv(log_records: list, log_file: str, outputs_folder: str) -> tuple[bool, str]:
+    """Save log records to CSV file."""
+    if not log_records:
+        return False, "No records to save."
+
+    os.makedirs(outputs_folder, exist_ok=True)
+    file_exists = os.path.exists(log_file)
+    fieldnames = list(log_records[0].keys())
+
+    try:
+        with open(log_file, 'a', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            if not file_exists:
+                writer.writeheader()
+            writer.writerows(log_records)
+        return True, f"Successfully saved {len(log_records)} records to {log_file}."
+    except Exception as e:
+        return False, f"Could not save log to file: {e}"
 
 # --- GUI Class ---
 class ProcessTrackerGUI(tk.Tk):
