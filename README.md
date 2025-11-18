@@ -107,9 +107,7 @@ process_tracking/
 ## Requirements
 
 - Python 3.10 or higher
-- Tkinter (included with most Python installations)
 
-Developed on Python 3.13, tested on 3.10 ≤ Python ≤ 3.13.
 All dependencies are managed via `pyproject.toml`.
 No external dependencies required unless using optional features or development tools.
 
