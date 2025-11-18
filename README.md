@@ -1,48 +1,55 @@
 # Lab Process Tracker
 
-A simple command-line tool for tracking lab processes and sample scans using
-QR code input. The scan log is saved to a .csv file in the `outputs` folder.
+A process tracking application for lab operations with both command-line and GUI interfaces.
+Track processes and sample scans using QR code input, with logs saved to CSV files.
 
 ## Features
 
-- Track process and sample scans
+- **Dual Interface:** Command-line (CLI) and graphical user interface (GUI)
+- Track process and sample scans with timestamps
 - Undo the last scan (`UNDO`)
 - Save logs to CSV (`SAVE`)
 - Exit safely with optional save (`EXIT`)
-- Organized output files in the `outputs` directory
+- Organized output files with configurable locations
+- Modern GUI with color-coded status indicators
 
 ## Start the tracker
 
-after downloading the repository from GitHub, you can run the tracker in two ways:
+After downloading the repository from GitHub, you can run the tracker in multiple ways:
 
-### 1. Run the standalone executable
+### 1. Run the GUI (Graphical Interface)
+
+```bash
+python src/process_tracker_gui.py
+```
+
+The GUI provides:
+- Visual status blocks for current process and sample
+- Color-coded feedback (red=process, green=sample, yellow=undo, orange=alert)
+- Terminal-style activity log
+- Button controls for SAVE, UNDO, and EXIT
+
+### 2. Run the CLI (Command-Line Interface)
+
+```bash
+python src/process_tracker.py
+```
+
+### 3. Run the standalone executable
 
 Navigate to the `exe/dist` folder and double-click the `process_tracker_v<version>.exe`
 file to start the tracker.
 
 No additional installations are required.
 
-### 2. Run the Python script directly
-To run the Python script directly out of a terminal, after downloading the repository
-and installing Python:
-
-#### Navigate to the repository directory:
-```bash
-cd path/to/process_tracking
-```
-
-#### Run the tracker:
-```bash
-python src/process_tracker.py
-```
-
 ## How to use
+
 **Scan QR codes:**
    - Scan a process QR code to set the current process.
    - Scan a sample QR code to log a sample under the current process.
 
 Note: QR codes must contain either the `PROCESS:` tag or `SAMPLE:` tag in order to be
-succesfully identified as a process or sample scan event, respectively.
+successfully identified as a process or sample scan event, respectively.
 
 **Commands:**
    - `UNDO` — Remove the last scan from the session (not saved to log).
@@ -59,8 +66,8 @@ succesfully identified as a process or sample scan event, respectively.
     directory (e.g., `~/Documents/process_tracking_outputs/scan_log.csv`).
 - If a scan log .csv file already exists, new session outputs will be appended to the
   existing file.
-- **Custom output location:** You can specify a custom output directory by providing a
-  command-line argument when starting the tracker:
+- **Custom output location (CLI only):** You can specify a custom output directoryby
+  providing a command-line argument when starting the tracker:
 
   ```bash
   python src/process_tracker.py --output-dir /path/to/your/folder
@@ -75,7 +82,9 @@ succesfully identified as a process or sample scan event, respectively.
 ```
 process_tracking/
 ├── src/                           # Main application code
-│   └── process_tracker.py         # Core tracker application
+│   ├── tracker_utils.py           # Shared core utilities and business logic
+│   ├── process_tracker.py         # CLI application
+│   └── process_tracker_gui.py     # GUI application (Tkinter)
 ├── scripts/                       # Utility and build scripts
 │   ├── create_exe.py              # Build script for creating executables
 │   └── run_tests.py               # Test runner script
@@ -87,6 +96,9 @@ process_tracking/
 ├── exe/                           # Compiled executables
 │   └── dist/
 │       └── process_tracker_v<version>.exe
+├── .github/                       # CI/CD workflows
+│   └── workflows/
+│       └── pytest.yml             # Automated testing workflow
 ├── pyproject.toml                 # Project metadata and dependencies
 ├── README.md
 └── ...
@@ -94,9 +106,10 @@ process_tracking/
 
 ## Requirements
 
-- Python 3.10 or higher.
+- Python 3.10 or higher
+- Tkinter (included with most Python installations)
 
-Developed on Python 3.13, tested on 3.10<=Python<=3.13.
+Developed on Python 3.13, tested on 3.10 ≤ Python ≤ 3.13.
 All dependencies are managed via `pyproject.toml`.
 No external dependencies required unless using optional features or development tools.
 
@@ -145,4 +158,5 @@ pytest tests/ -v --cov=src --cov-report=term-missing
 - Add auto-save feature when switching processes
 - Print session summary/stats at end of session
 - Add platen and position tracking
----
+- Update QR code tags (SAMPLE:/PROCESS:), add tool QR
+- Create GUI and GUI executable build
