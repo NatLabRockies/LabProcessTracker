@@ -30,23 +30,27 @@ class ProcessTrackerGUI(tk.Tk):
         self.create_widgets()
 
     def create_widgets(self):
+        # Main container with margins
+        main_container = tk.Frame(self, bg="#f0f0f0")
+        main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+
         # Operator Name Entry
-        tk.Label(self, text="Operator Name:", bg="#f0f0f0").pack(
+        tk.Label(main_container, text="Operator Name:", bg="#f0f0f0").pack(
             pady=(10, 0)
         )
-        self.operator_entry = tk.Entry(self, width=30)
+        self.operator_entry = tk.Entry(main_container, width=30)
         self.operator_entry.pack()
         self.operator_entry.focus_set()
         self.operator_entry.bind("<Return>", lambda e: self.set_operator())
 
         self.set_operator_btn = tk.Button(
-            self, text="Set Operator", command=self.set_operator
+            main_container, text="Set Operator", command=self.set_operator
         )
         self.set_operator_btn.pack(pady=(0, 10))
 
         # Process Status Block
-        self.process_frame = tk.Frame(self, width=400, height=150, bg="grey")
-        self.process_frame.pack(pady=(10, 0))
+        self.process_frame = tk.Frame(main_container, height=150, bg="grey")
+        self.process_frame.pack(pady=(10, 0), fill=tk.BOTH, expand=True)
         self.process_label = tk.Label(
             self.process_frame,
             text="No process",
@@ -58,10 +62,8 @@ class ProcessTrackerGUI(tk.Tk):
         self.process_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # Sample Status Block
-        self.sample_frame = tk.Frame(
-            self, width=400, height=150, bg="#95a5a6"
-        )
-        self.sample_frame.pack(pady=(5, 10))
+        self.sample_frame = tk.Frame(main_container, height=150, bg="#95a5a6")
+        self.sample_frame.pack(pady=(5, 10), fill=tk.BOTH, expand=True)
 
         # Single label that will show either "No sample" or "SAMPLE\n{ID}"
         self.sample_label = tk.Label(
@@ -76,13 +78,13 @@ class ProcessTrackerGUI(tk.Tk):
         self.sample_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # QR Input
-        tk.Label(self, text="Scan QR Code:", bg="#f0f0f0").pack()
-        self.qr_entry = tk.Entry(self, width=50)
+        tk.Label(main_container, text="Scan QR Code:", bg="#f0f0f0").pack()
+        self.qr_entry = tk.Entry(main_container, width=50)
         self.qr_entry.pack(pady=5)
         self.qr_entry.bind("<Return>", lambda e: self.handle_scan())
 
         # Command Buttons
-        btn_frame = tk.Frame(self, bg="#f0f0f0")
+        btn_frame = tk.Frame(main_container, bg="#f0f0f0")
         btn_frame.pack(pady=10)
         self.save_btn = tk.Button(
             btn_frame, text="SAVE", width=10, command=self.save_log
@@ -98,19 +100,19 @@ class ProcessTrackerGUI(tk.Tk):
         self.exit_btn.grid(row=0, column=2, padx=5)
 
         # Terminal Output
-        tk.Label(self, text="Activity Log:", bg="#f0f0f0").pack()
+        tk.Label(main_container, text="Activity Log:", bg="#f0f0f0").pack()
         self.terminal = scrolledtext.ScrolledText(
-            self,
+            main_container,
             width=80,
             height=5,
             state="disabled",
             font=("Consolas", 9),
         )
-        self.terminal.pack(pady=5)
+        self.terminal.pack(pady=5, fill=tk.BOTH, expand=True)
 
         # Info
         tk.Label(
-            self,
+            main_container,
             text=f"Log will be saved to: {LOG_FILE}",
             bg="#f0f0f0",
             fg="gray",
