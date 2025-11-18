@@ -18,7 +18,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.configure(bg="#f0f0f0")
         self.current_process = None
         self.operator_name = None
-        self.log_records = []  # Move into class instead of global
+        self.log_records = []
         self.create_widgets()
 
     def create_widgets(self):
@@ -32,16 +32,26 @@ class ProcessTrackerGUI(tk.Tk):
         self.set_operator_btn = tk.Button(self, text="Set Operator", command=self.set_operator)
         self.set_operator_btn.pack(pady=(0,10))
 
-        # Process Status Block (always shows current process)
-        self.process_frame = tk.Frame(self, width=400, height=60, bg="grey")
+        # Process Status Block
+        self.process_frame = tk.Frame(self, width=400, height=150, bg="grey")
         self.process_frame.pack(pady=(10, 0))
-        self.process_label = tk.Label(self.process_frame, text="No process", font=("Arial", 16), bg="grey", fg="white")
+        self.process_label = tk.Label(self.process_frame, text="No process", font=("Arial", 18, "bold"), bg="grey", fg="white", wraplength=380)
         self.process_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        # Sample Status Block (shows last sample, changes on sample scan)
-        self.sample_frame = tk.Frame(self, width=400, height=60, bg="grey")
+        # Sample Status Block
+        self.sample_frame = tk.Frame(self, width=400, height=150, bg="#95a5a6")
         self.sample_frame.pack(pady=(5, 10))
-        self.sample_label = tk.Label(self.sample_frame, text="No sample", font=("Arial", 16), bg="grey", fg="white")
+
+        # Single label that will show either "No sample" or "SAMPLE\n{ID}"
+        self.sample_label = tk.Label(
+            self.sample_frame,
+            text="No sample",
+            font=("Arial", 18, "bold"),
+            bg="#95a5a6",
+            fg="white",
+            wraplength=380,
+            justify=tk.CENTER
+        )
         self.sample_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # QR Input
@@ -61,12 +71,12 @@ class ProcessTrackerGUI(tk.Tk):
         self.exit_btn.grid(row=0, column=2, padx=5)
 
         # Terminal Output
-        tk.Label(self, text="Terminal Output:", bg="#f0f0f0").pack()
-        self.terminal = scrolledtext.ScrolledText(self, width=80, height=18, state='disabled', font=("Consolas", 10))
+        tk.Label(self, text="Activity Log:", bg="#f0f0f0").pack()
+        self.terminal = scrolledtext.ScrolledText(self, width=80, height=5, state='disabled', font=("Consolas", 9))
         self.terminal.pack(pady=5)
 
         # Info
-        tk.Label(self, text=f"Log will be saved to: {LOG_FILE}", bg="#f0f0f0", fg="gray").pack(pady=(5,0))
+        tk.Label(self, text=f"Log will be saved to: {LOG_FILE}", bg="#f0f0f0", fg="gray", font=("Arial", 8)).pack(pady=(5,0))
 
     def set_operator(self):
         name = self.operator_entry.get().strip()
@@ -74,7 +84,7 @@ class ProcessTrackerGUI(tk.Tk):
             self.print_terminal("[ERROR] Operator name cannot be empty.")
             return
         self.operator_name = name
-        self.print_terminal(f"Hello, {self.operator_name}. Have fun scanning...")
+        self.print_terminal(f"Hello, {self.operator_name}. Have fun scanning... ps I hope your processes have a UWL file")
         self.operator_entry.config(state='disabled')
         self.set_operator_btn.config(state='disabled')
         self.qr_entry.focus_set()
@@ -154,7 +164,7 @@ class ProcessTrackerGUI(tk.Tk):
 
     def update_process_block(self, process_name):
         if process_name:
-            color = "#e74c3c"  # Red
+            color = "#e74c3c"
             text = f"PROCESS: {process_name}"
         else:
             color = "grey"
@@ -163,26 +173,19 @@ class ProcessTrackerGUI(tk.Tk):
         self.process_label.config(bg=color, text=text)
 
     def update_sample_block(self, sample_info, status_type="SAMPLE"):
+        # Sample box stays neutral gray, only text changes
         if status_type == "SAMPLE":
-            color = "#27ae60"  # Green
-            text = f"SAMPLE: {sample_info}"
+            self.sample_label.config(text=f"SAMPLE\n{sample_info}", font=("Arial", 14, "bold"))
         elif status_type == "UNDO":
-            color = "#f1c40f"  # Yellow
-            text = "UNDO: Last scan removed"
+            self.sample_label.config(text="Last scan undone", font=("Arial", 18, "bold"))
         elif status_type == "ALERT":
-            color = "#e67e22"  # Orange
-            text = sample_info
+            self.sample_label.config(text=sample_info, font=("Arial", 18, "bold"))
         elif status_type == "ERROR":
-            color = "#8e44ad"  # Purple
-            text = f"ERROR: {sample_info}"
+            self.sample_label.config(text=f"ERROR\n{sample_info}", font=("Arial", 14, "bold"))
         elif status_type == "RESET":
-            color = "grey"
-            text = "No sample"
+            self.sample_label.config(text="No sample", font=("Arial", 18, "bold"))
         else:
-            color = "grey"
-            text = "No sample"
-        self.sample_frame.config(bg=color)
-        self.sample_label.config(bg=color, text=text)
+            self.sample_label.config(text="No sample", font=("Arial", 18, "bold"))
 
 if __name__ == "__main__":
     app = ProcessTrackerGUI()
