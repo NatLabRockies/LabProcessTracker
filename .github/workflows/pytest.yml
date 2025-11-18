@@ -41,12 +41,6 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Retry on failure
-        if: failure()
-        run: |
-          echo "Retrying tests..."
-          pytest tests/ -v --tb=short
-
       - name: Report results
         if: always()
         run: |
