@@ -192,10 +192,3 @@ pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
 ```
 
 **Note:** You need to install the test dependencies first: `pip install .[test]`
-
-## TODO
-
-- Add auto-save feature when switching processes
-- Print session summary/stats at end of session
-- Add platen and position tracking
-
