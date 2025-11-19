@@ -12,10 +12,10 @@ from tracker_utils import (
     create_log_record,
     save_log_to_csv,
     get_process_color,
+    get_log_filename,
 )
 
 OUTPUTS_FOLDER = get_default_output_dir()
-LOG_FILE = os.path.join(OUTPUTS_FOLDER, "scan_log.csv")
 
 
 # --- GUI Class ---
@@ -26,6 +26,8 @@ class ProcessTrackerGUI(tk.Tk):
         self.geometry("700x650")
         self.configure(bg="#f0f0f0")
         self.current_process = None
+        self.tool_process = None  # The main tool/process for this session
+        self.log_file = None
         self.operator_name = None
         self.log_records = []
         self.create_widgets()
@@ -112,13 +114,14 @@ class ProcessTrackerGUI(tk.Tk):
         self.terminal.pack(pady=5, fill=tk.BOTH, expand=True)
 
         # Info
-        tk.Label(
+        self.log_file_label = tk.Label(
             main_container,
-            text=f"Log will be saved to: {LOG_FILE}",
+            text="Scan a PROCESS QR code to set the tool and begin logging.",
             bg="#f0f0f0",
             fg="gray",
             font=("Arial", 8),
-        ).pack(pady=(5, 0))
+        )
+        self.log_file_label.pack(pady=(5, 0))
 
     def set_operator(self):
         name = self.operator_entry.get().strip()
@@ -165,13 +168,30 @@ class ProcessTrackerGUI(tk.Tk):
             return
         if data_type == "PROCESS":
             self.current_process = data_id
+            
+            # If this is the first process scan, set it as the tool process and create log file
+            if not self.tool_process:
+                self.tool_process = data_id
+                self.log_file = os.path.join(OUTPUTS_FOLDER, get_log_filename(self.tool_process))
+                self.title(f"Lab Process Tracker GUI - {self.tool_process}")
+                self.log_file_label.config(text=f"Log will be saved to: {self.log_file}")
+                self.print_terminal(f">>> TOOL SET: '{self.tool_process}'")
+                self.print_terminal(f">>> Log file: {self.log_file}")
+            
             self.update_process_block(data_id)
             self.update_sample_block(None, status_type="RESET")
             self.print_terminal(
                 f">>> PROCESS UPDATED: Now running: '{self.current_process}'"
             )
         elif data_type == "SAMPLE":
-            if self.current_process:
+            if not self.tool_process:
+                alert_msg = (
+                    "[ALERT] Cannot log sample. Please scan a "
+                    "**PROCESS QR code** first to set the tool."
+                )
+                self.print_terminal(alert_msg)
+                self.update_sample_block("No tool set", status_type="ALERT")
+            elif self.current_process:
                 self.log_scan_event(self.current_process, data_id)
                 self.update_sample_block(data_id, status_type="SAMPLE")
             else:
@@ -216,8 +236,12 @@ class ProcessTrackerGUI(tk.Tk):
         self.update_sample_block("Last scan undone", status_type="UNDO")
 
     def save_log(self):
+        if not self.log_file:
+            self.print_terminal("[ERROR] No log file defined. Please scan a PROCESS QR code first.")
+            return
+            
         success, message = save_log_to_csv(
-            self.log_records, LOG_FILE, OUTPUTS_FOLDER
+            self.log_records, self.log_file, OUTPUTS_FOLDER
         )
 
         if success:

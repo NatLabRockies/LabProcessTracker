@@ -41,6 +41,17 @@ def get_process_color(process_name: str) -> str:
     """
     return PROCESS_COLORS.get(process_name, DEFAULT_PROCESS_COLOR)
 
+def get_log_filename(process_name: str) -> str:
+    """Generate the log filename for a specific process.
+    
+    Args:
+        process_name: Name of the process
+    
+    Returns:
+        Filename in format 'scan_log_PROCESSNAME.csv'
+    """
+    return f"scan_log_{process_name}.csv"
+
 # --- Output Directory Logic ---
 def get_default_output_dir():
     """Determine the appropriate output directory for log files."""

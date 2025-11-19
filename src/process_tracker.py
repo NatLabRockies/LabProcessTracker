@@ -3,7 +3,8 @@ import sys
 import argparse
 from tracker_utils import (
     DATE_FORMAT, DATA_SEPARATOR, EXIT_CMD, SAVE_CMD, UNDO_CMD,
-    get_default_output_dir, parse_input, create_log_record, save_log_to_csv
+    get_default_output_dir, parse_input, create_log_record, save_log_to_csv,
+    get_log_filename
 )
 
 # --- Global Variables ---
@@ -13,6 +14,7 @@ LOG_FILE = None
 # --- Data Storage ---
 operator_name = None
 current_process = None
+tool_process = None  # The main tool/process for this session
 log_records = []
 
 def parse_args():
@@ -41,7 +43,11 @@ def undo_last_scan():
 
 def save_log():
     """Saves all collected log records to the CSV file."""
-    global log_records
+    global log_records, LOG_FILE
+
+    if not LOG_FILE:
+        print("\n[ERROR] No log file defined. Please scan a PROCESS QR code first.")
+        return
 
     success, message = save_log_to_csv(log_records, LOG_FILE, OUTPUTS_FOLDER)
 
@@ -65,18 +71,17 @@ def pause_before_exit(message="Press Enter to exit..."):
 
 def main():
     """Main loop for the scanning control process."""
-    global current_process, operator_name, OUTPUTS_FOLDER, LOG_FILE
+    global current_process, operator_name, tool_process, OUTPUTS_FOLDER, LOG_FILE
 
     # Parse args and set up paths
     args = parse_args()
     OUTPUTS_FOLDER = args.output_dir if args.output_dir else get_default_output_dir()
-    LOG_FILE = os.path.join(OUTPUTS_FOLDER, "scan_log.csv")
 
     # Ensure the outputs folder exists at startup
     os.makedirs(OUTPUTS_FOLDER, exist_ok=True)
 
     print("--- Lab Process Tracker Initialized ---")
-    print(f"Log will be saved to: {LOG_FILE}")
+    print(f"Logs will be saved to: {OUTPUTS_FOLDER}")
 
     # Prompt for operator name at session start
     while not operator_name:
@@ -88,12 +93,14 @@ def main():
     print("---------------------------------------")
     print(f"Enter '{EXIT_CMD}' or '{SAVE_CMD}' to quit or save the current session.")
     print(f"Enter '{UNDO_CMD}' to remove the last scan.")
+    print("Scan a PROCESS QR code to set the tool and begin logging.")
     print("---------------------------------------")
 
     while True:
         try:
             # Simulate the QR code scanner output being read via input()
-            prompt = f"\n{'[ACTIVE PROCESS: ' + current_process + ']' if current_process else '[NO ACTIVE PROCESS]'} >> Scan QR Code (or {EXIT_CMD}/{SAVE_CMD}/{UNDO_CMD}): "
+            process_status = f"[TOOL: {tool_process}]" if tool_process else "[NO TOOL SET]"
+            prompt = f"\n{process_status} {'[ACTIVE PROCESS: ' + current_process + ']' if current_process else ''} >> Scan QR Code (or {EXIT_CMD}/{SAVE_CMD}/{UNDO_CMD}): "
             qr_input = input(prompt).strip()
 
             if not qr_input:
@@ -122,11 +129,21 @@ def main():
             if data_type == 'PROCESS':
                 # 1. Process Scan: Update the current state
                 current_process = data_id
+                
+                # If this is the first process scan, set it as the tool process and create log file
+                if not tool_process:
+                    tool_process = data_id
+                    LOG_FILE = os.path.join(OUTPUTS_FOLDER, get_log_filename(tool_process))
+                    print(f"\n>>> TOOL SET: '{tool_process}'")
+                    print(f">>> Log file: {LOG_FILE}")
+                
                 print(f"\n>>> PROCESS UPDATED: Now running: '{current_process}'")
 
             elif data_type == 'SAMPLE':
                 # 2. Sample Scan: Log the event using the current process
-                if current_process:
+                if not tool_process:
+                    print("\n[ALERT] Cannot log sample. Please scan a **PROCESS QR code** first to set the tool.")
+                elif current_process:
                     log_scan_event(current_process, data_id)
                 else:
                     print("\n[ALERT] Cannot log sample. Please scan a **PROCESS QR code** first to define the current step.")
