@@ -55,10 +55,10 @@ def get_log_filename(process_name: str) -> str:
 
 def parse_tool_process(process_name: str) -> tuple[str, str]:
     """Parse a process name into tool and process components.
-    
+
     Args:
         process_name: Full process name (e.g., 'C215SS_JV' or 'BD8_XRD')
-    
+
     Returns:
         Tuple of (tool_name, process_name)
         If no underscore found, returns (process_name, process_name)
@@ -70,10 +70,10 @@ def parse_tool_process(process_name: str) -> tuple[str, str]:
 
 def get_tool_name(process_name: str) -> str:
     """Extract the tool name from a full process identifier.
-    
+
     Args:
         process_name: Full process name (e.g., 'C215SS_JV')
-    
+
     Returns:
         Tool name (e.g., 'C215SS')
     """
@@ -82,10 +82,10 @@ def get_tool_name(process_name: str) -> str:
 
 def get_process_name(process_name: str) -> str:
     """Extract the process name from a full process identifier.
-    
+
     Args:
         process_name: Full process name (e.g., 'C215SS_JV')
-    
+
     Returns:
         Process name (e.g., 'JV')
     """

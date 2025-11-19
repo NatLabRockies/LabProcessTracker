@@ -72,11 +72,11 @@ def pause_before_exit(message="Press Enter to exit..."):
 def reset_operator():
     """Reset the operator name, allowing a new operator to take over."""
     global operator_name
-    
+
     if not operator_name:
         print("\n[INFO] No operator is currently set.")
         return
-    
+
     old_operator = operator_name
     operator_name = None
     print(f"\n[RESET] Operator '{old_operator}' has been reset.")
@@ -119,7 +119,7 @@ def main():
                     print("[ERROR] Operator name cannot be empty.")
                 else:
                     print(f"\nWelcome, {operator_name}!")
-            
+
             # Build the prompt with tool and process information
             status_parts = []
             if tool_process:
@@ -127,11 +127,11 @@ def main():
                 status_parts.append(f"TOOL: {tool_name}")
             else:
                 status_parts.append("NO TOOL SET")
-            
+
             if current_process:
                 process_name = get_process_name(current_process)
                 status_parts.append(f"PROCESS: {process_name}")
-            
+
             status_str = " | ".join(status_parts)
             prompt = f"\n[{status_str}] >> Scan QR Code (or {EXIT_CMD}/{SAVE_CMD}/{UNDO_CMD}/{RESET_OPERATOR_CMD}): "
             qr_input = input(prompt).strip()
@@ -153,7 +153,7 @@ def main():
             if qr_input.upper() == UNDO_CMD:
                 undo_last_scan()
                 continue
-            
+
             if qr_input.upper() == RESET_OPERATOR_CMD:
                 reset_operator()
                 continue

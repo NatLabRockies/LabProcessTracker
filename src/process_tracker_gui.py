@@ -44,7 +44,7 @@ class ProcessTrackerGUI(tk.Tk):
         # Operator Name Entry
         operator_frame = tk.Frame(main_container, bg="#f0f0f0")
         operator_frame.pack(pady=(10, 0))
-        
+
         tk.Label(operator_frame, text="Operator Name:", bg="#f0f0f0").pack(side=tk.LEFT, padx=(0, 5))
         self.operator_entry = tk.Entry(operator_frame, width=25)
         self.operator_entry.pack(side=tk.LEFT, padx=(0, 5))
@@ -55,7 +55,7 @@ class ProcessTrackerGUI(tk.Tk):
             operator_frame, text="Set Operator", command=self.set_operator
         )
         self.set_operator_btn.pack(side=tk.LEFT, padx=(0, 5))
-        
+
         self.reset_operator_btn = tk.Button(
             operator_frame, text="Reset Operator", command=self.reset_operator, state="disabled"
         )
@@ -154,7 +154,7 @@ class ProcessTrackerGUI(tk.Tk):
         if not self.operator_name:
             self.print_terminal("[INFO] No operator is currently set.")
             return
-        
+
         old_operator = self.operator_name
         self.operator_name = None
         self.operator_entry.delete(0, tk.END)
