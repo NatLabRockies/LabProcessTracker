@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['C:\\Users\\rdaxini\\Documents\\GitHub\\process_tracking\\src\\process_tracker.py'],
+    ['C:\\Users\\rdaxini\\Documents\\GitHub\\process_tracking\\src\\process_tracker_gui.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -22,14 +22,14 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='process_tracker_v0.1.0',
+    name='process_tracker_gui_v0.1.0',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
