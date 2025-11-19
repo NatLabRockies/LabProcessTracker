@@ -5,9 +5,11 @@ Track processes and sample scans using QR code input, with logs saved to CSV fil
 
 ## Features
 
-- Dual Interface: Command-line (CLI) and graphical user interface (GUI)
-- Per-Tool Logging: Each tool/process has its own dedicated CSV log file
+- **Dual Interface:** Command-line (CLI) and graphical user interface (GUI)
+- **Per-Tool Logging:** Each tool/process has its own dedicated CSV log file
+- **Process Validation:** Only approved processes can be tracked
 - Track process and sample scans with timestamps
+- Reset operator to allow handoffs between users
 - Undo the last scan (`UNDO`)
 - Save logs to CSV (`SAVE`)
 - Exit safely with optional save (`EXIT`)
@@ -28,7 +30,8 @@ The GUI provides:
 - Visual status blocks for current process and sample
 - Color-coded feedback for different processes
 - Terminal-style activity log
-- Button controls for SAVE, UNDO, and EXIT
+- Button controls for SAVE, UNDO, EXIT, and Reset Operator
+- Operator management with reset capability
 
 ### 2. Run the CLI (Command-Line Interface)
 
@@ -36,16 +39,20 @@ The GUI provides:
 python src/process_tracker.py
 ```
 
-### 3. Run the standalone executable
+### 3. Run the standalone executables
 
-Navigate to the `exe/dist` folder and double-click the `process_tracker_v<version>.exe`
-file to start the tracker.
+Navigate to the `exe/dist` folder and double-click one of the executables:
+- **`process_tracker_gui_v<version>.exe`** - GUI version (recommended)
+- **`process_tracker_cli_v<version>.exe`** - CLI version
 
 No additional installations are required.
 
 ## How to use
 
 1. **Enter operator name** when prompted
+   - GUI: Type name and click "Set Operator" or press Enter
+   - CLI: Type name and press Enter
+   - Use "Reset Operator" button (GUI) or `RESET` command (CLI) to change operators
 
 2. **Scan a PROCESS QR code** to set the tool/process:
    - This must be done first before scanning any samples
@@ -57,6 +64,7 @@ No additional installations are required.
 4. **Use commands:**
    - `UNDO` — Remove the last scan from the session (not saved to log)
    - `SAVE` — Save all current session scans to the tool-specific CSV file
+   - `RESET` — Change the operator (CLI) or click "Reset Operator" button (GUI)
    - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
 
 **QR Code Format:**
@@ -83,7 +91,7 @@ message with:
   ```
   or, for the executable:
   ```
-  process_tracker_v<version>.exe --output-dir C:\path\to\your\folder
+  process_tracker_cli_v<version>.exe --output-dir C:\path\to\your\folder
   ```
 
 ## Folder Structure
@@ -99,14 +107,16 @@ process_tracking/
 │   └── run_tests.py               # Test runner script
 ├── tests/                         # Test suite
 │   ├── __init__.py
-│   └── test_tracker_utils.py      # Pytest-based tests
+│   ├── test_process_tracker.py    # CLI/core tests
+│   └── test_tracker_utils.py      # Utility function tests
 ├── outputs/                       # Default output location (auto-created)
 │   ├── scan_log_C215SS_JV.csv     # Example: C215SS_JV tool log
 │   ├── scan_log_BD8_XRD.csv       # Example: BD8_XRD tool log
 │   └── ...                        # One CSV per tool/process
 ├── exe/                           # Compiled executables
 │   └── dist/
-│       └── process_tracker_v<version>.exe
+│       ├── process_tracker_gui_v<version>.exe
+│       └── process_tracker_cli_v<version>.exe
 ├── .github/                       # CI/CD workflows
 │   └── workflows/
 │       └── pytest.yml             # Automated testing workflow
@@ -131,7 +141,7 @@ customization), you can install it using pip:
 pip install .
 ```
 
-If you also want to install optional dependencies for building a standalone executable
+If you also want to install optional dependencies for building standalone executables
 (using PyInstaller) or running tests (using pytest), use:
 
 ```bash
@@ -144,6 +154,27 @@ pip install .[test]
 # Install all development dependencies (build + test)
 pip install .[dev]
 ```
+
+#### Building Executables
+
+To build standalone executables:
+
+```bash
+# Build both CLI and GUI executables
+python scripts/create_exe.py
+
+# Build only GUI executable
+python scripts/create_exe.py --target gui
+
+# Build only CLI executable
+python scripts/create_exe.py --target cli
+```
+
+The executables will be created in `exe/dist/` directory:
+- `process_tracker_gui_v<version>.exe` - GUI version (no console window)
+- `process_tracker_cli_v<version>.exe` - CLI version (with console window)
+
+**Note:** You need PyInstaller installed: `pip install .[build]`
 
 #### Running Tests
 
