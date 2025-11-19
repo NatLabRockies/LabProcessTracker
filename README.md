@@ -5,7 +5,8 @@ Track processes and sample scans using QR code input, with logs saved to CSV fil
 
 ## Features
 
-- **Dual Interface:** Command-line (CLI) and graphical user interface (GUI)
+- Dual Interface: Command-line (CLI) and graphical user interface (GUI)
+- Per-Tool Logging: Each tool/process has its own dedicated CSV log file
 - Track process and sample scans with timestamps
 - Undo the last scan (`UNDO`)
 - Save logs to CSV (`SAVE`)
@@ -25,7 +26,7 @@ python src/process_tracker_gui.py
 
 The GUI provides:
 - Visual status blocks for current process and sample
-- Color-coded feedback (red=process, green=sample, yellow=undo, orange=alert)
+- Color-coded feedback for different processes
 - Terminal-style activity log
 - Button controls for SAVE, UNDO, and EXIT
 
@@ -44,30 +45,38 @@ No additional installations are required.
 
 ## How to use
 
-**Scan QR codes:**
-   - Scan a process QR code to set the current process.
-   - Scan a sample QR code to log a sample under the current process.
+1. **Enter operator name** when prompted
 
-Note: QR codes must contain either the `PROCESS:` tag or `SAMPLE:` tag in order to be
-successfully identified as a process or sample scan event, respectively.
+2. **Scan a PROCESS QR code** to set the tool/process:
+   - This must be done first before scanning any samples
+   - The first process scanned determines the log file name (e.g., `scan_log_C215SS_JV.csv`)
+   - Valid processes: C215SS_JV, BD8_XRD, HSEM_SEM, OEQE_EQE, SUPSS_JV, PXT10_JV, OpProf_PROFIL, PAE_EVAP
 
-**Commands:**
-   - `UNDO` — Remove the last scan from the session (not saved to log).
-   - `SAVE` — Save all current session scans to `outputs/scan_log.csv`.
-   - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans).
+3. **Scan SAMPLE QR codes** to log samples under the current process
+
+4. **Use commands:**
+   - `UNDO` — Remove the last scan from the session (not saved to log)
+   - `SAVE` — Save all current session scans to the tool-specific CSV file
+   - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
+
+**QR Code Format:**
+- Process QR codes must contain: `PROCESS:ProcessName` (e.g., `PROCESS:C215SS_JV`)
+- Sample QR codes must contain: `SAMPLE:SampleID` (e.g., `SAMPLE:2511-09`)
+
+**Process Validation:**
+If you scan a process that is not in the approved list, you will receive an error
+message with:
+- The list of available processes
+- Contact information to request adding new processes (Rajiv.Daxini@nrel.gov)
 
 ## Output
 
-- By default, logs are saved in `outputs/scan_log.csv`:
-  - **If running from source (with project folder):** logs are saved to the `outputs`
-    folder in the project directory (created automatically if missing).
-  - **If running as a standalone executable (.exe) without the project folder:** logs
-    are saved to a folder named `process_tracking_outputs` in your user's Documents
-    directory (e.g., `~/Documents/process_tracking_outputs/scan_log.csv`).
-- If a scan log .csv file already exists, new session outputs will be appended to the
-  existing file.
-- **Custom output location (CLI only):** You can specify a custom output directoryby
-  providing a command-line argument when starting the tracker:
+- Logs are saved to tool-specific CSV files (e.g., `scan_log_C215SS_JV.csv`, `scan_log_BD8_XRD.csv`)
+- Default output locations:
+  - **Running from source:** `outputs/` folder in the project directory
+  - **Running as executable:** `~/Documents/process_tracking_outputs/`
+- If a log file already exists, new session outputs will be appended
+- **Custom output location (CLI only):**
 
   ```bash
   python src/process_tracker.py --output-dir /path/to/your/folder
@@ -90,9 +99,11 @@ process_tracking/
 │   └── run_tests.py               # Test runner script
 ├── tests/                         # Test suite
 │   ├── __init__.py
-│   └── test_process_tracker.py    # Pytest-based tests
+│   └── test_tracker_utils.py      # Pytest-based tests
 ├── outputs/                       # Default output location (auto-created)
-│   └── scan_log.csv               # Scan log CSV file
+│   ├── scan_log_C215SS_JV.csv     # Example: C215SS_JV tool log
+│   ├── scan_log_BD8_XRD.csv       # Example: BD8_XRD tool log
+│   └── ...                        # One CSV per tool/process
 ├── exe/                           # Compiled executables
 │   └── dist/
 │       └── process_tracker_v<version>.exe
@@ -146,7 +157,7 @@ python scripts/run_tests.py
 pytest tests/ -v
 
 # With coverage report (requires pytest-cov)
-pytest tests/ -v --cov=src --cov-report=term-missing
+pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
 ```
 
 **Note:** You need to install the test dependencies first: `pip install .[test]`
@@ -156,5 +167,4 @@ pytest tests/ -v --cov=src --cov-report=term-missing
 - Add auto-save feature when switching processes
 - Print session summary/stats at end of session
 - Add platen and position tracking
-- Update QR code tags (SAMPLE:/PROCESS:), add tool QR
-- Create GUI and GUI executable build
+
