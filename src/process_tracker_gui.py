@@ -13,6 +13,7 @@ from tracker_utils import (
     save_log_to_csv,
     get_process_color,
     get_log_filename,
+    validate_process,
 )
 
 OUTPUTS_FOLDER = get_default_output_dir()
@@ -167,8 +168,15 @@ class ProcessTrackerGUI(tk.Tk):
             self.print_terminal(error_msg)
             return
         if data_type == "PROCESS":
+            try:
+                validate_process(data_id)
+            except ValueError as e:
+                self.print_terminal(f"[ERROR] {str(e)}")
+                self.update_sample_block("Invalid process", status_type="ERROR")
+                return
+
             self.current_process = data_id
-            
+
             # If this is the first process scan, set it as the tool process and create log file
             if not self.tool_process:
                 self.tool_process = data_id
@@ -177,7 +185,7 @@ class ProcessTrackerGUI(tk.Tk):
                 self.log_file_label.config(text=f"Log will be saved to: {self.log_file}")
                 self.print_terminal(f">>> TOOL SET: '{self.tool_process}'")
                 self.print_terminal(f">>> Log file: {self.log_file}")
-            
+
             self.update_process_block(data_id)
             self.update_sample_block(None, status_type="RESET")
             self.print_terminal(
@@ -239,7 +247,7 @@ class ProcessTrackerGUI(tk.Tk):
         if not self.log_file:
             self.print_terminal("[ERROR] No log file defined. Please scan a PROCESS QR code first.")
             return
-            
+
         success, message = save_log_to_csv(
             self.log_records, self.log_file, OUTPUTS_FOLDER
         )

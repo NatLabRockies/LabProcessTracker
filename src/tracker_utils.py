@@ -43,14 +43,31 @@ def get_process_color(process_name: str) -> str:
 
 def get_log_filename(process_name: str) -> str:
     """Generate the log filename for a specific process.
-    
+
     Args:
         process_name: Name of the process
-    
+
     Returns:
         Filename in format 'scan_log_PROCESSNAME.csv'
     """
     return f"scan_log_{process_name}.csv"
+
+def validate_process(process_name: str) -> None:
+    """Validate that a process name is in the approved list.
+
+    Args:
+        process_name: Name of the process to validate
+
+    Raises:
+        ValueError: If the process name is not in PROCESS_COLORS
+    """
+    if process_name not in PROCESS_COLORS:
+        error_msg = (
+            f"Process '{process_name}' is not implemented in this system.\n"
+            f"Available processes: {', '.join(PROCESS_COLORS.keys())}\n"
+            f"If you need to add this process, please contact Dax (Rajiv.Daxini@nrel.gov)"
+        )
+        raise ValueError(error_msg)
 
 # --- Output Directory Logic ---
 def get_default_output_dir():

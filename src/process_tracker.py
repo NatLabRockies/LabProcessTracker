@@ -4,7 +4,7 @@ import argparse
 from tracker_utils import (
     DATE_FORMAT, DATA_SEPARATOR, EXIT_CMD, SAVE_CMD, UNDO_CMD,
     get_default_output_dir, parse_input, create_log_record, save_log_to_csv,
-    get_log_filename
+    get_log_filename, validate_process
 )
 
 # --- Global Variables ---
@@ -128,15 +128,21 @@ def main():
 
             if data_type == 'PROCESS':
                 # 1. Process Scan: Update the current state
+                try:
+                    validate_process(data_id)
+                except ValueError as e:
+                    print(f"\n[ERROR] {e}")
+                    continue
+
                 current_process = data_id
-                
+
                 # If this is the first process scan, set it as the tool process and create log file
                 if not tool_process:
                     tool_process = data_id
                     LOG_FILE = os.path.join(OUTPUTS_FOLDER, get_log_filename(tool_process))
                     print(f"\n>>> TOOL SET: '{tool_process}'")
                     print(f">>> Log file: {LOG_FILE}")
-                
+
                 print(f"\n>>> PROCESS UPDATED: Now running: '{current_process}'")
 
             elif data_type == 'SAMPLE':
