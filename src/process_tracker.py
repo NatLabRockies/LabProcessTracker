@@ -2,9 +2,9 @@ import os
 import sys
 import argparse
 from tracker_utils import (
-    DATE_FORMAT, DATA_SEPARATOR, EXIT_CMD, SAVE_CMD, UNDO_CMD,
+    DATE_FORMAT, DATA_SEPARATOR, EXIT_CMD, SAVE_CMD, UNDO_CMD, RESET_OPERATOR_CMD,
     get_default_output_dir, parse_input, create_log_record, save_log_to_csv,
-    get_log_filename, validate_process
+    get_log_filename, validate_process, get_tool_name, get_process_name
 )
 
 # --- Global Variables ---
@@ -69,6 +69,19 @@ def pause_before_exit(message="Press Enter to exit..."):
         except:
             pass
 
+def reset_operator():
+    """Reset the operator name, allowing a new operator to take over."""
+    global operator_name
+    
+    if not operator_name:
+        print("\n[INFO] No operator is currently set.")
+        return
+    
+    old_operator = operator_name
+    operator_name = None
+    print(f"\n[RESET] Operator '{old_operator}' has been reset.")
+    print("Please enter a new operator name to continue.")
+
 def main():
     """Main loop for the scanning control process."""
     global current_process, operator_name, tool_process, OUTPUTS_FOLDER, LOG_FILE
@@ -93,14 +106,34 @@ def main():
     print("---------------------------------------")
     print(f"Enter '{EXIT_CMD}' or '{SAVE_CMD}' to quit or save the current session.")
     print(f"Enter '{UNDO_CMD}' to remove the last scan.")
+    print(f"Enter '{RESET_OPERATOR_CMD}' to change the operator.")
     print("Scan a PROCESS QR code to set the tool and begin logging.")
     print("---------------------------------------")
 
     while True:
         try:
-            # Simulate the QR code scanner output being read via input()
-            process_status = f"[TOOL: {tool_process}]" if tool_process else "[NO TOOL SET]"
-            prompt = f"\n{process_status} {'[ACTIVE PROCESS: ' + current_process + ']' if current_process else ''} >> Scan QR Code (or {EXIT_CMD}/{SAVE_CMD}/{UNDO_CMD}): "
+            # Check if we need to prompt for operator name
+            while not operator_name:
+                operator_name = input("\nEnter operator name: ").strip()
+                if not operator_name:
+                    print("[ERROR] Operator name cannot be empty.")
+                else:
+                    print(f"\nWelcome, {operator_name}!")
+            
+            # Build the prompt with tool and process information
+            status_parts = []
+            if tool_process:
+                tool_name = get_tool_name(tool_process)
+                status_parts.append(f"TOOL: {tool_name}")
+            else:
+                status_parts.append("NO TOOL SET")
+            
+            if current_process:
+                process_name = get_process_name(current_process)
+                status_parts.append(f"PROCESS: {process_name}")
+            
+            status_str = " | ".join(status_parts)
+            prompt = f"\n[{status_str}] >> Scan QR Code (or {EXIT_CMD}/{SAVE_CMD}/{UNDO_CMD}/{RESET_OPERATOR_CMD}): "
             qr_input = input(prompt).strip()
 
             if not qr_input:
@@ -119,6 +152,10 @@ def main():
 
             if qr_input.upper() == UNDO_CMD:
                 undo_last_scan()
+                continue
+            
+            if qr_input.upper() == RESET_OPERATOR_CMD:
+                reset_operator()
                 continue
 
             # --- Core Logic: Parse and Act ---

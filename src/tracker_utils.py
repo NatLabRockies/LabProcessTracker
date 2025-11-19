@@ -12,6 +12,7 @@ DATA_SEPARATOR = ':'
 EXIT_CMD = 'EXIT'
 SAVE_CMD = 'SAVE'
 UNDO_CMD = 'UNDO'
+RESET_OPERATOR_CMD = 'RESET'
 
 # --- Process Color Mappings ---
 # Default color for unknown processes
@@ -51,6 +52,45 @@ def get_log_filename(process_name: str) -> str:
         Filename in format 'scan_log_PROCESSNAME.csv'
     """
     return f"scan_log_{process_name}.csv"
+
+def parse_tool_process(process_name: str) -> tuple[str, str]:
+    """Parse a process name into tool and process components.
+    
+    Args:
+        process_name: Full process name (e.g., 'C215SS_JV' or 'BD8_XRD')
+    
+    Returns:
+        Tuple of (tool_name, process_name)
+        If no underscore found, returns (process_name, process_name)
+    """
+    if '_' in process_name:
+        parts = process_name.split('_', 1)
+        return parts[0], parts[1]
+    return process_name, process_name
+
+def get_tool_name(process_name: str) -> str:
+    """Extract the tool name from a full process identifier.
+    
+    Args:
+        process_name: Full process name (e.g., 'C215SS_JV')
+    
+    Returns:
+        Tool name (e.g., 'C215SS')
+    """
+    tool, _ = parse_tool_process(process_name)
+    return tool
+
+def get_process_name(process_name: str) -> str:
+    """Extract the process name from a full process identifier.
+    
+    Args:
+        process_name: Full process name (e.g., 'C215SS_JV')
+    
+    Returns:
+        Process name (e.g., 'JV')
+    """
+    _, process = parse_tool_process(process_name)
+    return process
 
 def validate_process(process_name: str) -> None:
     """Validate that a process name is in the approved list.

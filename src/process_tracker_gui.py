@@ -7,6 +7,7 @@ from tracker_utils import (
     EXIT_CMD,
     SAVE_CMD,
     UNDO_CMD,
+    RESET_OPERATOR_CMD,
     get_default_output_dir,
     parse_input,
     create_log_record,
@@ -14,6 +15,8 @@ from tracker_utils import (
     get_process_color,
     get_log_filename,
     validate_process,
+    get_tool_name,
+    get_process_name,
 )
 
 OUTPUTS_FOLDER = get_default_output_dir()
@@ -39,18 +42,24 @@ class ProcessTrackerGUI(tk.Tk):
         main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
 
         # Operator Name Entry
-        tk.Label(main_container, text="Operator Name:", bg="#f0f0f0").pack(
-            pady=(10, 0)
-        )
-        self.operator_entry = tk.Entry(main_container, width=30)
-        self.operator_entry.pack()
+        operator_frame = tk.Frame(main_container, bg="#f0f0f0")
+        operator_frame.pack(pady=(10, 0))
+        
+        tk.Label(operator_frame, text="Operator Name:", bg="#f0f0f0").pack(side=tk.LEFT, padx=(0, 5))
+        self.operator_entry = tk.Entry(operator_frame, width=25)
+        self.operator_entry.pack(side=tk.LEFT, padx=(0, 5))
         self.operator_entry.focus_set()
         self.operator_entry.bind("<Return>", lambda e: self.set_operator())
 
         self.set_operator_btn = tk.Button(
-            main_container, text="Set Operator", command=self.set_operator
+            operator_frame, text="Set Operator", command=self.set_operator
         )
-        self.set_operator_btn.pack(pady=(0, 10))
+        self.set_operator_btn.pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.reset_operator_btn = tk.Button(
+            operator_frame, text="Reset Operator", command=self.reset_operator, state="disabled"
+        )
+        self.reset_operator_btn.pack(side=tk.LEFT)
 
         # Process Status Block
         self.process_frame = tk.Frame(main_container, height=150, bg="grey")
@@ -137,7 +146,24 @@ class ProcessTrackerGUI(tk.Tk):
         self.print_terminal(greeting)
         self.operator_entry.config(state="disabled")
         self.set_operator_btn.config(state="disabled")
+        self.reset_operator_btn.config(state="normal")
         self.qr_entry.focus_set()
+
+    def reset_operator(self):
+        """Reset the operator name, allowing a new operator to take over."""
+        if not self.operator_name:
+            self.print_terminal("[INFO] No operator is currently set.")
+            return
+        
+        old_operator = self.operator_name
+        self.operator_name = None
+        self.operator_entry.delete(0, tk.END)
+        self.operator_entry.config(state="normal")
+        self.set_operator_btn.config(state="normal")
+        self.reset_operator_btn.config(state="disabled")
+        self.print_terminal(f"[RESET] Operator '{old_operator}' has been reset.")
+        self.print_terminal("Please enter a new operator name to continue.")
+        self.operator_entry.focus_set()
 
     def handle_scan(self):
         if not self.operator_name:
@@ -156,6 +182,9 @@ class ProcessTrackerGUI(tk.Tk):
             return
         if qr_text.upper() == UNDO_CMD:
             self.undo_last_scan()
+            return
+        if qr_text.upper() == RESET_OPERATOR_CMD:
+            self.reset_operator()
             return
         # Parse input
         data_type, data_id = parse_input(qr_text)
@@ -181,15 +210,17 @@ class ProcessTrackerGUI(tk.Tk):
             if not self.tool_process:
                 self.tool_process = data_id
                 self.log_file = os.path.join(OUTPUTS_FOLDER, get_log_filename(self.tool_process))
-                self.title(f"Lab Process Tracker GUI - {self.tool_process}")
+                tool_name = get_tool_name(self.tool_process)
+                self.title(f"Lab Process Tracker GUI - {tool_name}")
                 self.log_file_label.config(text=f"Log will be saved to: {self.log_file}")
-                self.print_terminal(f">>> TOOL SET: '{self.tool_process}'")
+                self.print_terminal(f">>> TOOL SET: '{tool_name}'")
                 self.print_terminal(f">>> Log file: {self.log_file}")
 
             self.update_process_block(data_id)
             self.update_sample_block(None, status_type="RESET")
+            process_name = get_process_name(self.current_process)
             self.print_terminal(
-                f">>> PROCESS UPDATED: Now running: '{self.current_process}'"
+                f">>> PROCESS UPDATED: Now running: '{process_name}'"
             )
         elif data_type == "SAMPLE":
             if not self.tool_process:
@@ -275,7 +306,9 @@ class ProcessTrackerGUI(tk.Tk):
     def update_process_block(self, process_name):
         if process_name:
             color = get_process_color(process_name)
-            text = f"PROCESS: {process_name}"
+            # Display only the process name (after underscore)
+            display_name = get_process_name(process_name)
+            text = display_name
         else:
             color = "grey"
             text = "No process"
@@ -285,8 +318,9 @@ class ProcessTrackerGUI(tk.Tk):
     def update_sample_block(self, sample_info, status_type="SAMPLE"):
         # Sample box stays neutral gray, only text changes
         if status_type == "SAMPLE":
+            # Display only the sample ID without "SAMPLE" prefix
             self.sample_label.config(
-                text=f"SAMPLE\n{sample_info}", font=("Arial", 14, "bold")
+                text=sample_info, font=("Arial", 18, "bold")
             )
         elif status_type == "UNDO":
             self.sample_label.config(
