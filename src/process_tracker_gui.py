@@ -1,25 +1,9 @@
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
 import os
-from tracker_utils import (
-    DATE_FORMAT,
-    DATA_SEPARATOR,
-    EXIT_CMD,
-    SAVE_CMD,
-    UNDO_CMD,
-    RESET_OPERATOR_CMD,
-    get_default_output_dir,
-    parse_input,
-    create_log_record,
-    save_log_to_csv,
-    get_process_color,
-    get_log_filename,
-    validate_process,
-    get_tool_name,
-    get_process_name,
-)
+import tracker_utils as tu
 
-OUTPUTS_FOLDER = get_default_output_dir()
+OUTPUTS_FOLDER = tu.get_default_output_dir()
 
 
 # --- GUI Class ---
@@ -138,8 +122,9 @@ class ProcessTrackerGUI(tk.Tk):
 
     def set_operator(self):
         name = self.operator_entry.get().strip()
-        if not name:
-            self.print_terminal("[ERROR] Operator name cannot be empty.")
+        is_valid, error_msg = tu.validate_operator_name(name)
+        if not is_valid:
+            self.print_terminal(f"[ERROR] {error_msg}")
             return
         self.operator_name = name
         greeting = (
@@ -177,31 +162,26 @@ class ProcessTrackerGUI(tk.Tk):
         if not qr_text:
             return
         # Handle commands
-        if qr_text.upper() == EXIT_CMD:
+        if qr_text.upper() == tu.EXIT_CMD:
             self.exit_app()
             return
-        if qr_text.upper() == SAVE_CMD:
+        if qr_text.upper() == tu.SAVE_CMD:
             self.save_log()
             return
-        if qr_text.upper() == UNDO_CMD:
+        if qr_text.upper() == tu.UNDO_CMD:
             self.undo_last_scan()
             return
-        if qr_text.upper() == RESET_OPERATOR_CMD:
+        if qr_text.upper() == tu.RESET_OPERATOR_CMD:
             self.reset_operator()
             return
         # Parse input
-        data_type, data_id = parse_input(qr_text)
+        data_type, data_id = tu.parse_input(qr_text)
         if not data_type:
-            error_msg = (
-                f"[ERROR] Invalid format: '{qr_text}'. "
-                f"Use 'TYPE{DATA_SEPARATOR}ID' "
-                "(e.g., PROCESS:Name or SAMPLE:ID)."
-            )
-            self.print_terminal(error_msg)
+            self.print_terminal(f"[ERROR] {tu.get_invalid_format_error(qr_text)}")
             return
         if data_type == "PROCESS":
             try:
-                validate_process(data_id)
+                tu.validate_process(data_id)
             except ValueError as e:
                 self.print_terminal(f"[ERROR] {str(e)}")
                 self.update_sample_block("Invalid process", status_type="ERROR")
@@ -212,8 +192,8 @@ class ProcessTrackerGUI(tk.Tk):
             # If this is the first process scan, set it as the tool process and create log file
             if not self.tool_process:
                 self.tool_process = data_id
-                self.log_file = os.path.join(OUTPUTS_FOLDER, get_log_filename(self.tool_process))
-                tool_name = get_tool_name(self.tool_process)
+                self.log_file = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(self.tool_process))
+                tool_name = tu.get_tool_name(self.tool_process)
                 self.title(f"Lab Process Tracker GUI - {tool_name}")
                 self.log_file_label.config(text=f"Log will be saved to: {self.log_file}")
                 self.print_terminal(f">>> TOOL SET: '{tool_name}'")
@@ -221,60 +201,33 @@ class ProcessTrackerGUI(tk.Tk):
 
             self.update_process_block(data_id)
             self.update_sample_block(None, status_type="RESET")
-            process_name = get_process_name(self.current_process)
-            self.print_terminal(
-                f">>> PROCESS UPDATED: Now running: '{process_name}'"
-            )
+            process_name = tu.get_process_name(self.current_process)
+            self.print_terminal(f">>> PROCESS UPDATED: Now running: '{process_name}'")
         elif data_type == "SAMPLE":
             if not self.tool_process:
-                alert_msg = (
-                    "[ALERT] Cannot log sample. Please scan a "
-                    "**PROCESS QR code** first to set the tool."
-                )
-                self.print_terminal(alert_msg)
+                self.print_terminal(f"[ALERT] {tu.get_no_tool_alert()}")
                 self.update_sample_block("No tool set", status_type="ALERT")
             elif self.current_process:
                 self.log_scan_event(self.current_process, data_id)
                 self.update_sample_block(data_id, status_type="SAMPLE")
             else:
-                alert_msg = (
-                    "[ALERT] Cannot log sample. Please scan a "
-                    "**PROCESS QR code** first to define the current step."
-                )
-                self.print_terminal(alert_msg)
+                self.print_terminal(f"[ALERT] {tu.get_no_process_alert()}")
                 self.update_sample_block("No process set", status_type="ALERT")
         else:
-            error_msg = (
-                f"[ERROR] Unknown data type scanned: '{data_type}'. "
-                "Must be 'PROCESS' or 'SAMPLE'."
-            )
-            self.print_terminal(error_msg)
+            self.print_terminal(f"[ERROR] {tu.get_unknown_type_error(data_type)}")
             self.update_sample_block(data_type, status_type="ERROR")
 
     def log_scan_event(self, process_name, sample_id):
-        record = create_log_record(
-            self.operator_name, process_name, sample_id
-        )
+        record = tu.create_log_record(self.operator_name, process_name, sample_id)
         self.log_records.append(record)
-        log_msg = (
-            f"[LOGGED] {record['Timestamp']} | "
-            f"Operator: '{self.operator_name}' | "
-            f"Process: '{process_name}' | "
-            f"Sample: '{sample_id}'"
-        )
-        self.print_terminal(log_msg)
+        self.print_terminal(tu.format_log_message(record))
 
     def undo_last_scan(self):
         if not self.log_records:
             self.print_terminal("[INFO] No scans to undo.")
             return
         removed_record = self.log_records.pop()
-        undo_msg = (
-            f"[UNDO] Removed last scan: {removed_record['Timestamp']} | "
-            f"Process: '{removed_record['ProcessName']}' | "
-            f"Sample: '{removed_record['SampleID']}'"
-        )
-        self.print_terminal(undo_msg)
+        self.print_terminal(tu.format_undo_message(removed_record))
         self.update_sample_block("Last scan undone", status_type="UNDO")
 
     def save_log(self):
@@ -282,9 +235,7 @@ class ProcessTrackerGUI(tk.Tk):
             self.print_terminal("[ERROR] No log file defined. Please scan a PROCESS QR code first.")
             return
 
-        success, message = save_log_to_csv(
-            self.log_records, self.log_file, OUTPUTS_FOLDER
-        )
+        success, message = tu.save_log_to_csv(self.log_records, self.log_file, OUTPUTS_FOLDER)
 
         if success:
             self.print_terminal(f"[SUCCESS] {message}")
@@ -295,30 +246,18 @@ class ProcessTrackerGUI(tk.Tk):
     def exit_app(self):
         """Exit the application with prompt to save unsaved data."""
         if self.log_records:
-            if messagebox.askyesno(
-                "Unsaved Data",
-                f"You have {len(self.log_records)} unsaved record(s). Save before exiting?"
-            ):
+            count = tu.get_unsaved_count(self.log_records)
+            if messagebox.askyesno("Unsaved Data", f"You have {count} unsaved record(s). Save before exiting?"):
                 self.save_log()
-                # After saving, check if save was successful before exiting
-                if not self.log_records:  # Records cleared means save was successful
+                if not self.log_records:
                     self.destroy()
                 else:
-                    # Save failed, ask if they still want to exit
-                    if messagebox.askyesno(
-                        "Save Failed",
-                        "Failed to save records. Exit anyway?"
-                    ):
+                    if messagebox.askyesno("Save Failed", "Failed to save records. Exit anyway?"):
                         self.destroy()
             else:
-                # User chose not to save, confirm exit
-                if messagebox.askyesno(
-                    "Confirm Exit",
-                    "Exit without saving? All unsaved data will be lost."
-                ):
+                if messagebox.askyesno("Confirm Exit", "Exit without saving? All unsaved data will be lost."):
                     self.destroy()
         else:
-            # No unsaved records, just exit
             self.destroy()
 
     def print_terminal(self, msg):
@@ -329,9 +268,9 @@ class ProcessTrackerGUI(tk.Tk):
 
     def update_process_block(self, process_name):
         if process_name:
-            color = get_process_color(process_name)
+            color = tu.get_process_color(process_name)
             # Display only the process name (after underscore)
-            display_name = get_process_name(process_name)
+            display_name = tu.get_process_name(process_name)
             text = display_name
         else:
             color = "grey"

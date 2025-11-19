@@ -1,11 +1,7 @@
 import os
 import sys
 import argparse
-from tracker_utils import (
-    DATE_FORMAT, DATA_SEPARATOR, EXIT_CMD, SAVE_CMD, UNDO_CMD, RESET_OPERATOR_CMD,
-    get_default_output_dir, parse_input, create_log_record, save_log_to_csv,
-    get_log_filename, validate_process, get_tool_name, get_process_name
-)
+import tracker_utils as tu
 
 # --- Global Variables ---
 OUTPUTS_FOLDER = None
@@ -26,9 +22,9 @@ def log_scan_event(process_name: str, sample_id: str):
     """Creates a new log record with the current PC time."""
     global log_records, operator_name
 
-    record = create_log_record(operator_name, process_name, sample_id)
+    record = tu.create_log_record(operator_name, process_name, sample_id)
     log_records.append(record)
-    print(f"\n[LOGGED] {record['Timestamp']} | Operator: '{operator_name}' | Process: '{process_name}' | Sample: '{sample_id}'")
+    print(f"\n{tu.format_log_message(record)}")
 
 def undo_last_scan():
     """Removes the last logged scan from the records."""
@@ -39,7 +35,7 @@ def undo_last_scan():
         return
 
     removed_record = log_records.pop()
-    print(f"\n[UNDO] Removed last scan: {removed_record['Timestamp']} | Process: '{removed_record['ProcessName']}' | Sample: '{removed_record['SampleID']}'")
+    print(f"\n{tu.format_undo_message(removed_record)}")
 
 def save_log():
     """Saves all collected log records to the CSV file."""
@@ -49,7 +45,7 @@ def save_log():
         print("\n[ERROR] No log file defined. Please scan a PROCESS QR code first.")
         return
 
-    success, message = save_log_to_csv(log_records, LOG_FILE, OUTPUTS_FOLDER)
+    success, message = tu.save_log_to_csv(log_records, LOG_FILE, OUTPUTS_FOLDER)
 
     if success:
         print(f"\n[SUCCESS] {message}")
@@ -59,7 +55,7 @@ def save_log():
 
 def is_running_as_exe():
     """Check if the script is running as a compiled executable."""
-    return getattr(sys, 'frozen', False)
+    return tu.is_running_as_exe()
 
 def pause_before_exit(message="Press Enter to exit..."):
     """Pause execution to allow user to read messages before window closes."""
@@ -88,7 +84,7 @@ def main():
 
     # Parse args and set up paths
     args = parse_args()
-    OUTPUTS_FOLDER = args.output_dir if args.output_dir else get_default_output_dir()
+    OUTPUTS_FOLDER = args.output_dir if args.output_dir else tu.get_default_output_dir()
 
     # Ensure the outputs folder exists at startup
     os.makedirs(OUTPUTS_FOLDER, exist_ok=True)
@@ -98,15 +94,18 @@ def main():
 
     # Prompt for operator name at session start
     while not operator_name:
-        operator_name = input("\nEnter operator name: ").strip()
-        if not operator_name:
-            print("[ERROR] Operator name cannot be empty.")
+        name = input("\nEnter operator name: ").strip()
+        is_valid, error_msg = tu.validate_operator_name(name)
+        if not is_valid:
+            print(f"[ERROR] {error_msg}")
+        else:
+            operator_name = name
 
     print(f"\nHello, {operator_name}. Have fun scanning... ps I hope your processes have a UWL file")
     print("---------------------------------------")
-    print(f"Enter '{EXIT_CMD}' or '{SAVE_CMD}' to quit or save the current session.")
-    print(f"Enter '{UNDO_CMD}' to remove the last scan.")
-    print(f"Enter '{RESET_OPERATOR_CMD}' to change the operator.")
+    print(f"Enter '{tu.EXIT_CMD}' or '{tu.SAVE_CMD}' to quit or save the current session.")
+    print(f"Enter '{tu.UNDO_CMD}' to remove the last scan.")
+    print(f"Enter '{tu.RESET_OPERATOR_CMD}' to change the operator.")
     print("Scan a PROCESS QR code to set the tool and begin logging.")
     print("---------------------------------------")
 
@@ -114,33 +113,35 @@ def main():
         try:
             # Check if we need to prompt for operator name
             while not operator_name:
-                operator_name = input("\nEnter operator name: ").strip()
-                if not operator_name:
-                    print("[ERROR] Operator name cannot be empty.")
+                name = input("\nEnter operator name: ").strip()
+                is_valid, error_msg = tu.validate_operator_name(name)
+                if not is_valid:
+                    print(f"[ERROR] {error_msg}")
                 else:
+                    operator_name = name
                     print(f"\nWelcome, {operator_name}!")
 
             # Build the prompt with tool and process information
             status_parts = []
             if tool_process:
-                tool_name = get_tool_name(tool_process)
+                tool_name = tu.get_tool_name(tool_process)
                 status_parts.append(f"TOOL: {tool_name}")
             else:
                 status_parts.append("NO TOOL SET")
 
             if current_process:
-                process_name = get_process_name(current_process)
+                process_name = tu.get_process_name(current_process)
                 status_parts.append(f"PROCESS: {process_name}")
 
             status_str = " | ".join(status_parts)
-            prompt = f"\n[{status_str}] >> Scan QR Code (or {EXIT_CMD}/{SAVE_CMD}/{UNDO_CMD}/{RESET_OPERATOR_CMD}): "
+            prompt = f"\n[{status_str}] >> Scan QR Code (or {tu.EXIT_CMD}/{tu.SAVE_CMD}/{tu.UNDO_CMD}/{tu.RESET_OPERATOR_CMD}): "
             qr_input = input(prompt).strip()
 
             if not qr_input:
                 continue
 
             if qr_input.upper() == EXIT_CMD:
-                if log_records and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
+                if tu.has_unsaved_data(log_records) and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
                     save_log()
                 print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
                 pause_before_exit()
@@ -159,14 +160,14 @@ def main():
                 continue
 
             # --- Core Logic: Parse and Act ---
-            data_type, data_id = parse_input(qr_input)
+            data_type, data_id = tu.parse_input(qr_input)
             if not data_type:
                 continue
 
             if data_type == 'PROCESS':
                 # 1. Process Scan: Update the current state
                 try:
-                    validate_process(data_id)
+                    tu.validate_process(data_id)
                 except ValueError as e:
                     print(f"\n[ERROR] {e}")
                     continue
@@ -176,7 +177,7 @@ def main():
                 # If this is the first process scan, set it as the tool process and create log file
                 if not tool_process:
                     tool_process = data_id
-                    LOG_FILE = os.path.join(OUTPUTS_FOLDER, get_log_filename(tool_process))
+                    LOG_FILE = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(tool_process))
                     print(f"\n>>> TOOL SET: '{tool_process}'")
                     print(f">>> Log file: {LOG_FILE}")
 
@@ -185,14 +186,14 @@ def main():
             elif data_type == 'SAMPLE':
                 # 2. Sample Scan: Log the event using the current process
                 if not tool_process:
-                    print("\n[ALERT] Cannot log sample. Please scan a **PROCESS QR code** first to set the tool.")
+                    print(f"\n[ALERT] {tu.get_no_tool_alert()}")
                 elif current_process:
                     log_scan_event(current_process, data_id)
                 else:
-                    print("\n[ALERT] Cannot log sample. Please scan a **PROCESS QR code** first to define the current step.")
+                    print(f"\n[ALERT] {tu.get_no_process_alert()}")
 
             else:
-                print(f"\n[ERROR] Unknown data type scanned: '{data_type}'. Must be 'PROCESS' or 'SAMPLE'.")
+                print(f"\n[ERROR] {get_unknown_type_error(data_type)}")
 
         except EOFError:
             print("\nReceived EOF. Saving and exiting.")

@@ -5,6 +5,7 @@ Contains common functions and constants used by both CLI and GUI versions.
 import datetime
 import csv
 import os
+import sys
 
 # --- Constants ---
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -196,3 +197,128 @@ def save_log_to_csv(log_records: list, log_file: str, outputs_folder: str) -> tu
         return True, f"Successfully saved {len(log_records)} records to {log_file}."
     except Exception as e:
         return False, f"Could not save log to file: {e}"
+
+# --- Operator Management ---
+def validate_operator_name(name: str) -> tuple[bool, str]:
+    """Validate an operator name.
+
+    Args:
+        name: The operator name to validate
+
+    Returns:
+        Tuple of (is_valid: bool, error_message: str or empty string)
+    """
+    name = name.strip()
+    if not name:
+        return False, "Operator name cannot be empty."
+    if len(name) < 2:
+        return False, "Operator name must be at least 2 characters."
+    if len(name) > 50:
+        return False, "Operator name must be less than 50 characters."
+    return True, ""
+
+# --- Session State Helpers ---
+def has_unsaved_data(log_records: list) -> bool:
+    """Check if there are unsaved log records.
+
+    Args:
+        log_records: List of log record dictionaries
+
+    Returns:
+        True if there are unsaved records, False otherwise
+    """
+    return len(log_records) > 0
+
+def get_unsaved_count(log_records: list) -> int:
+    """Get count of unsaved log records.
+
+    Args:
+        log_records: List of log record dictionaries
+
+    Returns:
+        Number of unsaved records
+    """
+    return len(log_records)
+
+# --- Runtime Environment ---
+def is_running_as_exe() -> bool:
+    """Check if the script is running as a compiled executable.
+
+    Returns:
+        True if running as .exe, False if running as .py script
+    """
+    return getattr(sys, 'frozen', False)
+
+def format_log_message(record: dict) -> str:
+    """Format a log record into a human-readable message.
+
+    Args:
+        record: Log record dictionary
+
+    Returns:
+        Formatted log message string
+    """
+    return (
+        f"[LOGGED] {record['Timestamp']} | "
+        f"Operator: '{record['Operator']}' | "
+        f"Process: '{record['ProcessName']}' | "
+        f"Sample: '{record['SampleID']}'"
+    )
+
+def format_undo_message(record: dict) -> str:
+    """Format an undo message for a log record.
+
+    Args:
+        record: Log record dictionary that was undone
+
+    Returns:
+        Formatted undo message string
+    """
+    return (
+        f"[UNDO] Removed last scan: {record['Timestamp']} | "
+        f"Process: '{record['ProcessName']}' | "
+        f"Sample: '{record['SampleID']}'"
+    )
+
+# --- Error Messages ---
+def get_no_tool_alert() -> str:
+    """Get the alert message for when no tool is set.
+
+    Returns:
+        Alert message string
+    """
+    return "Cannot log sample. Please scan a **PROCESS QR code** first to set the tool."
+
+def get_no_process_alert() -> str:
+    """Get the alert message for when no process is active.
+
+    Returns:
+        Alert message string
+    """
+    return "Cannot log sample. Please scan a **PROCESS QR code** first to define the current step."
+
+def get_invalid_format_error(qr_text: str) -> str:
+    """Get error message for invalid QR code format.
+
+    Args:
+        qr_text: The invalid QR code text
+
+    Returns:
+        Formatted error message
+    """
+    return (
+        f"Invalid format: '{qr_text}'. "
+        f"Use 'TYPE{DATA_SEPARATOR}ID' "
+        "(e.g., PROCESS:Name or SAMPLE:ID)."
+    )
+
+def get_unknown_type_error(data_type: str) -> str:
+    """Get error message for unknown data type.
+
+    Args:
+        data_type: The unknown data type
+
+    Returns:
+        Formatted error message
+    """
+    return f"Unknown data type scanned: '{data_type}'. Must be 'PROCESS' or 'SAMPLE'."
