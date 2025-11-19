@@ -36,6 +36,9 @@ class ProcessTrackerGUI(tk.Tk):
         self.log_records = []
         self.create_widgets()
 
+        # Handle window close event (X button)
+        self.protocol("WM_DELETE_WINDOW", self.exit_app)
+
     def create_widgets(self):
         # Main container with margins
         main_container = tk.Frame(self, bg="#f0f0f0")
@@ -290,12 +293,33 @@ class ProcessTrackerGUI(tk.Tk):
             self.print_terminal(f"[CRITICAL ERROR] {message}")
 
     def exit_app(self):
+        """Exit the application with prompt to save unsaved data."""
         if self.log_records:
             if messagebox.askyesno(
-                "Unsaved Data", "Unsaved data exists. Save before exiting?"
+                "Unsaved Data",
+                f"You have {len(self.log_records)} unsaved record(s). Save before exiting?"
             ):
                 self.save_log()
-        self.destroy()
+                # After saving, check if save was successful before exiting
+                if not self.log_records:  # Records cleared means save was successful
+                    self.destroy()
+                else:
+                    # Save failed, ask if they still want to exit
+                    if messagebox.askyesno(
+                        "Save Failed",
+                        "Failed to save records. Exit anyway?"
+                    ):
+                        self.destroy()
+            else:
+                # User chose not to save, confirm exit
+                if messagebox.askyesno(
+                    "Confirm Exit",
+                    "Exit without saving? All unsaved data will be lost."
+                ):
+                    self.destroy()
+        else:
+            # No unsaved records, just exit
+            self.destroy()
 
     def print_terminal(self, msg):
         self.terminal.config(state="normal")
