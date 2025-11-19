@@ -7,20 +7,25 @@ Track processes and sample scans using QR code input, with logs saved to CSV fil
 
 - **Dual Interface:** Command-line (CLI) and graphical user interface (GUI)
 - **Per-Tool Logging:** Each tool/process has its own dedicated CSV log file
-- **Process Validation:** Only approved processes can be tracked
-- Track process and sample scans with timestamps
+- Track tool, process, and sample scans with timestamps
 - Reset operator to allow handoffs between users
 - Undo the last scan (`UNDO`)
 - Save logs to CSV (`SAVE`)
 - Exit safely with optional save (`EXIT`)
 - Organized output files with configurable locations
-- Modern GUI with color-coded status indicators
+- GUI with color-coded status indicators
 
 ## Start the tracker
 
 After downloading the repository from GitHub, you can run the tracker in multiple ways:
 
-### 1. Run the GUI (Graphical Interface)
+### 1. Run the standalone executables
+
+Navigate to the `exe/dist` folder and double-click one of the executables:
+- **`process_tracker_gui_v<version>.exe`** - GUI version (recommended)
+- **`process_tracker_cli_v<version>.exe`** - CLI version
+
+### 2. Run the GUI (Graphical Interface)
 
 ```bash
 python src/process_tracker_gui.py
@@ -33,17 +38,11 @@ The GUI provides:
 - Button controls for SAVE, UNDO, EXIT, and Reset Operator
 - Operator management with reset capability
 
-### 2. Run the CLI (Command-Line Interface)
+### 3. Run the CLI (Command-Line Interface)
 
 ```bash
 python src/process_tracker.py
 ```
-
-### 3. Run the standalone executables
-
-Navigate to the `exe/dist` folder and double-click one of the executables:
-- **`process_tracker_gui_v<version>.exe`** - GUI version (recommended)
-- **`process_tracker_cli_v<version>.exe`** - CLI version
 
 No additional installations are required.
 
@@ -68,7 +67,7 @@ No additional installations are required.
    - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
 
 **QR Code Format:**
-- Process QR codes must contain: `PROCESS:ProcessName` (e.g., `PROCESS:C215SS_JV`)
+- Process QR codes must contain: `PROCESS:Tool_Process` (e.g., `PROCESS:C215SS_JV`)
 - Sample QR codes must contain: `SAMPLE:SampleID` (e.g., `SAMPLE:2511-09`)
 
 **Process Validation:**
@@ -132,7 +131,7 @@ process_tracking/
 All dependencies are managed via `pyproject.toml`.
 No external dependencies required unless using optional features or development tools.
 
-### For Developers
+## For Developers
 
 If you want to install and run the repository directly (for development or
 customization), you can install it using pip:
