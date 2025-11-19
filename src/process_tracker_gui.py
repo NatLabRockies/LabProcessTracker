@@ -11,6 +11,7 @@ from tracker_utils import (
     parse_input,
     create_log_record,
     save_log_to_csv,
+    get_process_color,
 )
 
 OUTPUTS_FOLDER = get_default_output_dir()
@@ -241,7 +242,7 @@ class ProcessTrackerGUI(tk.Tk):
 
     def update_process_block(self, process_name):
         if process_name:
-            color = "#e74c3c"
+            color = get_process_color(process_name)
             text = f"PROCESS: {process_name}"
         else:
             color = "grey"

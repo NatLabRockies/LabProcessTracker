@@ -13,6 +13,34 @@ EXIT_CMD = 'EXIT'
 SAVE_CMD = 'SAVE'
 UNDO_CMD = 'UNDO'
 
+# --- Process Color Mappings ---
+# Default color for unknown processes
+DEFAULT_PROCESS_COLOR = "#95a5a6"  # Grey
+
+# Map process names to colors (hex codes for GUI)
+PROCESS_COLORS = {
+    "C215SS_JV": "#e74c3c",         # Red
+    "BD8_XRD": "#f39c12",           # Orange
+    "HSEM_SEM": "#9b59b6",          # Purple
+    "OEQE_EQE": "#3498db",          # Blue
+    "SUPSS_JV": "#1abc9c",          # Turquoise
+    "PXT10_JV": "#2ecc71",          # Green
+    "OpProf_PROFIL": "#fdca24",     # Yellow
+    "PAE_EVAP": "#fe27ba",          # Pink
+
+}
+
+def get_process_color(process_name: str) -> str:
+    """Get the color assigned to a specific process.
+
+    Args:
+        process_name: Name of the process
+
+    Returns:
+        Hex color code for the process
+    """
+    return PROCESS_COLORS.get(process_name, DEFAULT_PROCESS_COLOR)
+
 # --- Output Directory Logic ---
 def get_default_output_dir():
     """Determine the appropriate output directory for log files."""
