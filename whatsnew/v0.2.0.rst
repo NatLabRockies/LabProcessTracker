@@ -10,58 +10,66 @@ logging capabilities.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
-* Log files are now tool-specific (e.g., ``scan_log_C215SS_JV.csv``) instead of a single
+- Log files are now tool-specific (e.g., ``scan_log_C215SS_JV.csv``) instead of a single
   ``scan_log.csv``
-* Project structure reorganized: core code moved from ``scripts/`` to ``src/``
-* Minimum Python version changed from 3.13 to 3.10+
-* Output directory for executables changed to ``~/Documents/process_tracking_outputs/``
+- Project structure reorganized: core code moved from ``scripts/`` to ``src/``
+- Minimum Python version changed from 3.13 to 3.10+
+- Output directory for executables changed to ``~/Documents/process_tracking_outputs/``
+- Create new centralized JSON database to document and manage all processes and tools
+  (`tools_processes.json`).
+- All process abbreviations (and subsequently exported log files) are now lowercase for
+  consistency
 
 Enhancements
 ~~~~~~~~~~~~
-* **New GUI Interface**: Add ``process_tracker_gui.py`` with Tkinter-based graphical
+- New GUI Interface: Add ``process_tracker_gui.py`` with Tkinter-based graphical
   interface
 
-  * Visual status blocks with color-coded process indicators
-  * Terminal-style activity log
-  * Button controls for SAVE, UNDO, EXIT, and Reset Operator
+  - Visual status blocks with color-coded process indicators
+  - Terminal-style activity log
+  - Button controls for SAVE, UNDO, EXIT, and Reset Operator
 
-* **Per-Tool Logging**: Each tool/process now has its own dedicated CSV log file
-* **Operator Management**: Add ``RESET`` command to change operators during a session
-* **Process Validation**: QR codes are validated against approved process list
+- Per-Tool Logging: Each tool/process now has its own dedicated CSV log file
+- Operator Management: Add ``RESET`` command to change operators during a session
+- Process Validation: QR codes are validated against approved process list
   (C215SS_JV, BD8_XRD, HSEM_SEM, OEQE_EQE, SUPSS_JV, PXT10_JV, OpProf_PROFIL, PAE_EVAP)
-* **Improved Build System**: New ``scripts/create_exe.py`` with separate CLI and GUI
+- Improved Build System: New ``scripts/create_exe.py`` with separate CLI and GUI
   executable generation
+- Improve error messages for invalid process scans, now listing all available processes
+  from the JSON.
 
 Documentation
 ~~~~~~~~~~~~~
-* Comprehensive README updates with dual interface instructions
-* Add folder structure documentation
-* Improve installation and developer setup instructions
-* Add process validation documentation with contact information
+- Comprehensive README updates with dual interface instructions
+- Add folder structure documentation
+- Improve installation and developer setup instructions
+- Add process validation documentation with contact information
+- Add documentation and examples for the new JSON configuration structure.
+- Update instructions for adding new tools/processes via the JSON file.
 
 Dependencies
 ~~~~~~~~~~~~
-* Python 3.10+ (down from 3.13 only)
-* Add optional dependencies: ``pytest>=7.0.0``, ``pytest-cov>=4.0.0`` for testing
-* ``pyinstaller>=5.0`` for building executables
+- Python 3.10+ (down from 3.13 only)
+- Add optional dependencies: ``pytest>=7.0.0``, ``pytest-cov>=4.0.0`` for testing
+- ``pyinstaller>=5.0`` for building executables
 
 Testing
 ~~~~~~~
-* Add comprehensive test suite with pytest
-* New ``tests/`` directory with ``test_process_tracker.py`` and
+- Add comprehensive test suite with pytest
+- New ``tests/`` directory with ``test_process_tracker.py`` and
   ``test_tracker_utils.py``
-* Add ``scripts/run_tests.py`` test runner with coverage reporting
-* GitHub Actions CI/CD workflow (``pytest.yml``) for automated testing across
+- Add ``scripts/run_tests.py`` test runner with coverage reporting
+- GitHub Actions CI/CD workflow (``pytest.yml``) for automated testing across
   Python 3.10-3.13
 
 Maintenance
 ~~~~~~~~~~~
-* Refactor core logic into ``tracker_utils.py`` for code sharing between CLI and GUI
-* Rename main script from ``scripts/process_tracker.py`` to ``src/process_tracker.py``
-* Add ``.github/CODEOWNERS.txt`` for repository management
-* Update ``.gitignore`` to track executables in ``exe/dist/``
-* Build artifacts now organized in ``exe/spec/`` directory
+- Refactor core logic into ``tracker_utils.py`` for code sharing between CLI and GUI
+- Rename main script from ``scripts/process_tracker.py`` to ``src/process_tracker.py``
+- Add ``.github/CODEOWNERS.txt`` for repository management
+- Update ``.gitignore`` to track executables in ``exe/dist/``
+- Build artifacts now organized in ``exe/spec/`` directory
 
 Contributors
 ~~~~~~~~~~~~
-* Rajiv Daxini (:ghuser:`rdaxini`)
+- Rajiv Daxini (:ghuser:`rdaxini`)
