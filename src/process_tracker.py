@@ -162,20 +162,27 @@ def main():
             # --- Core Logic: Parse and Act ---
             data_type, data_id = tu.parse_input(qr_input)
             if not data_type:
+                print(f"\n[ERROR] Invalid format: '{qr_input}'. Use 'P%:Name' or 'S%:ID'")
                 continue
 
             if data_type == 'PROCESS':
-                # 1. Process Scan: Update the current state
-                try:
-                    tu.validate_process(data_id)
-                except ValueError as e:
-                    print(f"\n[ERROR] {e}")
+                # Normalize to lowercase once
+                normalized_process = data_id.lower()
+                
+                # Validate using the normalized name
+                if normalized_process not in tu.PROCESS_COLORS:
+                    error_msg = (
+                        f"Process '{data_id}' is not implemented.\n"
+                        f"Available: {', '.join(sorted(tu.PROCESS_COLORS.keys()))}\n"
+                        f"Contact Rajiv.Daxini@nrel.gov to add new processes."
+                    )
+                    print(f"\n[ERROR] {error_msg}")
                     continue
 
-                # Normalize to lowercase for consistency with PROCESS_COLORS keys
-                current_process = data_id.lower()
+                # Only set current_process if validation passed
+                current_process = normalized_process
 
-                # If this is the first process scan, set it as the tool process and create log file
+                # If this is the first process scan, set it as the tool process
                 if not tool_process:
                     tool_process = current_process
                     LOG_FILE = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(tool_process))
@@ -188,15 +195,12 @@ def main():
 
             elif data_type == 'SAMPLE':
                 # 2. Sample Scan: Log the event using the current process
-                if not tool_process:
-                    print(f"\n[ALERT] {tu.get_no_tool_alert()}")
-                elif current_process:
-                    log_scan_event(current_process, data_id)
+                if not tool_process or not current_process:
+                    print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 else:
-                    print(f"\n[ALERT] {tu.get_no_process_alert()}")
-
+                    log_scan_event(current_process, data_id)
             else:
-                print(f"\n[ERROR] {tu.get_unknown_type_error(data_type)}")
+                print(f"\n[ERROR] Unknown data type: '{data_type}'")
 
         except EOFError:
             print("\nReceived EOF. Saving and exiting.")

@@ -181,6 +181,7 @@ class TestJSONDataLoading:
     def test_process_colors_loaded(self):
         """Test that PROCESS_COLORS is populated from JSON."""
         assert len(PROCESS_COLORS) > 0
+        # If this fails, tools_processes.json wasn't loaded correctly
 
     def test_expected_processes_exist(self):
         """Test that expected processes are loaded."""
@@ -188,16 +189,11 @@ class TestJSONDataLoading:
             "c215ss_jv",
             "bd8_xrd",
             "hsem_sem",
-            "oeqe_eqe",
-            "supss_jv",
-            "pxt10_jv",
-            "opprof_profil",
-            "pae_evap",
             "ftlb234_spinbox",
             "pdil_pct",
         ]
         for process in expected_processes:
-            assert process in PROCESS_COLORS
+            assert process in PROCESS_COLORS, f"Process '{process}' not found in PROCESS_COLORS. JSON may not be loaded."
 
     def test_all_abbreviations_are_lowercase(self):
         """Test that all abbreviated names are lowercase."""

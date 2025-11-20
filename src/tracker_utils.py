@@ -30,9 +30,15 @@ def load_process_data():
     """Load process and tool data from JSON file."""
     global PROCESS_COLORS, PROCESS_INFO
 
-    # JSON file is always in the project root
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    json_path = os.path.join(project_root, "tools_processes.json")
+    # Determine base path - handles both script and PyInstaller .exe
+    if getattr(sys, 'frozen', False):
+        # Running as compiled executable
+        base_path = sys._MEIPASS
+    else:
+        # Running as script
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    json_path = os.path.join(base_path, "tools_processes.json")
 
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
