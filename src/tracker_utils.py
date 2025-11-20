@@ -6,6 +6,7 @@ import datetime
 import csv
 import os
 import sys
+import json
 
 # --- Constants ---
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -19,18 +20,49 @@ RESET_OPERATOR_CMD = 'RESET'
 # Default color for unknown processes
 DEFAULT_PROCESS_COLOR = "#95a5a6"  # Grey
 
-# Map process names to colors (hex codes for GUI)
-PROCESS_COLORS = {
-    "C215SS_JV": "#e74c3c",         # Red
-    "BD8_XRD": "#f39c12",           # Orange
-    "HSEM_SEM": "#9b59b6",          # Purple
-    "OEQE_EQE": "#3498db",          # Blue
-    "SUPSS_JV": "#1abc9c",          # Turquoise
-    "PXT10_JV": "#2ecc71",          # Green
-    "OpProf_PROFIL": "#fdca24",     # Yellow
-    "PAE_EVAP": "#fe27ba",          # Pink
+# Map process names to colors (hex codes for GUI) - loaded from JSON
+PROCESS_COLORS = {}
+PROCESS_INFO = {}  # Full process information
 
-}
+def load_process_data():
+    """Load process and tool data from JSON file."""
+    global PROCESS_COLORS, PROCESS_INFO
+
+    # Determine JSON file path
+    if getattr(sys, 'frozen', False):
+        # Running as compiled executable
+        base_path = sys._MEIPASS
+    else:
+        # Running as script
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    json_path = os.path.join(base_path, "tools_processes.json")
+
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        for tool in data.get('tools', []):
+            abbreviated = tool.get('abbreviated', '')
+            if abbreviated:
+                PROCESS_COLORS[abbreviated] = tool.get('color', DEFAULT_PROCESS_COLOR)
+                PROCESS_INFO[abbreviated] = {
+                    'tool': tool.get('tool', ''),
+                    'location': tool.get('location', ''),
+                    'process': tool.get('process', ''),
+                    'notes': tool.get('notes', ''),
+                    'required_upgrades': tool.get('required_upgrades', ''),
+                    'color': tool.get('color', DEFAULT_PROCESS_COLOR)
+                }
+    except FileNotFoundError:
+        print(f"Warning: tools_processes.json not found at {json_path}")
+        print("Using default/empty process configuration.")
+    except json.JSONDecodeError as e:
+        print(f"Warning: Error parsing tools_processes.json: {e}")
+        print("Using default/empty process configuration.")
+
+# Load process data at module import
+load_process_data()
 
 def get_process_color(process_name: str) -> str:
     """Get the color assigned to a specific process.
@@ -42,6 +74,17 @@ def get_process_color(process_name: str) -> str:
         Hex color code for the process
     """
     return PROCESS_COLORS.get(process_name, DEFAULT_PROCESS_COLOR)
+
+def get_process_info(process_name: str) -> dict:
+    """Get full information for a specific process.
+
+    Args:
+        process_name: Name of the process
+
+    Returns:
+        Dictionary containing process information, or empty dict if not found
+    """
+    return PROCESS_INFO.get(process_name, {})
 
 def get_log_filename(process_name: str) -> str:
     """Generate the log filename for a specific process.
@@ -105,7 +148,7 @@ def validate_process(process_name: str) -> None:
     if process_name not in PROCESS_COLORS:
         error_msg = (
             f"Process '{process_name}' is not implemented in this system.\n"
-            f"Available processes: {', '.join(PROCESS_COLORS.keys())}\n"
+            f"Available processes: {', '.join(sorted(PROCESS_COLORS.keys()))}\n"
             f"If you need to add this process, please contact Dax (Rajiv.Daxini@nrel.gov)"
         )
         raise ValueError(error_msg)
