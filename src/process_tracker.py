@@ -172,11 +172,12 @@ def main():
                     print(f"\n[ERROR] {e}")
                     continue
 
-                current_process = data_id
+                # Normalize to lowercase for consistency with PROCESS_COLORS keys
+                current_process = data_id.lower()
 
                 # If this is the first process scan, set it as the tool process and create log file
                 if not tool_process:
-                    tool_process = data_id
+                    tool_process = current_process
                     LOG_FILE = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(tool_process))
                     tool_display_name = tu.get_tool_display_name(tool_process)
                     print(f"\n>>> TOOL SET: '{tool_display_name}'")

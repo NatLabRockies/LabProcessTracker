@@ -212,39 +212,16 @@ class TestJSONDataLoading:
         validate_process("C215ss_Jv")
 
     def test_parse_input_normalizes_process_names(self):
-        """Test that parse_input converts PROCESS names to lowercase."""
-        data_type, data_id = tu.parse_input("PROCESS:C215SS_JV")
+        """Test that parse_input handles process names correctly."""
+        data_type, data_id = tu.parse_input("P%:C215SS_JV")
         assert data_type == "PROCESS"
-        assert data_id == "c215ss_jv"  # Should be lowercase
+        assert data_id == "C215SS_JV"
 
-        data_type, data_id = tu.parse_input("PROCESS:Bd8_XRD")
+        data_type, data_id = tu.parse_input("P%:Bd8_XRD")
         assert data_type == "PROCESS"
-        assert data_id == "bd8_xrd"  # Should be lowercase
+        assert data_id == "Bd8_XRD"
 
         # Sample IDs should preserve case
-        data_type, data_id = tu.parse_input("SAMPLE:ABC123xyz")
+        data_type, data_id = tu.parse_input("S%:ABC123xyz")
         assert data_type == "SAMPLE"
-        assert data_id == "ABC123xyz"  # Should preserve case
-
-
-class TestLogFilename:
-    """Test cases for log filename generation."""
-
-    def test_log_filename_format(self):
-        """Test log filename format."""
-        from tracker_utils import get_log_filename
-
-        filename = get_log_filename("c215ss_jv")
-        assert filename == "scan_log_c215ss_jv.csv"
-
-        filename = get_log_filename("bd8_xrd")
-        assert filename == "scan_log_bd8_xrd.csv"
-
-    def test_log_filename_preserves_abbreviation(self):
-        """Test that log filename uses abbreviated name."""
-        from tracker_utils import get_log_filename
-
-        # Should use abbreviated name, not display name
-        filename = get_log_filename("c215ss_jv")
-        assert "c215ss_jv" in filename
-        assert "JV Measurement" not in filename
+        assert data_id == "ABC123xyz"

@@ -10,7 +10,9 @@ import json
 
 # --- Constants ---
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-DATA_SEPARATOR = ':'
+# QR Code Prefixes (compact format for easier printing)
+QR_SAMPLE_PREFIX = 'S%:'
+QR_PROCESS_PREFIX = 'P%:'
 EXIT_CMD = 'EXIT'
 SAVE_CMD = 'SAVE'
 UNDO_CMD = 'UNDO'
@@ -130,13 +132,15 @@ def get_process_name(process_name: str) -> str:
 def validate_process(process_name: str) -> None:
     """Validate that a process name is in the approved list.
 
+    Validation is case-insensitive - input is converted to lowercase.
+
     Args:
-        process_name: Name of the process to validate (case-insensitive)
+        process_name: Name of the process to validate
 
     Raises:
         ValueError: If the process name is not in PROCESS_COLORS
     """
-    # Convert to lowercase for case-insensitive matching
+    # Convert to lowercase for case-insensitive comparison
     process_name_lower = process_name.lower()
 
     if process_name_lower not in PROCESS_COLORS:
@@ -165,25 +169,28 @@ def get_default_output_dir():
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     """Parse QR code text to determine type and ID.
 
+    Supports compact QR format (S%:ID, P%:ID).
+
     Args:
-        qr_text: The QR code text in format 'TYPE:ID'
+        qr_text: The QR code text in format 'TYPE:ID', where TYPE is one of 'S%' or 'P%'
 
     Returns:
-        Tuple of (data_type, data_id) or (None, None) if invalid
-        Note: data_id for PROCESS type is converted to lowercase
+        Tuple of ('SAMPLE', sample_id) or ('PROCESS', process_id) or (None, None) if
+        invalid
     """
     try:
-        parts = qr_text.strip().split(DATA_SEPARATOR, 1)
-        if len(parts) == 2:
-            data_type = parts[0].strip().upper()
-            data_id = parts[1].strip()
+        qr_text = qr_text.strip()
 
-            # Convert PROCESS IDs to lowercase for case-insensitive matching
-            # SAMPLE IDs remain as-is (case-sensitive)
-            if data_type == "PROCESS":
-                data_id = data_id.lower()
+        # Check for compact QR prefixes (include colon for uniqueness)
+        if qr_text.startswith(QR_SAMPLE_PREFIX):
+            data_id = qr_text[len(QR_SAMPLE_PREFIX):].strip()
+            if data_id:  # Ensure there's an ID after the prefix
+                return "SAMPLE", data_id
+        elif qr_text.startswith(QR_PROCESS_PREFIX):
+            data_id = qr_text[len(QR_PROCESS_PREFIX):].strip()
+            if data_id:  # Ensure there's an ID after the prefix
+                return "PROCESS", data_id
 
-            return data_type, data_id
         return None, None
     except Exception:
         return None, None
@@ -352,8 +359,8 @@ def get_invalid_format_error(qr_text: str) -> str:
     """
     return (
         f"Invalid format: '{qr_text}'. "
-        f"Use 'TYPE{DATA_SEPARATOR}ID' "
-        "(e.g., PROCESS:Name or SAMPLE:ID)."
+        f"Use '{QR_PROCESS_PREFIX}Name' or '{QR_SAMPLE_PREFIX}ID' "
+        f"(e.g., {QR_PROCESS_PREFIX}ftlb234_spinbox or {QR_SAMPLE_PREFIX}ABC123)."
     )
 
 def get_unknown_type_error(data_type: str) -> str:

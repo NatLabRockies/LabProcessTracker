@@ -187,11 +187,12 @@ class ProcessTrackerGUI(tk.Tk):
                 self.update_sample_block("Invalid process", status_type="ERROR")
                 return
 
-            self.current_process = data_id
+            # Normalize to lowercase for consistency with PROCESS_COLORS keys
+            self.current_process = data_id.lower()
 
             # If this is the first process scan, set it as the tool process and create log file
             if not self.tool_process:
-                self.tool_process = data_id
+                self.tool_process = self.current_process
                 self.log_file = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(self.tool_process))
                 tool_display_name = tu.get_tool_display_name(self.tool_process)
                 self.title(f"Lab Process Tracker GUI - {tool_display_name}")
@@ -199,7 +200,7 @@ class ProcessTrackerGUI(tk.Tk):
                 self.print_terminal(f">>> TOOL SET: '{tool_display_name}'")
                 self.print_terminal(f">>> Log file: {self.log_file}")
 
-            self.update_process_block(data_id)
+            self.update_process_block(self.current_process)
             self.update_sample_block(None, status_type="RESET")
             process_display_name = tu.get_process_display_name(self.current_process)
             self.print_terminal(f">>> PROCESS UPDATED: Now running: '{process_display_name}'")
