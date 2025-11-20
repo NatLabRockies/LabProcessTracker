@@ -140,22 +140,22 @@ def main():
             if not qr_input:
                 continue
 
-            if qr_input.upper() == EXIT_CMD:
+            if qr_input.upper() == tu.EXIT_CMD:
                 if tu.has_unsaved_data(log_records) and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
                     save_log()
                 print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
                 pause_before_exit()
                 break
 
-            if qr_input.upper() == SAVE_CMD:
+            if qr_input.upper() == tu.SAVE_CMD:
                 save_log()
                 continue
 
-            if qr_input.upper() == UNDO_CMD:
+            if qr_input.upper() == tu.UNDO_CMD:
                 undo_last_scan()
                 continue
 
-            if qr_input.upper() == RESET_OPERATOR_CMD:
+            if qr_input.upper() == tu.RESET_OPERATOR_CMD:
                 reset_operator()
                 continue
 
