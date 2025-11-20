@@ -19,6 +19,9 @@ Breaking Changes
   (`tools_processes.json`).
 - All process abbreviations (and subsequently exported log files) are now lowercase for
   consistency
+- Simplified QR code format for easier generation and scanning
+  - Process QR codes now use `P%:` prefix instead of `PROCESS:` (e.g., `P%:c215ss_jv`)
+  - Sample QR codes now use `S%:` prefix instead of `SAMPLE:` (e.g., `S%:ABC-123`)
 
 Enhancements
 ~~~~~~~~~~~~
