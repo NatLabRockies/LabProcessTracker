@@ -8,6 +8,7 @@ import pytest
 # Add src directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+import tracker_utils as tu
 from tracker_utils import (
     validate_process,
     PROCESS_COLORS,
@@ -61,10 +62,8 @@ class TestProcessValidation:
         "BD8_XRD",    # uppercase
     ])
     def test_case_sensitive_validation(self, invalid_case):
-        """Test that process names are case-sensitive."""
-        # These should fail because they're not exact matches (all valid names are lowercase)
-        with pytest.raises(ValueError):
-            validate_process(invalid_case)
+        """Test that process validation is case-insensitive."""
+        validate_process(invalid_case)
 
     def test_valid_lowercase_process_names(self):
         """Test that lowercase abbreviated names are valid."""
@@ -80,7 +79,7 @@ class TestProcessDisplayNames:
     def test_get_process_display_name_valid(self):
         """Test getting display name for valid process."""
         display_name = get_process_display_name("c215ss_jv")
-        assert display_name == "JV Measurement"
+        assert display_name == "JV"
 
     def test_get_process_display_name_invalid(self):
         """Test getting display name for invalid process returns abbreviated name."""
@@ -88,7 +87,7 @@ class TestProcessDisplayNames:
         assert display_name == "invalid_process"
 
     @pytest.mark.parametrize("abbreviated,expected_display", [
-        ("c215ss_jv", "JV Measurement"),
+        ("c215ss_jv", "JV"),
         ("bd8_xrd", "XRD"),
         ("hsem_sem", "SEM Imaging"),
         ("ftlb234_spinbox", "Spincoating"),
@@ -133,7 +132,7 @@ class TestProcessInfo:
         assert "process" in info
         assert "color" in info
         assert info["tool"] == "C215 Solar Simulator"
-        assert info["process"] == "JV Measurement"
+        assert info["process"] == "JV"
 
     def test_get_process_info_invalid(self):
         """Test getting process info for invalid process returns empty dict."""
@@ -203,7 +202,29 @@ class TestJSONDataLoading:
     def test_all_abbreviations_are_lowercase(self):
         """Test that all abbreviated names are lowercase."""
         for abbreviated in PROCESS_COLORS.keys():
-            assert abbreviated == abbreviated.lower()
+            assert abbreviated == abbreviated.lower(), f"'{abbreviated}' is not lowercase"
+
+    def test_case_insensitive_validation(self):
+        """Test that process validation is case-insensitive."""
+        # These should all pass (converted to lowercase internally)
+        validate_process("c215ss_jv")
+        validate_process("C215SS_JV")
+        validate_process("C215ss_Jv")
+
+    def test_parse_input_normalizes_process_names(self):
+        """Test that parse_input converts PROCESS names to lowercase."""
+        data_type, data_id = tu.parse_input("PROCESS:C215SS_JV")
+        assert data_type == "PROCESS"
+        assert data_id == "c215ss_jv"  # Should be lowercase
+
+        data_type, data_id = tu.parse_input("PROCESS:Bd8_XRD")
+        assert data_type == "PROCESS"
+        assert data_id == "bd8_xrd"  # Should be lowercase
+
+        # Sample IDs should preserve case
+        data_type, data_id = tu.parse_input("SAMPLE:ABC123xyz")
+        assert data_type == "SAMPLE"
+        assert data_id == "ABC123xyz"  # Should preserve case
 
 
 class TestLogFilename:

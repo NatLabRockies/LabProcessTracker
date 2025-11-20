@@ -28,7 +28,7 @@
       "tool": "FTLB 233 fume hood spin coater",
       "location": "FTLB 233",
       "process": "Spincoating",
-      "abbreviated": "ftlb233_FumehoodSpin",
+      "abbreviated": "ftlb233_fumehoodspin",
       "notes": "used for NiOx NP HTL, PEDOT:PSS HTL, and P3CT-Cs HTL",
       "color": "#3498db"
     },
@@ -92,7 +92,7 @@
       "tool": "W129 SnPb spincoater glovebox",
       "location": "W129",
       "process": "Spincoating",
-      "abbreviated": "w129_SnPbSpinbox",
+      "abbreviated": "w129_snpbspinbox",
       "notes": "N2 atmosphere, spincoater and 2 hot plates; used for Sn-containing perovskite only",
       "color": "#c0392b"
     },
@@ -100,7 +100,7 @@
       "tool": "W129 spincoater purge glovebox",
       "location": "W129",
       "process": "Spincoating",
-      "abbreviated": "w129_PurgeSpinbox",
+      "abbreviated": "w129_purgespinbox",
       "notes": "N2 purge but no purifier, spincoater and hot plates; used for perovskites, HTL, surface treatments, etc. [check] used for perovskites?",
       "color": "#27ae60"
     },
@@ -148,7 +148,7 @@
       "tool": "PDIL Perovskite large evaporator tool",
       "location": "PDIL",
       "process": "Evaporation",
-      "abbreviated": "pdil_largeEvap",
+      "abbreviated": "pdil_largeevap",
       "notes": "SAN to fill out",
       "color": "#1abc9c"
     },
@@ -164,7 +164,7 @@
       "tool": "PDIL APP nanosecond Talon laser scriber",
       "location": "PDIL",
       "process": "Laser Scribing",
-      "abbreviated": "pdil_nanoLaser",
+      "abbreviated": "pdil_nanolaser",
       "notes": "N2 or Argon switchable glovebox and UV (355nm) fixed beam laser with XY stage, 100mm focal length lens, and optical microscopes; used for scribing perovskites, TCOs, and Cadmium Telluride films and taking high-magnification images of scribes.",
       "color": "#fdca24"
     },
@@ -172,7 +172,7 @@
       "tool": "PDIL APP picosecond laser scriber",
       "location": "PDIL",
       "process": "Laser Scribing",
-      "abbreviated": "pdil_picoLaser",
+      "abbreviated": "pdil_picolaser",
       "notes": "-",
       "color": "#fe27ba"
     },

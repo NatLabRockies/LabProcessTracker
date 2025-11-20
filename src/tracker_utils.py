@@ -131,12 +131,15 @@ def validate_process(process_name: str) -> None:
     """Validate that a process name is in the approved list.
 
     Args:
-        process_name: Name of the process to validate
+        process_name: Name of the process to validate (case-insensitive)
 
     Raises:
         ValueError: If the process name is not in PROCESS_COLORS
     """
-    if process_name not in PROCESS_COLORS:
+    # Convert to lowercase for case-insensitive matching
+    process_name_lower = process_name.lower()
+
+    if process_name_lower not in PROCESS_COLORS:
         error_msg = (
             f"Process '{process_name}' is not implemented in this system.\n"
             f"Available processes: {', '.join(sorted(PROCESS_COLORS.keys()))}\n"
@@ -167,12 +170,19 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
 
     Returns:
         Tuple of (data_type, data_id) or (None, None) if invalid
+        Note: data_id for PROCESS type is converted to lowercase
     """
     try:
         parts = qr_text.strip().split(DATA_SEPARATOR, 1)
         if len(parts) == 2:
             data_type = parts[0].strip().upper()
             data_id = parts[1].strip()
+
+            # Convert PROCESS IDs to lowercase for case-insensitive matching
+            # SAMPLE IDs remain as-is (case-sensitive)
+            if data_type == "PROCESS":
+                data_id = data_id.lower()
+
             return data_type, data_id
         return None, None
     except Exception:
