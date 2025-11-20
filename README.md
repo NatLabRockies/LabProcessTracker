@@ -8,12 +8,7 @@ Track processes and sample scans using QR code input, with logs saved to CSV fil
 - **Dual Interface:** Command-line (CLI) and graphical user interface (GUI)
 - **Per-Tool Logging:** Each tool/process has its own dedicated CSV log file
 - Track tool, process, and sample scans with timestamps
-- Reset operator to allow handoffs between users
-- Undo the last scan (`UNDO`)
-- Save logs to CSV (`SAVE`)
-- Exit safely with optional save (`EXIT`)
-- Organized output files with configurable locations
-- GUI with color-coded status indicators
+- RESET (operator), UNDO, SAVE, and EXIT commands
 - Centralized process/tool configuration via JSON file
 
 ## Start the tracker
@@ -69,10 +64,15 @@ No additional installations are required.
    - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
 
 **QR Code Format:**
-- Process QR codes must contain: `PROCESS:abbreviated_name` (e.g., `PROCESS:c215ss_jv`)
-- Sample QR codes must contain: `SAMPLE:SampleID` (e.g., `SAMPLE:2511-09`)
-- The `PROCESS:` and `SAMPLE:` prefixes are case-insensitive, but the process
-  abbreviation is always matched in lowercase.
+- Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
+- Sample QR codes must contain: `S%:SampleID` (e.g., `S%:2511-09`)
+- The prefixes (`P%:` and `S%:`) must be uppercase and include the colon
+- Process names are case-insensitive (automatically normalized to lowercase)
+- Sample IDs preserve their original case
+
+**Examples:**
+- `P%:c215ss_jv` — Sets process to C215 Solar Simulator JV measurement
+- `S%:2511-09` — Logs sample 2511-09 under the current process
 
 **Process Validation:**
 If you scan a process that is not in the approved list, you will receive an error
