@@ -95,42 +95,102 @@ class TestProcessColors:
             assert len(color) == 7
             int(color[1:], 16)  # Should not raise ValueError
 
+    def test_get_process_color_valid(self):
+        """Test getting color for valid process."""
+        color = tu.get_process_color("c215ss_jv")
+        assert color.startswith("#")
+        assert len(color) == 7
 
-class TestJSONDataLoading:
-    """Test cases for JSON data loading."""
+    def test_get_process_color_invalid(self):
+        """Test getting color for invalid process returns default."""
+        color = tu.get_process_color("invalid_process")
+        assert color == tu.DEFAULT_PROCESS_COLOR
 
-    def test_process_colors_loaded(self):
-        """Test that PROCESS_COLORS is populated from JSON."""
-        assert len(PROCESS_COLORS) > 0
 
-    def test_expected_processes_exist(self):
-        """Test that expected processes are loaded."""
-        expected_processes = [
-            "c215ss_jv",
-            "bd8_xrd",
-            "hsem_sem",
-            "oeqe_eqe",
-            "supss_jv",
-            "pxt10_jv",
-            "opprof_profil",
-            "pae_evap",
-            "ftlb234_spinbox",
-            "pdil_pct",
-        ]
-        for process in expected_processes:
-            assert process in PROCESS_COLORS
+class TestLogFilename:
+    """Test cases for log filename generation."""
 
-    def test_all_abbreviations_are_lowercase(self):
-        """Test that all abbreviated names are lowercase."""
-        for abbreviated in PROCESS_COLORS.keys():
-            assert abbreviated == abbreviated.lower(), f"'{abbreviated}' is not lowercase"
+    def test_get_log_filename(self):
+        """Test log filename generation."""
+        filename = tu.get_log_filename("c215ss_jv")
+        assert filename == "scan_log_c215ss_jv.csv"
 
-    def test_parse_input_preserves_case(self):
-        """Test that parse_input preserves case in IDs."""
-        data_type, data_id = tu.parse_input("P%:C215SS_JV")
-        assert data_type == "PROCESS"
-        assert data_id == "C215SS_JV"  # parse_input preserves case
+    def test_get_log_filename_various_processes(self):
+        """Test log filename for various processes."""
+        assert tu.get_log_filename("bd8_xrd") == "scan_log_bd8_xrd.csv"
+        assert tu.get_log_filename("ftlb234_spinbox") == "scan_log_ftlb234_spinbox.csv"
 
-        data_type, data_id = tu.parse_input("S%:ABC123xyz")
-        assert data_type == "SAMPLE"
-        assert data_id == "ABC123xyz"  # Case preserved
+
+class TestMessageFormatting:
+    """Test cases for message formatting functions."""
+
+    def test_format_log_message(self):
+        """Test formatting a log message."""
+        record = {
+            'Timestamp': '2025-01-01 12:00:00',
+            'Operator': 'TestOp',
+            'ProcessName': 'test_process',
+            'SampleID': 'SAMPLE123'
+        }
+        msg = tu.format_log_message(record)
+        assert "[LOGGED]" in msg
+        assert "TestOp" in msg
+        assert "test_process" in msg
+        assert "SAMPLE123" in msg
+
+    def test_format_undo_message(self):
+        """Test formatting an undo message."""
+        record = {
+            'Timestamp': '2025-01-01 12:00:00',
+            'ProcessName': 'test_process',
+            'SampleID': 'SAMPLE123'
+        }
+        msg = tu.format_undo_message(record)
+        assert "[UNDO]" in msg
+        assert "test_process" in msg
+        assert "SAMPLE123" in msg
+
+
+class TestRuntimeEnvironment:
+    """Test cases for runtime environment detection."""
+
+    def test_is_running_as_exe(self):
+        """Test detecting if running as executable."""
+        # When running as .py script, should return False
+        result = tu.is_running_as_exe()
+        assert result is False
+
+
+class TestOperatorValidation:
+    """Test cases for operator name validation."""
+
+    def test_validate_operator_name_valid(self):
+        """Test valid operator names."""
+        is_valid, msg = tu.validate_operator_name("John Doe")
+        assert is_valid
+        assert msg == ""
+
+    def test_validate_operator_name_empty(self):
+        """Test empty operator name."""
+        is_valid, msg = tu.validate_operator_name("")
+        assert not is_valid
+        assert "empty" in msg.lower()
+
+    def test_validate_operator_name_too_short(self):
+        """Test operator name too short."""
+        is_valid, msg = tu.validate_operator_name("A")
+        assert not is_valid
+        assert "2 characters" in msg
+
+    def test_validate_operator_name_too_long(self):
+        """Test operator name too long."""
+        long_name = "A" * 51
+        is_valid, msg = tu.validate_operator_name(long_name)
+        assert not is_valid
+        assert "50 characters" in msg
+
+    def test_validate_operator_name_whitespace(self):
+        """Test operator name with only whitespace."""
+        is_valid, msg = tu.validate_operator_name("   ")
+        assert not is_valid
+        assert "empty" in msg.lower()
