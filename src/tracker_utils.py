@@ -403,3 +403,29 @@ def get_tool_display_name(abbreviated_name: str) -> str:
     """
     info = PROCESS_INFO.get(abbreviated_name, {})
     return info.get('tool', abbreviated_name)
+
+def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
+    """Validate process input and normalize to lowercase.
+    
+    This function centralizes the validation logic used by both CLI and GUI.
+    
+    Args:
+        process_input: Raw process input from QR code
+        
+    Returns:
+        Tuple of (is_valid, normalized_process, error_message)
+        - is_valid: True if process exists in PROCESS_COLORS
+        - normalized_process: Lowercase normalized process name
+        - error_message: Error message if invalid, empty string if valid
+    """
+    normalized = process_input.lower()
+    
+    if normalized not in PROCESS_COLORS:
+        error_msg = (
+            f"Process '{process_input}' is not implemented.\n"
+            f"Available: {', '.join(sorted(PROCESS_COLORS.keys()))}\n"
+            f"Contact Rajiv.Daxini@nrel.gov to add new processes."
+        )
+        return False, normalized, error_msg
+    
+    return True, normalized, ""

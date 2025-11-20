@@ -166,16 +166,9 @@ def main():
                 continue
 
             if data_type == 'PROCESS':
-                # Normalize to lowercase once
-                normalized_process = data_id.lower()
+                is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
                 
-                # Validate using the normalized name
-                if normalized_process not in tu.PROCESS_COLORS:
-                    error_msg = (
-                        f"Process '{data_id}' is not implemented.\n"
-                        f"Available: {', '.join(sorted(tu.PROCESS_COLORS.keys()))}\n"
-                        f"Contact Rajiv.Daxini@nrel.gov to add new processes."
-                    )
+                if not is_valid:
                     print(f"\n[ERROR] {error_msg}")
                     continue
 

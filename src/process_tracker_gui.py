@@ -180,16 +180,9 @@ class ProcessTrackerGUI(tk.Tk):
             self.print_terminal(f"[ERROR] Invalid format: '{qr_text}'. Use 'P%:Name' or 'S%:ID'")
             return
         if data_type == "PROCESS":
-            # Normalize to lowercase once
-            normalized_process = data_id.lower()
-
-            # Validate using the normalized name
-            if normalized_process not in tu.PROCESS_COLORS:
-                error_msg = (
-                    f"Process '{data_id}' is not implemented.\n"
-                    f"Available: {', '.join(sorted(tu.PROCESS_COLORS.keys()))}\n"
-                    f"Contact Rajiv.Daxini@nrel.gov to add new processes."
-                )
+            is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
+            
+            if not is_valid:
                 self.print_terminal(f"[ERROR] {error_msg}")
                 self.update_sample_block("Invalid process", status_type="ERROR")
                 return
