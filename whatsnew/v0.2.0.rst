@@ -64,4 +64,4 @@ Maintenance
 
 Contributors
 ~~~~~~~~~~~~
-* Rajiv Daxini (@rdaxini)
+* Rajiv Daxini (:ghuser:`rdaxini`)
