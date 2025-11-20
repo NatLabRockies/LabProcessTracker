@@ -219,7 +219,7 @@
     {
       "tool": "C215 Solar Simulator",
       "location": "C215",
-      "process": "JV Measurement",
+      "process": "JV",
       "abbreviated": "c215ss_jv",
       "notes": "Solar simulator for current-voltage measurements",
       "color": "#e74c3c"
@@ -243,7 +243,7 @@
     {
       "tool": "OEQE EQE System",
       "location": "OEQE",
-      "process": "EQE Measurement",
+      "process": "EQE",
       "abbreviated": "oeqe_eqe",
       "notes": "External quantum efficiency measurements",
       "color": "#3498db"
@@ -251,7 +251,7 @@
     {
       "tool": "SUPSS Solar Simulator",
       "location": "SUPSS",
-      "process": "JV Measurement",
+      "process": "JV",
       "abbreviated": "supss_jv",
       "notes": "Solar simulator for current-voltage measurements",
       "color": "#1abc9c"
@@ -259,7 +259,7 @@
     {
       "tool": "PXT10 Solar Simulator",
       "location": "PXT10",
-      "process": "JV Measurement",
+      "process": "JV",
       "abbreviated": "pxt10_jv",
       "notes": "Solar simulator for current-voltage measurements",
       "color": "#2ecc71"
@@ -267,7 +267,7 @@
     {
       "tool": "OpProf Optical Profilometer",
       "location": "OpProf",
-      "process": "Profile Measurement",
+      "process": "Profile",
       "abbreviated": "opprof_profil",
       "notes": "Optical profilometry for surface measurements",
       "color": "#fdca24"
