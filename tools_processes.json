@@ -1,0 +1,247 @@
+{
+  "tools": [
+    {
+      "tool": "FTLB 248 weighing glovebox",
+      "location": "FTLB 248",
+      "process": "Weighing & Solvation",
+      "abbreviated": "ftlb248_weighbox",
+      "notes": "vortex mixer and atomic scale and precursors and solvent bottles; used to weigh and solvate perovskite inks, 2ME and acetonitrile not allowed. (glovebox needs temperature logger)",
+      "required_upgrades": "box needs temp logger",
+      "color": "#e74c3c"
+    },
+    {
+      "tool": "FTLB 234 spincoating glovebox",
+      "location": "FTLB 234",
+      "process": "Spincoating",
+      "abbreviated": "ftlb234_spinbox",
+      "notes": "spincoating glovebox: N2 atmosphere, spin coater and two hot plates and a spin plate; used for HTL, perovskite, and surface treatments. (glovebox needs temperature logger)",
+      "required_upgrades": "box needs temp logger",
+      "color": "#f39c12"
+    },
+    {
+      "tool": "FTLB 234 blade coating glovebox",
+      "location": "FTLB 234",
+      "process": "Blade Coating",
+      "abbreviated": "ftlb234_bladebox",
+      "notes": "N2 atmosphere, blade coater and two hot plates; used for UV epoxy and perovskite blade coating. (glovebox needs temperature logger)",
+      "required_upgrades": "glovebox needs temp logger",
+      "color": "#9b59b6"
+    },
+    {
+      "tool": "FTLB 233 fume hood spin coater",
+      "location": "FTLB 233",
+      "process": "Spincoating",
+      "abbreviated": "ftlb233_FumehoodSpin",
+      "notes": "used for NiOx NP HTL, PEDOT:PSS HTL, and P3CT-Cs HTL",
+      "required_upgrades": "room needs temp/rh logger",
+      "color": "#3498db"
+    },
+    {
+      "tool": "FTLB 233 sonicating bath",
+      "location": "FTLB 233",
+      "process": "Sonication",
+      "abbreviated": "ftlb233_sonicator",
+      "notes": "Cleaning glass and mixing SAMs",
+      "required_upgrades": "room needs temp/rh logger",
+      "color": "#1abc9c"
+    },
+    {
+      "tool": "FTLB 234 UV-ozone cleaner",
+      "location": "FTLB 234",
+      "process": "UV-Ozone Cleaning",
+      "abbreviated": "ftlb234_uvo",
+      "notes": "UV-ozone cleaning substrates",
+      "required_upgrades": "room needs temp/rh logger",
+      "color": "#2ecc71"
+    },
+    {
+      "tool": "C212 sonicating bath",
+      "location": "C212",
+      "process": "Sonication",
+      "abbreviated": "c212_sonicator",
+      "notes": "Cleaning glass and mixing SAMs",
+      "required_upgrades": "room needs temp/rh logger",
+      "color": "#fdca24"
+    },
+    {
+      "tool": "C212 spincoating glovebox",
+      "location": "C212",
+      "process": "Spincoating",
+      "abbreviated": "c212_spinbox",
+      "notes": "N2 atmosphere, spincoater and 1 hot plate; used for SAMs HTL and perovskite and surface treatment",
+      "required_upgrades": "box needs temp logger",
+      "color": "#fe27ba"
+    },
+    {
+      "tool": "C212 dry glovebox",
+      "location": "C212",
+      "process": "Weighing",
+      "abbreviated": "c212_drybox",
+      "notes": "N2 atmosphere, atomic scale and precursors, no solvents allowed; used to weight salts",
+      "required_upgrades": "box needs temp logger",
+      "color": "#e67e22"
+    },
+    {
+      "tool": "C212 wet glovebox",
+      "location": "C212",
+      "process": "Solvation",
+      "abbreviated": "c212_wetbox",
+      "notes": "N2 atmosphere, pipetters, plate spinner, vortex mixer, and vial agitator; used to solvate inks",
+      "required_upgrades": "box needs temp logger",
+      "color": "#16a085"
+    },
+    {
+      "tool": "C212 Optigon glovebox",
+      "location": "C212",
+      "process": "Optigon",
+      "abbreviated": "c212_optigon",
+      "notes": "N2 atmosphere",
+      "required_upgrades": "[maybe] box needs temperature logger",
+      "color": "#8e44ad"
+    },
+    {
+      "tool": "W129 SnPb spincoater glovebox",
+      "location": "W129",
+      "process": "Spincoating",
+      "abbreviated": "w129_SnPbSpinbox",
+      "notes": "N2 atmosphere, spincoater and 2 hot plates; used for Sn-containing perovskite only",
+      "required_upgrades": "box needs temp logger",
+      "color": "#c0392b"
+    },
+    {
+      "tool": "W129 spincoater purge glovebox",
+      "location": "W129",
+      "process": "Spincoating",
+      "abbreviated": "w129_PurgeSpinbox",
+      "notes": "N2 purge but no purifier, spincoater and hot plates; used for perovskites, HTL, surface treatments, etc. [check] used for perovskites?",
+      "required_upgrades": "",
+      "color": "#27ae60"
+    },
+    {
+      "tool": "W129 evaporator",
+      "location": "W129",
+      "process": "Evaporation",
+      "abbreviated": "w129_evap",
+      "notes": "N2 atmosphere, evaporator loading and HEPA vacuum; used for scraping films, loading samples into evaporator, evaporating C60, BCP, LiF, Au, Ag, Cu, and other materials.",
+      "required_upgrades": "box needs temp logger",
+      "color": "#d35400"
+    },
+    {
+      "tool": "C215 evaporator",
+      "location": "C215",
+      "process": "Evaporation",
+      "abbreviated": "c215_evap",
+      "notes": "N2 atmosphere, evaporator loading and HEPA vacuum; used for scraping films, loading samples into evaporator, evaporating C60, BCP, LiF, Au, Ag, Cu and other materials",
+      "required_upgrades": "hood needs temp/rh logger",
+      "color": "#e74c3c"
+    },
+    {
+      "tool": "PDIL blade coater fume hood",
+      "location": "PDIL",
+      "process": "Blade Coating",
+      "abbreviated": "pdil_blade",
+      "notes": "used for NiOx NP blade coating, HTL blade coating, OPVperovskite blade coating(?)",
+      "required_upgrades": "",
+      "color": "#f39c12"
+    },
+    {
+      "tool": "PDIL laminar flow box",
+      "location": "PDIL",
+      "process": "Blade Coating/Imaging",
+      "abbreviated": "pdil_lfb",
+      "notes": "N2 or condensed air atmosphere with controllable temperature and Rh, blade coater with heating platen and hot plate and PL imaging and thickness-measurement optical probe and PL probe; used for SAMs, perovskites, surface treatment, and imaging.",
+      "required_upgrades": "",
+      "color": "#9b59b6"
+    },
+    {
+      "tool": "PDIL Perovskite Cluster Tool (PCT)",
+      "location": "PDIL",
+      "process": "Vapor Deposition",
+      "abbreviated": "pdil_pct",
+      "notes": "Perovskite Cluster Tool (PCT): vapor deposition tool with multi-plate cassette for automatic operation overnight, three separate sputtering chambers, loaded from air; used for IZO, ITO, NiOx, and others under development.",
+      "required_upgrades": "room needs temp/rh logger",
+      "color": "#3498db"
+    },
+    {
+      "tool": "PDIL Perovskite large evaporator tool",
+      "location": "PDIL",
+      "process": "Evaporation",
+      "abbreviated": "pdil_largeEvap",
+      "notes": "SAN to fill out",
+      "required_upgrades": "",
+      "color": "#1abc9c"
+    },
+    {
+      "tool": "PDIL APP cluster tool",
+      "location": "PDIL",
+      "process": "Vapor Deposition",
+      "abbreviated": "pdil_app",
+      "notes": "vapor deposition connected to loading glovebox, one sputtering chamber and one thermal evaporation chamber; used for IZO, ITO, Calcium, Ag, and other materials. Controlled VERY manually.",
+      "required_upgrades": "box needs temp logger",
+      "color": "#2ecc71"
+    },
+    {
+      "tool": "PDIL APP nanosecond Talon laser scriber",
+      "location": "PDIL",
+      "process": "Laser Scribing",
+      "abbreviated": "pdil_nanoLaser",
+      "notes": "N2 or Argon switchable glovebox and UV (355nm) fixed beam laser with XY stage, 100mm focal length lens, and optical microscopes; used for scribing perovskites, TCOs, and Cadmium Telluride films and taking high-magnification images of scribes.",
+      "required_upgrades": "box needs temp logger",
+      "color": "#fdca24"
+    },
+    {
+      "tool": "PDIL APP picosecond laser scriber",
+      "location": "PDIL",
+      "process": "Laser Scribing",
+      "abbreviated": "pdil_picoLaser",
+      "notes": "-",
+      "required_upgrades": "",
+      "color": "#fe27ba"
+    },
+    {
+      "tool": "RMI laser scriber",
+      "location": "RMI",
+      "process": "Laser Scribing",
+      "abbreviated": "rmi_laser",
+      "notes": "open-air IR laser with galvo and scribing image software; used for scribing Si and TCOs (and maybe metal annealing in future...?)",
+      "required_upgrades": "[maybe] needs temp/rh logger",
+      "color": "#e67e22"
+    },
+    {
+      "tool": "CO2 laser scriber",
+      "location": "-",
+      "process": "Laser Scribing",
+      "abbreviated": "co2_laser",
+      "notes": "JAMES to fill out",
+      "required_upgrades": "room needs temp/rh logger",
+      "color": "#16a085"
+    },
+    {
+      "tool": "Beneq1 ALD system",
+      "location": "-",
+      "process": "ALD",
+      "abbreviated": "beneq1_ald",
+      "notes": "CHRISTIAN/AXEL to fill out",
+      "required_upgrades": "",
+      "color": "#8e44ad"
+    },
+    {
+      "tool": "Beneq2 ALD system",
+      "location": "-",
+      "process": "ALD",
+      "abbreviated": "beneq2_ald",
+      "notes": "N2 glovebox loadable, used most often by PET for SnOx and Al2O3 depositions",
+      "required_upgrades": "",
+      "color": "#c0392b"
+    },
+    {
+      "tool": "Beneq2 glovebox",
+      "location": "-",
+      "process": "Aging/Illumination",
+      "abbreviated": "beneq2_box",
+      "notes": "N2 atmosphere with hot plate and LED solar simulator lamp; used to age films under heat and illumination while in OC or constant-load conditions",
+      "required_upgrades": "box needs temp logger",
+      "color": "#27ae60"
+    }
+  ]
+}
