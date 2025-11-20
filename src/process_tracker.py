@@ -140,22 +140,24 @@ def main():
             if not qr_input:
                 continue
 
-            if qr_input.upper() == tu.EXIT_CMD:
+            qr_upper = qr_input.upper()
+
+            if qr_upper == tu.EXIT_CMD:
                 if tu.has_unsaved_data(log_records) and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
                     save_log()
                 print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
                 pause_before_exit()
                 break
 
-            if qr_input.upper() == tu.SAVE_CMD:
+            if qr_upper == tu.SAVE_CMD:
                 save_log()
                 continue
 
-            if qr_input.upper() == tu.UNDO_CMD:
+            if qr_upper == tu.UNDO_CMD:
                 undo_last_scan()
                 continue
 
-            if qr_input.upper() == tu.RESET_OPERATOR_CMD:
+            if qr_upper == tu.RESET_OPERATOR_CMD:
                 reset_operator()
                 continue
 
@@ -165,17 +167,20 @@ def main():
                 continue
 
             if data_type == 'PROCESS':
-                # 1. Process Scan: Update the current state
-                try:
-                    tu.validate_process(data_id)
-                except ValueError as e:
-                    print(f"\n[ERROR] {e}")
-                    continue
-
-                # Normalize to lowercase for consistency with PROCESS_COLORS keys
+                # Normalize to lowercase once
                 current_process = data_id.lower()
 
-                # If this is the first process scan, set it as the tool process and create log file
+                # Validate using the normalized name
+                if current_process not in tu.PROCESS_COLORS:
+                    error_msg = (
+                        f"Process '{data_id}' is not implemented. "
+                        f"Available: {', '.join(sorted(tu.PROCESS_COLORS.keys()))}\n"
+                        f"Contact Rajiv.Daxini@nrel.gov to add new processes."
+                    )
+                    print(f"\n[ERROR] {error_msg}")
+                    continue
+
+                # If this is the first process scan, set it as the tool process
                 if not tool_process:
                     tool_process = current_process
                     LOG_FILE = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(tool_process))
@@ -189,11 +194,11 @@ def main():
             elif data_type == 'SAMPLE':
                 # 2. Sample Scan: Log the event using the current process
                 if not tool_process:
-                    print(f"\n[ALERT] {tu.get_no_tool_alert()}")
+                    print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 elif current_process:
                     log_scan_event(current_process, data_id)
                 else:
-                    print(f"\n[ALERT] {tu.get_no_process_alert()}")
+                    print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
 
             else:
                 print(f"\n[ERROR] {tu.get_unknown_type_error(data_type)}")

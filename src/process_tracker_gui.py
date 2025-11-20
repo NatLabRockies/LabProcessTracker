@@ -161,36 +161,42 @@ class ProcessTrackerGUI(tk.Tk):
         self.qr_entry.delete(0, tk.END)
         if not qr_text:
             return
+
+        qr_upper = qr_text.upper()
+
         # Handle commands
-        if qr_text.upper() == tu.EXIT_CMD:
+        if qr_upper == tu.EXIT_CMD:
             self.exit_app()
             return
-        if qr_text.upper() == tu.SAVE_CMD:
+        if qr_upper == tu.SAVE_CMD:
             self.save_log()
             return
-        if qr_text.upper() == tu.UNDO_CMD:
+        if qr_upper == tu.UNDO_CMD:
             self.undo_last_scan()
             return
-        if qr_text.upper() == tu.RESET_OPERATOR_CMD:
+        if qr_upper == tu.RESET_OPERATOR_CMD:
             self.reset_operator()
             return
         # Parse input
         data_type, data_id = tu.parse_input(qr_text)
         if not data_type:
-            self.print_terminal(f"[ERROR] {tu.get_invalid_format_error(qr_text)}")
+            self.print_terminal(f"[ERROR] Invalid format: '{qr_text}'. Use 'P%:Name' or 'S%:ID'")
             return
         if data_type == "PROCESS":
-            try:
-                tu.validate_process(data_id)
-            except ValueError as e:
-                self.print_terminal(f"[ERROR] {str(e)}")
+            # Normalize to lowercase once
+            self.current_process = data_id.lower()
+
+            # Validate using the normalized name
+            if self.current_process not in tu.PROCESS_COLORS:
+                error_msg = (
+                    f"Process '{data_id}' is not implemented. "
+                    f"Available: {', '.join(sorted(tu.PROCESS_COLORS.keys()))}"
+                )
+                self.print_terminal(f"[ERROR] {error_msg}")
                 self.update_sample_block("Invalid process", status_type="ERROR")
                 return
 
-            # Normalize to lowercase for consistency with PROCESS_COLORS keys
-            self.current_process = data_id.lower()
-
-            # If this is the first process scan, set it as the tool process and create log file
+            # If this is the first process scan, set it as the tool process
             if not self.tool_process:
                 self.tool_process = self.current_process
                 self.log_file = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(self.tool_process))
@@ -206,16 +212,16 @@ class ProcessTrackerGUI(tk.Tk):
             self.print_terminal(f">>> PROCESS UPDATED: Now running: '{process_display_name}'")
         elif data_type == "SAMPLE":
             if not self.tool_process:
-                self.print_terminal(f"[ALERT] {tu.get_no_tool_alert()}")
+                self.print_terminal("[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 self.update_sample_block("No tool set", status_type="ALERT")
             elif self.current_process:
                 self.log_scan_event(self.current_process, data_id)
                 self.update_sample_block(data_id, status_type="SAMPLE")
             else:
-                self.print_terminal(f"[ALERT] {tu.get_no_process_alert()}")
+                self.print_terminal("[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 self.update_sample_block("No process set", status_type="ALERT")
         else:
-            self.print_terminal(f"[ERROR] {tu.get_unknown_type_error(data_type)}")
+            self.print_terminal(f"[ERROR] Unknown data type: '{data_type}'")
             self.update_sample_block(data_type, status_type="ERROR")
 
     def log_scan_event(self, process_name, sample_id):
