@@ -6,13 +6,10 @@ import tomllib
 
 def get_version():
     """Get version from pyproject.toml or use default."""
-    try:
-        pyproject_path = os.path.join(os.path.dirname(__file__), '..', 'pyproject.toml')
-        with open(pyproject_path, 'rb') as f:
-            data = tomllib.load(f)
-            return data['project']['version']
-    except:
-        return "0.1.0"
+    pyproject_path = os.path.join(os.path.dirname(__file__), '..', 'pyproject.toml')
+    with open(pyproject_path, 'rb') as f:
+        data = tomllib.load(f)
+        return data['project']['version']
 
 def build_exe(target='both'):
     """Build executable(s) for the process tracker.
@@ -71,23 +68,18 @@ def build_exe(target='both'):
             args.extend(['--icon', icon_path])
 
         # Run PyInstaller
-        try:
-            PyInstaller.__main__.run(args)
+        PyInstaller.__main__.run(args)
 
-            # Rename the output file to include version
-            output_path = os.path.join(exe_dir, 'dist', exe_name.replace('.exe', '') + '.exe')
-            final_path = os.path.join(exe_dir, 'dist', exe_name)
+        # Rename the output file to include version
+        output_path = os.path.join(exe_dir, 'dist', exe_name.replace('.exe', '') + '.exe')
+        final_path = os.path.join(exe_dir, 'dist', exe_name)
 
-            if os.path.exists(output_path) and output_path != final_path:
-                if os.path.exists(final_path):
-                    os.remove(final_path)
-                os.rename(output_path, final_path)
+        if os.path.exists(output_path) and output_path != final_path:
+            if os.path.exists(final_path):
+                os.remove(final_path)
+            os.rename(output_path, final_path)
 
-            print(f"✓ {build_type.upper()} executable created: {final_path}")
-
-        except Exception as e:
-            print(f"✗ Error building {build_type.upper()} executable: {e}")
-            return False
+        print(f"✓ {build_type.upper()} executable created: {final_path}")
 
     print("\n" + "=" * 60)
     print("Build completed successfully!")
@@ -108,14 +100,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
-    # Check if PyInstaller is installed
-    try:
-        import PyInstaller
-    except ImportError:
-        print("Error: PyInstaller is not installed.")
-        print("Install it with: pip install .[build]")
-        sys.exit(1)
 
     success = build_exe(target=args.target)
     sys.exit(0 if success else 1)
