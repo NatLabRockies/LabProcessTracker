@@ -193,16 +193,16 @@ class ProcessTrackerGUI(tk.Tk):
             if not self.tool_process:
                 self.tool_process = data_id
                 self.log_file = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(self.tool_process))
-                tool_name = tu.get_tool_name(self.tool_process)
-                self.title(f"Lab Process Tracker GUI - {tool_name}")
+                tool_display_name = tu.get_tool_display_name(self.tool_process)
+                self.title(f"Lab Process Tracker GUI - {tool_display_name}")
                 self.log_file_label.config(text=f"Log will be saved to: {self.log_file}")
-                self.print_terminal(f">>> TOOL SET: '{tool_name}'")
+                self.print_terminal(f">>> TOOL SET: '{tool_display_name}'")
                 self.print_terminal(f">>> Log file: {self.log_file}")
 
             self.update_process_block(data_id)
             self.update_sample_block(None, status_type="RESET")
-            process_name = tu.get_process_name(self.current_process)
-            self.print_terminal(f">>> PROCESS UPDATED: Now running: '{process_name}'")
+            process_display_name = tu.get_process_display_name(self.current_process)
+            self.print_terminal(f">>> PROCESS UPDATED: Now running: '{process_display_name}'")
         elif data_type == "SAMPLE":
             if not self.tool_process:
                 self.print_terminal(f"[ALERT] {tu.get_no_tool_alert()}")
@@ -269,8 +269,8 @@ class ProcessTrackerGUI(tk.Tk):
     def update_process_block(self, process_name):
         if process_name:
             color = tu.get_process_color(process_name)
-            # Display only the process name (after underscore)
-            display_name = tu.get_process_name(process_name)
+            # Display the human-readable process name
+            display_name = tu.get_process_display_name(process_name)
             text = display_name
         else:
             color = "grey"

@@ -124,13 +124,13 @@ def main():
             # Build the prompt with tool and process information
             status_parts = []
             if tool_process:
-                tool_name = tu.get_tool_name(tool_process)
+                tool_name = tu.get_tool_display_name(tool_process)
                 status_parts.append(f"TOOL: {tool_name}")
             else:
                 status_parts.append("NO TOOL SET")
 
             if current_process:
-                process_name = tu.get_process_name(current_process)
+                process_name = tu.get_process_display_name(current_process)
                 status_parts.append(f"PROCESS: {process_name}")
 
             status_str = " | ".join(status_parts)
@@ -140,22 +140,22 @@ def main():
             if not qr_input:
                 continue
 
-            if qr_input.upper() == EXIT_CMD:
+            if qr_input.upper() == tu.EXIT_CMD:
                 if tu.has_unsaved_data(log_records) and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
                     save_log()
                 print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
                 pause_before_exit()
                 break
 
-            if qr_input.upper() == SAVE_CMD:
+            if qr_input.upper() == tu.SAVE_CMD:
                 save_log()
                 continue
 
-            if qr_input.upper() == UNDO_CMD:
+            if qr_input.upper() == tu.UNDO_CMD:
                 undo_last_scan()
                 continue
 
-            if qr_input.upper() == RESET_OPERATOR_CMD:
+            if qr_input.upper() == tu.RESET_OPERATOR_CMD:
                 reset_operator()
                 continue
 
@@ -178,10 +178,12 @@ def main():
                 if not tool_process:
                     tool_process = data_id
                     LOG_FILE = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(tool_process))
-                    print(f"\n>>> TOOL SET: '{tool_process}'")
+                    tool_display_name = tu.get_tool_display_name(tool_process)
+                    print(f"\n>>> TOOL SET: '{tool_display_name}'")
                     print(f">>> Log file: {LOG_FILE}")
 
-                print(f"\n>>> PROCESS UPDATED: Now running: '{current_process}'")
+                process_display_name = tu.get_process_display_name(current_process)
+                print(f"\n>>> PROCESS UPDATED: Now running: '{process_display_name}'")
 
             elif data_type == 'SAMPLE':
                 # 2. Sample Scan: Log the event using the current process
@@ -193,7 +195,7 @@ def main():
                     print(f"\n[ALERT] {tu.get_no_process_alert()}")
 
             else:
-                print(f"\n[ERROR] {get_unknown_type_error(data_type)}")
+                print(f"\n[ERROR] {tu.get_unknown_type_error(data_type)}")
 
         except EOFError:
             print("\nReceived EOF. Saving and exiting.")

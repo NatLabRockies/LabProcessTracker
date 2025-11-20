@@ -22,25 +22,25 @@ class TestParseInput:
         """Test parsing valid PROCESS input."""
         data_type, data_id = tu.parse_input("PROCESS:Coating")
         assert data_type == "PROCESS"
-        assert data_id == "Coating"
+        assert data_id == "coating"  # Process names converted to lowercase
 
     def test_valid_sample(self):
         """Test parsing valid SAMPLE input."""
         data_type, data_id = tu.parse_input("SAMPLE:ABC123")
         assert data_type == "SAMPLE"
-        assert data_id == "ABC123"
+        assert data_id == "ABC123"  # Sample IDs preserve case
 
     def test_case_insensitive(self):
         """Test that data type is case insensitive."""
         data_type, data_id = tu.parse_input("process:Test")
         assert data_type == "PROCESS"
-        assert data_id == "Test"
+        assert data_id == "test"  # Process names converted to lowercase
 
     def test_with_whitespace(self):
         """Test parsing with extra whitespace."""
         data_type, data_id = tu.parse_input("  SAMPLE : XYZ789  ")
         assert data_type == "SAMPLE"
-        assert data_id == "XYZ789"
+        assert data_id == "XYZ789"  # Sample IDs preserve case
 
     def test_invalid_format(self):
         """Test parsing invalid format (missing colon)."""
@@ -61,10 +61,10 @@ class TestParseInput:
         assert data_id == "ID:WITH:COLONS"
 
     @pytest.mark.parametrize("input_str,expected_type,expected_id", [
-        ("PROCESS:Coating", "PROCESS", "Coating"),
-        ("SAMPLE:ABC123", "SAMPLE", "ABC123"),
-        ("process:testing", "PROCESS", "testing"),
-        ("SAMPLE:999", "SAMPLE", "999"),
+        ("PROCESS:Coating", "PROCESS", "coating"),  # Process converted to lowercase
+        ("SAMPLE:ABC123", "SAMPLE", "ABC123"),       # Sample preserves case
+        ("process:testing", "PROCESS", "testing"),   # Process converted to lowercase
+        ("SAMPLE:999", "SAMPLE", "999"),             # Sample preserves case
     ])
     def test_multiple_valid_inputs(self, input_str, expected_type, expected_id):
         """Test multiple valid input combinations."""
@@ -79,7 +79,7 @@ class TestLogScanEvent:
     def test_log_scan_event(self):
         """Test that log_scan_event creates a record with correct fields."""
         record = tu.create_log_record("TestOperator", "TestProcess", "SAMPLE123")
-        
+
         assert "Timestamp" in record
         assert record["Operator"] == "TestOperator"
         assert record["ProcessName"] == "TestProcess"
@@ -89,7 +89,7 @@ class TestLogScanEvent:
         """Test that timestamp is in correct format."""
         record = tu.create_log_record("Op", "Proc", "Samp")
         timestamp = record["Timestamp"]
-        
+
         # Should be able to parse timestamp with DATE_FORMAT
         datetime.strptime(timestamp, tu.DATE_FORMAT)
 
@@ -99,7 +99,7 @@ class TestLogScanEvent:
         for i in range(3):
             record = tu.create_log_record(f"Op{i}", f"Proc{i}", f"Samp{i}")
             records.append(record)
-        
+
         assert len(records) == 3
         assert records[0]["Operator"] == "Op0"
         assert records[2]["SampleID"] == "Samp2"
@@ -114,7 +114,7 @@ class TestUndoLastScan:
             tu.create_log_record("Op", "Proc", "Samp1"),
             tu.create_log_record("Op", "Proc", "Samp2"),
         ]
-        
+
         removed = records.pop()
         assert len(records) == 1
         assert removed["SampleID"] == "Samp2"
@@ -130,10 +130,10 @@ class TestUndoLastScan:
             tu.create_log_record("Op", "Proc", f"Samp{i}")
             for i in range(5)
         ]
-        
+
         records.pop()
         records.pop()
-        
+
         assert len(records) == 3
         assert records[-1]["SampleID"] == "Samp2"
 
@@ -145,9 +145,9 @@ class TestSaveLog:
         """Test that save_log creates a CSV file."""
         log_file = tmp_path / "test_log.csv"
         records = [tu.create_log_record("Op", "Proc", "Samp")]
-        
+
         success, _ = tu.save_log_to_csv(records, str(log_file), str(tmp_path))
-        
+
         assert success
         assert log_file.exists()
 
@@ -155,9 +155,9 @@ class TestSaveLog:
         """Test that CSV contains correct data."""
         log_file = tmp_path / "test_log.csv"
         records = [tu.create_log_record("TestOp", "TestProc", "TestSamp")]
-        
+
         tu.save_log_to_csv(records, str(log_file), str(tmp_path))
-        
+
         with open(log_file, 'r') as f:
             reader = csv.DictReader(f)
             row = next(reader)
@@ -168,15 +168,15 @@ class TestSaveLog:
     def test_appends_to_existing_file(self, tmp_path):
         """Test that save_log appends to existing file."""
         log_file = tmp_path / "test_log.csv"
-        
+
         # First save
         records1 = [tu.create_log_record("Op1", "Proc", "Samp1")]
         tu.save_log_to_csv(records1, str(log_file), str(tmp_path))
-        
+
         # Second save (should append)
         records2 = [tu.create_log_record("Op2", "Proc", "Samp2")]
         tu.save_log_to_csv(records2, str(log_file), str(tmp_path))
-        
+
         with open(log_file, 'r') as f:
             reader = csv.DictReader(f)
             rows = list(reader)
@@ -195,9 +195,9 @@ class TestSaveLog:
         """Test saving empty records list."""
         log_file = tmp_path / "test_log.csv"
         records = []
-        
+
         success, message = tu.save_log_to_csv(records, str(log_file), str(tmp_path))
-        
+
         assert not success
         assert "No records" in message
 
@@ -232,17 +232,17 @@ class TestIntegrationWorkflow:
         """Test a complete scan workflow."""
         log_file = tmp_path / "workflow_test.csv"
         records = []
-        
+
         # Simulate scanning process and samples
         records.append(tu.create_log_record("Alice", "C215SS_JV", "Sample1"))
         records.append(tu.create_log_record("Alice", "C215SS_JV", "Sample2"))
-        
+
         # Save
         success, _ = tu.save_log_to_csv(records, str(log_file), str(tmp_path))
-        
+
         assert success
         assert log_file.exists()
-        
+
         # Verify saved data
         with open(log_file, 'r') as f:
             reader = csv.DictReader(f)
@@ -253,18 +253,18 @@ class TestIntegrationWorkflow:
         """Test workflow with undo operation."""
         log_file = tmp_path / "undo_test.csv"
         records = []
-        
+
         # Add records
         records.append(tu.create_log_record("Bob", "BD8_XRD", "Sample1"))
         records.append(tu.create_log_record("Bob", "BD8_XRD", "Sample2"))
         records.append(tu.create_log_record("Bob", "BD8_XRD", "Sample3"))
-        
+
         # Undo last one
         records.pop()
-        
+
         # Save
         tu.save_log_to_csv(records, str(log_file), str(tmp_path))
-        
+
         # Verify only 2 records saved
         with open(log_file, 'r') as f:
             reader = csv.DictReader(f)
