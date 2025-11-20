@@ -14,6 +14,7 @@ Track processes and sample scans using QR code input, with logs saved to CSV fil
 - Exit safely with optional save (`EXIT`)
 - Organized output files with configurable locations
 - GUI with color-coded status indicators
+- Centralized process/tool configuration via JSON file
 
 ## Start the tracker
 
@@ -55,8 +56,9 @@ No additional installations are required.
 
 2. **Scan a PROCESS QR code** to set the tool/process:
    - This must be done first before scanning any samples
-   - The first process scanned determines the log file name (e.g., `scan_log_C215SS_JV.csv`)
-   - Valid processes: C215SS_JV, BD8_XRD, HSEM_SEM, OEQE_EQE, SUPSS_JV, PXT10_JV, OpProf_PROFIL, PAE_EVAP
+   - The first process scanned determines the log file name
+     (e.g., `scan_log_c215ss_jv.csv`)
+   - Valid processes are defined in `tools_processes.json`
 
 3. **Scan SAMPLE QR codes** to log samples under the current process
 
@@ -67,8 +69,10 @@ No additional installations are required.
    - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
 
 **QR Code Format:**
-- Process QR codes must contain: `PROCESS:Tool_Process` (e.g., `PROCESS:C215SS_JV`)
+- Process QR codes must contain: `PROCESS:abbreviated_name` (e.g., `PROCESS:c215ss_jv`)
 - Sample QR codes must contain: `SAMPLE:SampleID` (e.g., `SAMPLE:2511-09`)
+- The `PROCESS:` and `SAMPLE:` prefixes are case-insensitive, but the process
+  abbreviation is always matched in lowercase.
 
 **Process Validation:**
 If you scan a process that is not in the approved list, you will receive an error
@@ -78,7 +82,8 @@ message with:
 
 ## Output
 
-- Logs are saved to tool-specific CSV files (e.g., `scan_log_C215SS_JV.csv`, `scan_log_BD8_XRD.csv`)
+- Logs are saved to tool-specific CSV files (e.g., `scan_log_c215ss_jv.csv`,
+  `scan_log_bd8_xrd.csv`)
 - Default output locations:
   - **Running from source:** `outputs/` folder in the project directory
   - **Running as executable:** `~/Documents/process_tracking_outputs/`
@@ -101,6 +106,7 @@ process_tracking/
 │   ├── tracker_utils.py           # Shared core utilities and business logic
 │   ├── process_tracker.py         # CLI application
 │   └── process_tracker_gui.py     # GUI application (Tkinter)
+├── tools_processes.json           # Central database of all tools/processe
 ├── scripts/                       # Utility and build scripts
 │   ├── create_exe.py              # Build script for creating executables
 │   └── run_tests.py               # Test runner script
@@ -109,8 +115,8 @@ process_tracking/
 │   ├── test_process_tracker.py    # CLI/core tests
 │   └── test_tracker_utils.py      # Utility function tests
 ├── outputs/                       # Default output location (auto-created)
-│   ├── scan_log_C215SS_JV.csv     # Example: C215SS_JV tool log
-│   ├── scan_log_BD8_XRD.csv       # Example: BD8_XRD tool log
+│   ├── scan_log_c215ss_jv.csv     # Example: c215ss_jv tool log
+│   ├── scan_log_bd8_xrd.csv       # Example: bd8_xrd tool log
 │   └── ...                        # One CSV per tool/process
 ├── exe/                           # Compiled executables
 │   └── dist/
