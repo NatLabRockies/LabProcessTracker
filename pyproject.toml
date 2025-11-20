@@ -45,6 +45,8 @@ source = ["src"]
 omit = [
     "*/tests/*",
     "*/test_*.py",
+    "src/process_tracker_gui.py",
+    "src/process_tracker.py",
 ]
 
 [tool.coverage.report]

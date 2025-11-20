@@ -314,6 +314,6 @@ class ProcessTrackerGUI(tk.Tk):
             )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     app = ProcessTrackerGUI()
     app.mainloop()
