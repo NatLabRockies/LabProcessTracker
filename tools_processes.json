@@ -158,7 +158,7 @@
       "process": "Vapor Deposition",
       "abbreviated": "pdil_app",
       "notes": "vapor deposition connected to loading glovebox, one sputtering chamber and one thermal evaporation chamber; used for IZO, ITO, Calcium, Ag, and other materials. Controlled VERY manually.",
-      "color": "#2ecc71"
+      "color": "#fdca24"
     },
     {
       "tool": "PDIL APP nanosecond Talon laser scriber",
@@ -215,6 +215,70 @@
       "abbreviated": "beneq2_box",
       "notes": "N2 atmosphere with hot plate and LED solar simulator lamp; used to age films under heat and illumination while in OC or constant-load conditions",
       "color": "#27ae60"
+    },
+    {
+      "tool": "C215 Solar Simulator",
+      "location": "C215",
+      "process": "JV Measurement",
+      "abbreviated": "c215ss_jv",
+      "notes": "Solar simulator for current-voltage measurements",
+      "color": "#e74c3c"
+    },
+    {
+      "tool": "BD8 X-Ray Diffractometer",
+      "location": "BD8",
+      "process": "XRD",
+      "abbreviated": "bd8_xrd",
+      "notes": "X-ray diffraction measurements",
+      "color": "#f39c12"
+    },
+    {
+      "tool": "HSEM Scanning Electron Microscope",
+      "location": "HSEM",
+      "process": "SEM Imaging",
+      "abbreviated": "hsem_sem",
+      "notes": "Scanning electron microscopy",
+      "color": "#9b59b6"
+    },
+    {
+      "tool": "OEQE EQE System",
+      "location": "OEQE",
+      "process": "EQE Measurement",
+      "abbreviated": "oeqe_eqe",
+      "notes": "External quantum efficiency measurements",
+      "color": "#3498db"
+    },
+    {
+      "tool": "SUPSS Solar Simulator",
+      "location": "SUPSS",
+      "process": "JV Measurement",
+      "abbreviated": "supss_jv",
+      "notes": "Solar simulator for current-voltage measurements",
+      "color": "#1abc9c"
+    },
+    {
+      "tool": "PXT10 Solar Simulator",
+      "location": "PXT10",
+      "process": "JV Measurement",
+      "abbreviated": "pxt10_jv",
+      "notes": "Solar simulator for current-voltage measurements",
+      "color": "#2ecc71"
+    },
+    {
+      "tool": "OpProf Optical Profilometer",
+      "location": "OpProf",
+      "process": "Profile Measurement",
+      "abbreviated": "opprof_profil",
+      "notes": "Optical profilometry for surface measurements",
+      "color": "#fdca24"
+    },
+    {
+      "tool": "PAE Evaporator",
+      "location": "PAE",
+      "process": "Evaporation",
+      "abbreviated": "pae_evap",
+      "notes": "Evaporation system",
+      "color": "#fe27ba"
     }
   ]
 }
