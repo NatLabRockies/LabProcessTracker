@@ -28,15 +28,9 @@ def load_process_data():
     """Load process and tool data from JSON file."""
     global PROCESS_COLORS, PROCESS_INFO
 
-    # Determine JSON file path
-    if getattr(sys, 'frozen', False):
-        # Running as compiled executable
-        base_path = sys._MEIPASS
-    else:
-        # Running as script
-        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-    json_path = os.path.join(base_path, "tools_processes.json")
+    # JSON file is always in the project root
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    json_path = os.path.join(project_root, "tools_processes.json")
 
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
@@ -48,10 +42,7 @@ def load_process_data():
                 PROCESS_COLORS[abbreviated] = tool.get('color', DEFAULT_PROCESS_COLOR)
                 PROCESS_INFO[abbreviated] = {
                     'tool': tool.get('tool', ''),
-                    'location': tool.get('location', ''),
                     'process': tool.get('process', ''),
-                    'notes': tool.get('notes', ''),
-                    'required_upgrades': tool.get('required_upgrades', ''),
                     'color': tool.get('color', DEFAULT_PROCESS_COLOR)
                 }
     except FileNotFoundError:
@@ -365,3 +356,27 @@ def get_unknown_type_error(data_type: str) -> str:
         Formatted error message
     """
     return f"Unknown data type scanned: '{data_type}'. Must be 'PROCESS' or 'SAMPLE'."
+
+def get_process_display_name(abbreviated_name: str) -> str:
+    """Get the human-readable process name for display.
+
+    Args:
+        abbreviated_name: The abbreviated process name (e.g., 'ftlb234_spinbox')
+
+    Returns:
+        Human-readable process name (e.g., 'Spincoating') or abbreviated name if not found
+    """
+    info = PROCESS_INFO.get(abbreviated_name, {})
+    return info.get('process', abbreviated_name)
+
+def get_tool_display_name(abbreviated_name: str) -> str:
+    """Get the human-readable tool name for display.
+
+    Args:
+        abbreviated_name: The abbreviated process name (e.g., 'ftlb234_spinbox')
+
+    Returns:
+        Human-readable tool name (e.g., 'FTLB 234 spincoating glovebox') or abbreviated name if not found
+    """
+    info = PROCESS_INFO.get(abbreviated_name, {})
+    return info.get('tool', abbreviated_name)
