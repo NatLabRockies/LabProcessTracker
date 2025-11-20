@@ -20,30 +20,31 @@ class TestParseInput:
 
     def test_valid_process(self):
         """Test parsing valid PROCESS input."""
-        data_type, data_id = tu.parse_input("PROCESS:Coating")
+        data_type, data_id = tu.parse_input("P%:ftlb234_spinbox")
         assert data_type == "PROCESS"
-        assert data_id == "coating"  # Process names converted to lowercase
+        assert data_id == "ftlb234_spinbox"
 
     def test_valid_sample(self):
         """Test parsing valid SAMPLE input."""
-        data_type, data_id = tu.parse_input("SAMPLE:ABC123")
+        data_type, data_id = tu.parse_input("S%:ABC123")
         assert data_type == "SAMPLE"
-        assert data_id == "ABC123"  # Sample IDs preserve case
+        assert data_id == "ABC123"
 
-    def test_case_insensitive(self):
-        """Test that data type is case insensitive."""
-        data_type, data_id = tu.parse_input("process:Test")
-        assert data_type == "PROCESS"
-        assert data_id == "test"  # Process names converted to lowercase
+    def test_case_sensitive_prefix(self):
+        """Test that prefix must match exactly (case-sensitive)."""
+        # Lowercase prefix should not work
+        data_type, data_id = tu.parse_input("s%:Test")
+        assert data_type is None
+        assert data_id is None
 
     def test_with_whitespace(self):
         """Test parsing with extra whitespace."""
-        data_type, data_id = tu.parse_input("  SAMPLE : XYZ789  ")
+        data_type, data_id = tu.parse_input("  S%:XYZ789  ")
         assert data_type == "SAMPLE"
-        assert data_id == "XYZ789"  # Sample IDs preserve case
+        assert data_id == "XYZ789"
 
     def test_invalid_format(self):
-        """Test parsing invalid format (missing colon)."""
+        """Test parsing invalid format (missing colon or wrong prefix)."""
         data_type, data_id = tu.parse_input("INVALID")
         assert data_type is None
         assert data_id is None
@@ -54,17 +55,17 @@ class TestParseInput:
         assert data_type is None
         assert data_id is None
 
-    def test_with_colon_in_id(self):
-        """Test parsing when ID contains colon."""
-        data_type, data_id = tu.parse_input("SAMPLE:ID:WITH:COLONS")
-        assert data_type == "SAMPLE"
-        assert data_id == "ID:WITH:COLONS"
+    def test_empty_id(self):
+        """Test parsing with empty ID after prefix."""
+        data_type, data_id = tu.parse_input("S%:")
+        assert data_type is None
+        assert data_id is None
 
     @pytest.mark.parametrize("input_str,expected_type,expected_id", [
-        ("PROCESS:Coating", "PROCESS", "coating"),  # Process converted to lowercase
-        ("SAMPLE:ABC123", "SAMPLE", "ABC123"),       # Sample preserves case
-        ("process:testing", "PROCESS", "testing"),   # Process converted to lowercase
-        ("SAMPLE:999", "SAMPLE", "999"),             # Sample preserves case
+        ("P%:ftlb234_spinbox", "PROCESS", "ftlb234_spinbox"),
+        ("S%:ABC123", "SAMPLE", "ABC123"),
+        ("P%:testing", "PROCESS", "testing"),
+        ("S%:999", "SAMPLE", "999"),
     ])
     def test_multiple_valid_inputs(self, input_str, expected_type, expected_id):
         """Test multiple valid input combinations."""
