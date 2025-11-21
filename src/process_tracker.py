@@ -140,24 +140,25 @@ def main():
             if not qr_input:
                 continue
 
-            if qr_input.upper() == tu.EXIT_CMD:
-                if tu.has_unsaved_data(log_records) and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
+            # Check if input is a command
+            is_cmd, cmd_type = tu.is_command(qr_input)
+
+            if is_cmd:
+                if cmd_type == tu.EXIT_CMD:
+                    if tu.has_unsaved_data(log_records) and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
+                        save_log()
+                    print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
+                    pause_before_exit()
+                    break
+                elif cmd_type == tu.SAVE_CMD:
                     save_log()
-                print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
-                pause_before_exit()
-                break
-
-            if qr_input.upper() == tu.SAVE_CMD:
-                save_log()
-                continue
-
-            if qr_input.upper() == tu.UNDO_CMD:
-                undo_last_scan()
-                continue
-
-            if qr_input.upper() == tu.RESET_OPERATOR_CMD:
-                reset_operator()
-                continue
+                    continue
+                elif cmd_type == tu.UNDO_CMD:
+                    undo_last_scan()
+                    continue
+                elif cmd_type == tu.RESET_OPERATOR_CMD:
+                    reset_operator()
+                    continue
 
             # --- Core Logic: Parse and Act ---
             data_type, data_id = tu.parse_input(qr_input)
@@ -166,8 +167,9 @@ def main():
                 continue
 
             if data_type == 'PROCESS':
+                # Use centralized validation
                 is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
-                
+
                 if not is_valid:
                     print(f"\n[ERROR] {error_msg}")
                     continue

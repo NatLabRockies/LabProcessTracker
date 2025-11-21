@@ -37,7 +37,7 @@ def load_process_data():
     else:
         # Running as script
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
+
     json_path = os.path.join(base_path, "tools_processes.json")
 
     try:
@@ -95,67 +95,6 @@ def get_log_filename(process_name: str) -> str:
         Filename in format 'scan_log_PROCESSNAME.csv'
     """
     return f"scan_log_{process_name}.csv"
-
-def parse_tool_process(process_name: str) -> tuple[str, str]:
-    """Parse a process name into tool and process components.
-
-    Args:
-        process_name: Full process name (e.g., 'C215SS_JV' or 'BD8_XRD')
-
-    Returns:
-        Tuple of (tool_name, process_name)
-        If no underscore found, returns (process_name, process_name)
-    """
-    if '_' in process_name:
-        parts = process_name.split('_', 1)
-        return parts[0], parts[1]
-    return process_name, process_name
-
-def get_tool_name(process_name: str) -> str:
-    """Extract the tool name from a full process identifier.
-
-    Args:
-        process_name: Full process name (e.g., 'C215SS_JV')
-
-    Returns:
-        Tool name (e.g., 'C215SS')
-    """
-    tool, _ = parse_tool_process(process_name)
-    return tool
-
-def get_process_name(process_name: str) -> str:
-    """Extract the process name from a full process identifier.
-
-    Args:
-        process_name: Full process name (e.g., 'C215SS_JV')
-
-    Returns:
-        Process name (e.g., 'JV')
-    """
-    _, process = parse_tool_process(process_name)
-    return process
-
-def validate_process(process_name: str) -> None:
-    """Validate that a process name is in the approved list.
-
-    Validation is case-insensitive - input is converted to lowercase.
-
-    Args:
-        process_name: Name of the process to validate
-
-    Raises:
-        ValueError: If the process name is not in PROCESS_COLORS
-    """
-    # Convert to lowercase for case-insensitive comparison
-    process_name_lower = process_name.lower()
-
-    if process_name_lower not in PROCESS_COLORS:
-        error_msg = (
-            f"Process '{process_name}' is not implemented in this system.\n"
-            f"Available processes: {', '.join(sorted(PROCESS_COLORS.keys()))}\n"
-            f"If you need to add this process, please contact Dax (Rajiv.Daxini@nrel.gov)"
-        )
-        raise ValueError(error_msg)
 
 # --- Output Directory Logic ---
 def get_default_output_dir():
@@ -338,48 +277,6 @@ def format_undo_message(record: dict) -> str:
     )
 
 # --- Error Messages ---
-def get_no_tool_alert() -> str:
-    """Get the alert message for when no tool is set.
-
-    Returns:
-        Alert message string
-    """
-    return "Cannot log sample. Please scan a **PROCESS QR code** first to set the tool."
-
-def get_no_process_alert() -> str:
-    """Get the alert message for when no process is active.
-
-    Returns:
-        Alert message string
-    """
-    return "Cannot log sample. Please scan a **PROCESS QR code** first to define the current step."
-
-def get_invalid_format_error(qr_text: str) -> str:
-    """Get error message for invalid QR code format.
-
-    Args:
-        qr_text: The invalid QR code text
-
-    Returns:
-        Formatted error message
-    """
-    return (
-        f"Invalid format: '{qr_text}'. "
-        f"Use '{QR_PROCESS_PREFIX}Name' or '{QR_SAMPLE_PREFIX}ID' "
-        f"(e.g., {QR_PROCESS_PREFIX}ftlb234_spinbox or {QR_SAMPLE_PREFIX}ABC123)."
-    )
-
-def get_unknown_type_error(data_type: str) -> str:
-    """Get error message for unknown data type.
-
-    Args:
-        data_type: The unknown data type
-
-    Returns:
-        Formatted error message
-    """
-    return f"Unknown data type scanned: '{data_type}'. Must be 'PROCESS' or 'SAMPLE'."
-
 def get_process_display_name(abbreviated_name: str) -> str:
     """Get the human-readable process name for display.
 
@@ -406,12 +303,12 @@ def get_tool_display_name(abbreviated_name: str) -> str:
 
 def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
     """Validate process input and normalize to lowercase.
-    
+
     This function centralizes the validation logic used by both CLI and GUI.
-    
+
     Args:
         process_input: Raw process input from QR code
-        
+
     Returns:
         Tuple of (is_valid, normalized_process, error_message)
         - is_valid: True if process exists in PROCESS_COLORS
@@ -419,7 +316,7 @@ def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
         - error_message: Error message if invalid, empty string if valid
     """
     normalized = process_input.lower()
-    
+
     if normalized not in PROCESS_COLORS:
         error_msg = (
             f"Process '{process_input}' is not implemented.\n"
@@ -427,5 +324,29 @@ def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
             f"Contact Rajiv.Daxini@nrel.gov to add new processes."
         )
         return False, normalized, error_msg
-    
+
     return True, normalized, ""
+
+def is_command(qr_text: str) -> tuple[bool, str | None]:
+    """Check if input is a command and return the command type.
+
+    Args:
+        qr_text: Input text to check
+
+    Returns:
+        Tuple of (is_command, command_type)
+        - is_command: True if text is a valid command
+        - command_type: One of EXIT_CMD, SAVE_CMD, UNDO_CMD, RESET_OPERATOR_CMD, or None
+    """
+    qr_upper = qr_text.upper()
+
+    if qr_upper == EXIT_CMD:
+        return True, EXIT_CMD
+    elif qr_upper == SAVE_CMD:
+        return True, SAVE_CMD
+    elif qr_upper == UNDO_CMD:
+        return True, UNDO_CMD
+    elif qr_upper == RESET_OPERATOR_CMD:
+        return True, RESET_OPERATOR_CMD
+    else:
+        return False, None
