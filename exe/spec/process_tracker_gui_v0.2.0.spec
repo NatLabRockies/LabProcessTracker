@@ -5,7 +5,7 @@ a = Analysis(
     ['C:\\Users\\rdaxini\\Documents\\GitHub\\process_tracking\\src\\process_tracker_gui.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('C:\\Users\\rdaxini\\Documents\\GitHub\\process_tracking\\tools_processes.json', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
