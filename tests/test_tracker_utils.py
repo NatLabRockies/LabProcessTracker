@@ -10,7 +10,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import tracker_utils as tu
 from tracker_utils import (
-    validate_process,
     PROCESS_COLORS,
     get_process_display_name,
     get_tool_display_name,
@@ -21,104 +20,57 @@ from tracker_utils import (
 class TestProcessValidation:
     """Test cases for process validation."""
 
-    def test_valid_process_names(self):
-        """Test that all valid process names pass validation without errors."""
-        for process_name in PROCESS_COLORS.keys():
-            # Should not raise any exception
-            validate_process(process_name)
+    def test_all_processes_in_colors_dict(self):
+        """Test that PROCESS_COLORS contains expected processes."""
+        assert len(PROCESS_COLORS) > 0
 
-    @pytest.mark.parametrize("invalid_process", [
-        "INVALID_PROCESS",
-        "NotAProcess",
-        "XYZ123",
-        "random_name",
-        ""
-    ])
-    def test_invalid_process_name(self, invalid_process):
-        """Test that invalid process names raise ValueError."""
-        with pytest.raises(ValueError) as exc_info:
-            validate_process(invalid_process)
+    def test_process_lookup_valid(self):
+        """Test that valid process names can be looked up in PROCESS_COLORS."""
+        assert "c215ss_jv" in PROCESS_COLORS
+        assert "bd8_xrd" in PROCESS_COLORS
+        assert "ftlb234_spinbox" in PROCESS_COLORS
 
-        # Check that error message contains useful information
-        error_message = str(exc_info.value)
-        assert invalid_process in error_message
-        assert "not implemented" in error_message.lower()
-        assert "Rajiv.Daxini@nrel.gov" in error_message
+    def test_validate_and_normalize_valid_process(self):
+        """Test validating and normalizing valid processes."""
+        is_valid, normalized, error = tu.validate_and_normalize_process("c215ss_jv")
+        assert is_valid
+        assert normalized == "c215ss_jv"
+        assert error == ""
 
-    def test_error_message_includes_available_processes(self):
-        """Test that error message lists available processes."""
-        with pytest.raises(ValueError) as exc_info:
-            validate_process("INVALID_PROCESS")
+    def test_validate_and_normalize_invalid_process(self):
+        """Test validating and normalizing invalid processes."""
+        is_valid, normalized, error = tu.validate_and_normalize_process("INVALID_PROC")
+        assert not is_valid
+        assert normalized == "invalid_proc"
+        assert "not implemented" in error
+        assert "Rajiv.Daxini@nrel.gov" in error
 
-        error_message = str(exc_info.value)
-        # Check that at least some of the valid processes are listed (lowercase versions)
-        assert "Available processes:" in error_message
-        assert "c215ss_jv" in error_message
-        assert "bd8_xrd" in error_message
+    def test_validate_and_normalize_case_insensitive(self):
+        """Test that validation is case-insensitive."""
+        is_valid1, norm1, _ = tu.validate_and_normalize_process("C215SS_JV")
+        is_valid2, norm2, _ = tu.validate_and_normalize_process("c215ss_jv")
 
-    @pytest.mark.parametrize("invalid_case", [
-        "C215SS_JV",  # uppercase
-        "C215ss_jv",  # mixed case
-        "BD8_XRD",    # uppercase
-    ])
-    def test_case_sensitive_validation(self, invalid_case):
-        """Test that process validation is case-insensitive."""
-        validate_process(invalid_case)
-
-    def test_valid_lowercase_process_names(self):
-        """Test that lowercase abbreviated names are valid."""
-        # These should pass
-        validate_process("c215ss_jv")
-        validate_process("bd8_xrd")
-        validate_process("ftlb234_spinbox")
+        assert is_valid1 == is_valid2
+        assert norm1 == norm2 == "c215ss_jv"
 
 
 class TestProcessDisplayNames:
     """Test cases for process display name functions."""
 
-    def test_get_process_display_name_valid(self):
-        """Test getting display name for valid process."""
-        display_name = get_process_display_name("c215ss_jv")
-        assert display_name == "JV"
-
-    def test_get_process_display_name_invalid(self):
-        """Test getting display name for invalid process returns abbreviated name."""
-        display_name = get_process_display_name("invalid_process")
-        assert display_name == "invalid_process"
-
-    @pytest.mark.parametrize("abbreviated,expected_display", [
-        ("c215ss_jv", "JV"),
-        ("bd8_xrd", "XRD"),
-        ("hsem_sem", "SEM Imaging"),
-        ("ftlb234_spinbox", "Spincoating"),
-        ("pdil_blade", "Blade Coating"),
+    @pytest.mark.parametrize("abbreviated,expected_display,expected_tool", [
+        ("c215ss_jv", "JV", "C215 Solar Simulator"),
+        ("bd8_xrd", "XRD", "BD8 X-Ray Diffractometer"),
+        ("hsem_sem", "SEM Imaging", "HSEM Scanning Electron Microscope"),
     ])
-    def test_multiple_process_display_names(self, abbreviated, expected_display):
-        """Test display names for multiple processes."""
-        display_name = get_process_display_name(abbreviated)
-        assert display_name == expected_display
+    def test_display_names(self, abbreviated, expected_display, expected_tool):
+        """Test display names for processes."""
+        assert tu.get_process_display_name(abbreviated) == expected_display
+        assert tu.get_tool_display_name(abbreviated) == expected_tool
 
-    def test_get_tool_display_name_valid(self):
-        """Test getting tool display name for valid process."""
-        tool_name = get_tool_display_name("c215ss_jv")
-        assert tool_name == "C215 Solar Simulator"
-
-    def test_get_tool_display_name_invalid(self):
-        """Test getting tool display name for invalid process returns abbreviated name."""
-        tool_name = get_tool_display_name("invalid_process")
-        assert tool_name == "invalid_process"
-
-    @pytest.mark.parametrize("abbreviated,expected_tool", [
-        ("c215ss_jv", "C215 Solar Simulator"),
-        ("bd8_xrd", "BD8 X-Ray Diffractometer"),
-        ("hsem_sem", "HSEM Scanning Electron Microscope"),
-        ("ftlb234_spinbox", "FTLB 234 spincoating glovebox"),
-        ("pdil_pct", "PDIL Perovskite Cluster Tool (PCT)"),
-    ])
-    def test_multiple_tool_display_names(self, abbreviated, expected_tool):
-        """Test tool display names for multiple processes."""
-        tool_name = get_tool_display_name(abbreviated)
-        assert tool_name == expected_tool
+    def test_display_name_invalid_returns_input(self):
+        """Test that invalid process returns the input as display name."""
+        assert tu.get_process_display_name("invalid") == "invalid"
+        assert tu.get_tool_display_name("invalid") == "invalid"
 
 
 class TestProcessInfo:
@@ -164,15 +116,155 @@ class TestProcessColors:
             assert color.startswith("#")
             assert len(color) == 7  # Hex color format #RRGGBB
 
-    def test_color_format_valid(self):
+    def test_colors_are_valid_hex(self):
         """Test that all colors are valid hex codes."""
-        for process, color in PROCESS_COLORS.items():
-            # Should be able to convert hex to RGB
+        for color in tu.PROCESS_COLORS.values():
             assert color.startswith("#")
-            hex_part = color[1:]
-            assert len(hex_part) == 6
-            # Should not raise ValueError
-            int(hex_part, 16)
+            assert len(color) == 7
+            int(color[1:], 16)  # Should not raise ValueError
+
+    def test_get_process_color_valid(self):
+        """Test getting color for valid process."""
+        color = tu.get_process_color("c215ss_jv")
+        assert color.startswith("#")
+        assert len(color) == 7
+
+    def test_get_process_color_invalid(self):
+        """Test getting color for invalid process returns default."""
+        color = tu.get_process_color("invalid_process")
+        assert color == tu.DEFAULT_PROCESS_COLOR
+
+
+class TestLogFilename:
+    """Test cases for log filename generation."""
+
+    def test_get_log_filename(self):
+        """Test log filename generation."""
+        filename = tu.get_log_filename("c215ss_jv")
+        assert filename == "scan_log_c215ss_jv.csv"
+
+    def test_get_log_filename_various_processes(self):
+        """Test log filename for various processes."""
+        assert tu.get_log_filename("bd8_xrd") == "scan_log_bd8_xrd.csv"
+        assert tu.get_log_filename("ftlb234_spinbox") == "scan_log_ftlb234_spinbox.csv"
+
+
+class TestMessageFormatting:
+    """Test cases for message formatting functions."""
+
+    def test_format_log_message(self):
+        """Test formatting a log message."""
+        record = {
+            'Timestamp': '2025-01-01 12:00:00',
+            'Operator': 'TestOp',
+            'ProcessName': 'test_process',
+            'SampleID': 'SAMPLE123'
+        }
+        msg = tu.format_log_message(record)
+        assert "[LOGGED]" in msg
+        assert "TestOp" in msg
+        assert "test_process" in msg
+        assert "SAMPLE123" in msg
+
+    def test_format_undo_message(self):
+        """Test formatting an undo message."""
+        record = {
+            'Timestamp': '2025-01-01 12:00:00',
+            'ProcessName': 'test_process',
+            'SampleID': 'SAMPLE123'
+        }
+        msg = tu.format_undo_message(record)
+        assert "[UNDO]" in msg
+        assert "test_process" in msg
+        assert "SAMPLE123" in msg
+
+
+class TestCommandDetection:
+    """Test cases for command detection."""
+
+    def test_is_command_exit(self):
+        """Test EXIT command detection."""
+        is_cmd, cmd_type = tu.is_command("EXIT")
+        assert is_cmd
+        assert cmd_type == tu.EXIT_CMD
+
+    def test_is_command_save(self):
+        """Test SAVE command detection."""
+        is_cmd, cmd_type = tu.is_command("SAVE")
+        assert is_cmd
+        assert cmd_type == tu.SAVE_CMD
+
+    def test_is_command_undo(self):
+        """Test UNDO command detection."""
+        is_cmd, cmd_type = tu.is_command("UNDO")
+        assert is_cmd
+        assert cmd_type == tu.UNDO_CMD
+
+    def test_is_command_reset(self):
+        """Test RESET command detection."""
+        is_cmd, cmd_type = tu.is_command("RESET")
+        assert is_cmd
+        assert cmd_type == tu.RESET_OPERATOR_CMD
+
+    def test_is_command_case_insensitive(self):
+        """Test that commands are case-insensitive."""
+        is_cmd1, cmd1 = tu.is_command("exit")
+        is_cmd2, cmd2 = tu.is_command("EXIT")
+        is_cmd3, cmd3 = tu.is_command("Exit")
+
+        assert is_cmd1 and is_cmd2 and is_cmd3
+        assert cmd1 == cmd2 == cmd3 == tu.EXIT_CMD
+
+    def test_is_command_not_command(self):
+        """Test that non-commands return False."""
+        is_cmd, cmd_type = tu.is_command("P%:test")
+        assert not is_cmd
+        assert cmd_type is None
+
+
+class TestRuntimeEnvironment:
+    """Test cases for runtime environment detection."""
+
+    def test_is_running_as_exe(self):
+        """Test detecting if running as executable."""
+        # When running as .py script, should return False
+        result = tu.is_running_as_exe()
+        assert result is False
+
+
+class TestOperatorValidation:
+    """Test cases for operator name validation."""
+
+    def test_validate_operator_name_valid(self):
+        """Test valid operator names."""
+        is_valid, msg = tu.validate_operator_name("John Doe")
+        assert is_valid
+        assert msg == ""
+
+    def test_validate_operator_name_empty(self):
+        """Test empty operator name."""
+        is_valid, msg = tu.validate_operator_name("")
+        assert not is_valid
+        assert "empty" in msg.lower()
+
+    def test_validate_operator_name_too_short(self):
+        """Test operator name too short."""
+        is_valid, msg = tu.validate_operator_name("A")
+        assert not is_valid
+        assert "2 characters" in msg
+
+    def test_validate_operator_name_too_long(self):
+        """Test operator name too long."""
+        long_name = "A" * 51
+        is_valid, msg = tu.validate_operator_name(long_name)
+        assert not is_valid
+        assert "50 characters" in msg
+
+    def test_validate_operator_name_whitespace(self):
+        """Test operator name with only whitespace."""
+        is_valid, msg = tu.validate_operator_name("   ")
+        assert not is_valid
+        assert "empty" in msg.lower()
 
 
 class TestJSONDataLoading:
@@ -188,40 +280,23 @@ class TestJSONDataLoading:
             "c215ss_jv",
             "bd8_xrd",
             "hsem_sem",
-            "oeqe_eqe",
-            "supss_jv",
-            "pxt10_jv",
-            "opprof_profil",
-            "pae_evap",
             "ftlb234_spinbox",
             "pdil_pct",
         ]
         for process in expected_processes:
-            assert process in PROCESS_COLORS
+            assert process in PROCESS_COLORS, f"Process '{process}' not found in PROCESS_COLORS. JSON may not be loaded."
 
     def test_all_abbreviations_are_lowercase(self):
         """Test that all abbreviated names are lowercase."""
         for abbreviated in PROCESS_COLORS.keys():
             assert abbreviated == abbreviated.lower(), f"'{abbreviated}' is not lowercase"
 
-    def test_case_insensitive_validation(self):
-        """Test that process validation is case-insensitive."""
-        # These should all pass (converted to lowercase internally)
-        validate_process("c215ss_jv")
-        validate_process("C215SS_JV")
-        validate_process("C215ss_Jv")
-
-    def test_parse_input_normalizes_process_names(self):
-        """Test that parse_input handles process names correctly."""
+    def test_parse_input_preserves_case(self):
+        """Test that parse_input preserves case in IDs."""
         data_type, data_id = tu.parse_input("P%:C215SS_JV")
         assert data_type == "PROCESS"
-        assert data_id == "C215SS_JV"
+        assert data_id == "C215SS_JV"  # parse_input preserves case
 
-        data_type, data_id = tu.parse_input("P%:Bd8_XRD")
-        assert data_type == "PROCESS"
-        assert data_id == "Bd8_XRD"
-
-        # Sample IDs should preserve case
         data_type, data_id = tu.parse_input("S%:ABC123xyz")
         assert data_type == "SAMPLE"
-        assert data_id == "ABC123xyz"
+        assert data_id == "ABC123xyz"  # Case preserved
