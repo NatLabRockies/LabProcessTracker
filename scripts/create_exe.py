@@ -53,6 +53,7 @@ def build_exe(target='both'):
             '--workpath', os.path.join(exe_dir, 'build'),
             '--specpath', os.path.join(exe_dir, 'spec'),
             '--clean',
+            '--add-data', f'{os.path.join(project_root, "tools_processes.json")}{os.pathsep}.',
         ]
 
         # GUI-specific arguments

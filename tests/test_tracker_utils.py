@@ -30,6 +30,29 @@ class TestProcessValidation:
         assert "bd8_xrd" in PROCESS_COLORS
         assert "ftlb234_spinbox" in PROCESS_COLORS
 
+    def test_validate_and_normalize_valid_process(self):
+        """Test validating and normalizing valid processes."""
+        is_valid, normalized, error = tu.validate_and_normalize_process("c215ss_jv")
+        assert is_valid
+        assert normalized == "c215ss_jv"
+        assert error == ""
+
+    def test_validate_and_normalize_invalid_process(self):
+        """Test validating and normalizing invalid processes."""
+        is_valid, normalized, error = tu.validate_and_normalize_process("INVALID_PROC")
+        assert not is_valid
+        assert normalized == "invalid_proc"
+        assert "not implemented" in error
+        assert "Rajiv.Daxini@nrel.gov" in error
+
+    def test_validate_and_normalize_case_insensitive(self):
+        """Test that validation is case-insensitive."""
+        is_valid1, norm1, _ = tu.validate_and_normalize_process("C215SS_JV")
+        is_valid2, norm2, _ = tu.validate_and_normalize_process("c215ss_jv")
+
+        assert is_valid1 == is_valid2
+        assert norm1 == norm2 == "c215ss_jv"
+
 
 class TestProcessDisplayNames:
     """Test cases for process display name functions."""
@@ -43,6 +66,11 @@ class TestProcessDisplayNames:
         """Test display names for processes."""
         assert tu.get_process_display_name(abbreviated) == expected_display
         assert tu.get_tool_display_name(abbreviated) == expected_tool
+
+    def test_display_name_invalid_returns_input(self):
+        """Test that invalid process returns the input as display name."""
+        assert tu.get_process_display_name("invalid") == "invalid"
+        assert tu.get_tool_display_name("invalid") == "invalid"
 
 
 class TestProcessInfo:
@@ -151,6 +179,49 @@ class TestMessageFormatting:
         assert "SAMPLE123" in msg
 
 
+class TestCommandDetection:
+    """Test cases for command detection."""
+
+    def test_is_command_exit(self):
+        """Test EXIT command detection."""
+        is_cmd, cmd_type = tu.is_command("EXIT")
+        assert is_cmd
+        assert cmd_type == tu.EXIT_CMD
+
+    def test_is_command_save(self):
+        """Test SAVE command detection."""
+        is_cmd, cmd_type = tu.is_command("SAVE")
+        assert is_cmd
+        assert cmd_type == tu.SAVE_CMD
+
+    def test_is_command_undo(self):
+        """Test UNDO command detection."""
+        is_cmd, cmd_type = tu.is_command("UNDO")
+        assert is_cmd
+        assert cmd_type == tu.UNDO_CMD
+
+    def test_is_command_reset(self):
+        """Test RESET command detection."""
+        is_cmd, cmd_type = tu.is_command("RESET")
+        assert is_cmd
+        assert cmd_type == tu.RESET_OPERATOR_CMD
+
+    def test_is_command_case_insensitive(self):
+        """Test that commands are case-insensitive."""
+        is_cmd1, cmd1 = tu.is_command("exit")
+        is_cmd2, cmd2 = tu.is_command("EXIT")
+        is_cmd3, cmd3 = tu.is_command("Exit")
+
+        assert is_cmd1 and is_cmd2 and is_cmd3
+        assert cmd1 == cmd2 == cmd3 == tu.EXIT_CMD
+
+    def test_is_command_not_command(self):
+        """Test that non-commands return False."""
+        is_cmd, cmd_type = tu.is_command("P%:test")
+        assert not is_cmd
+        assert cmd_type is None
+
+
 class TestRuntimeEnvironment:
     """Test cases for runtime environment detection."""
 
@@ -194,3 +265,38 @@ class TestOperatorValidation:
         is_valid, msg = tu.validate_operator_name("   ")
         assert not is_valid
         assert "empty" in msg.lower()
+
+
+class TestJSONDataLoading:
+    """Test cases for JSON data loading."""
+
+    def test_process_colors_loaded(self):
+        """Test that PROCESS_COLORS is populated from JSON."""
+        assert len(PROCESS_COLORS) > 0
+
+    def test_expected_processes_exist(self):
+        """Test that expected processes are loaded."""
+        expected_processes = [
+            "c215ss_jv",
+            "bd8_xrd",
+            "hsem_sem",
+            "ftlb234_spinbox",
+            "pdil_pct",
+        ]
+        for process in expected_processes:
+            assert process in PROCESS_COLORS, f"Process '{process}' not found in PROCESS_COLORS. JSON may not be loaded."
+
+    def test_all_abbreviations_are_lowercase(self):
+        """Test that all abbreviated names are lowercase."""
+        for abbreviated in PROCESS_COLORS.keys():
+            assert abbreviated == abbreviated.lower(), f"'{abbreviated}' is not lowercase"
+
+    def test_parse_input_preserves_case(self):
+        """Test that parse_input preserves case in IDs."""
+        data_type, data_id = tu.parse_input("P%:C215SS_JV")
+        assert data_type == "PROCESS"
+        assert data_id == "C215SS_JV"  # parse_input preserves case
+
+        data_type, data_id = tu.parse_input("S%:ABC123xyz")
+        assert data_type == "SAMPLE"
+        assert data_id == "ABC123xyz"  # Case preserved

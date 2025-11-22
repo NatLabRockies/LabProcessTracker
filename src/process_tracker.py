@@ -140,45 +140,42 @@ def main():
             if not qr_input:
                 continue
 
-            qr_upper = qr_input.upper()
+            # Check if input is a command
+            is_cmd, cmd_type = tu.is_command(qr_input)
 
-            if qr_upper == tu.EXIT_CMD:
-                if tu.has_unsaved_data(log_records) and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
+            if is_cmd:
+                if cmd_type == tu.EXIT_CMD:
+                    if tu.has_unsaved_data(log_records) and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
+                        save_log()
+                    print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
+                    pause_before_exit()
+                    break
+                elif cmd_type == tu.SAVE_CMD:
                     save_log()
-                print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
-                pause_before_exit()
-                break
-
-            if qr_upper == tu.SAVE_CMD:
-                save_log()
-                continue
-
-            if qr_upper == tu.UNDO_CMD:
-                undo_last_scan()
-                continue
-
-            if qr_upper == tu.RESET_OPERATOR_CMD:
-                reset_operator()
-                continue
+                    continue
+                elif cmd_type == tu.UNDO_CMD:
+                    undo_last_scan()
+                    continue
+                elif cmd_type == tu.RESET_OPERATOR_CMD:
+                    reset_operator()
+                    continue
 
             # --- Core Logic: Parse and Act ---
             data_type, data_id = tu.parse_input(qr_input)
             if not data_type:
+                print(f"\n[ERROR] Invalid format: '{qr_input}'. Use 'P%:Name' or 'S%:ID'")
                 continue
 
             if data_type == 'PROCESS':
-                # Normalize to lowercase once
-                current_process = data_id.lower()
+                # Use centralized validation
+                is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
 
-                # Validate using the normalized name
-                if current_process not in tu.PROCESS_COLORS:
-                    error_msg = (
-                        f"Process '{data_id}' is not implemented. "
-                        f"Available: {', '.join(sorted(tu.PROCESS_COLORS.keys()))}\n"
-                        f"Contact Rajiv.Daxini@nrel.gov to add new processes."
-                    )
+                if not is_valid:
                     print(f"\n[ERROR] {error_msg}")
                     continue
+
+                # Only set current_process if validation passed
+                current_process = normalized_process
 
                 # If this is the first process scan, set it as the tool process
                 if not tool_process:
@@ -193,15 +190,12 @@ def main():
 
             elif data_type == 'SAMPLE':
                 # 2. Sample Scan: Log the event using the current process
-                if not tool_process:
+                if not tool_process or not current_process:
                     print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
-                elif current_process:
-                    log_scan_event(current_process, data_id)
                 else:
-                    print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
-
+                    log_scan_event(current_process, data_id)
             else:
-                print(f"\n[ERROR] {tu.get_unknown_type_error(data_type)}")
+                print(f"\n[ERROR] Unknown data type: '{data_type}'")
 
         except EOFError:
             print("\nReceived EOF. Saving and exiting.")
