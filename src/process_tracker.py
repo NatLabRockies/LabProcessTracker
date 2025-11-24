@@ -82,6 +82,10 @@ def main():
     """Main loop for the scanning control process."""
     global current_process, operator_name, tool_process, OUTPUTS_FOLDER, LOG_FILE
 
+    # --- Deprecation Warning ---
+    print("\n[DEPRECATION WARNING] The CLI interface is deprecated as of v0.2.0 and will not be maintained.")
+    print("It will be removed in v0.3.0. Please use the new GUI interface for future use.\n")
+
     # Parse args and set up paths
     args = parse_args()
     OUTPUTS_FOLDER = args.output_dir if args.output_dir else tu.get_default_output_dir()
