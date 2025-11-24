@@ -81,6 +81,15 @@ Deprecations
 - CLI (`process_tracker.py`) is now deprecated and will not be maintained.
   It will be removed in v0.3.0. Please migrate to the new GUI interface.
 
+Known Issues
+~~~~~~~~~~~~
+- **Multi-process logging:** When scanning multiple different processes in a single session,
+  all samples are saved to the first process's CSV file.
+
+  **Workaround:** Manually click SAVE before switching to a different process.
+
+  **Fix:** This will be resolved in v0.3.0 with auto-save on process switch.
+
 Contributors
 ~~~~~~~~~~~~
 - Rajiv Daxini (:ghuser:`rdaxini`)
