@@ -83,7 +83,7 @@ def main():
     global current_process, operator_name, tool_process, OUTPUTS_FOLDER, LOG_FILE
 
     # --- Deprecation Warning ---
-    print("\n[DEPRECATION WARNING] The CLI interface is deprecated as of v0.2.0 and will not be maintained.")
+    print("\n[DEPRECATION WARNING] The CLI is deprecated as of v0.2.0 and will not be maintained.")
     print("It will be removed in v0.3.0. Please use the new GUI interface for future use.\n")
 
     # Parse args and set up paths
