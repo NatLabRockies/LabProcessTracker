@@ -66,6 +66,9 @@ No additional installations are required.
 **QR Code Format:**
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
 - Sample QR codes must contain: `S%:SampleID` (e.g., `S%:2511-09`)
+- **Legacy sample QR codes** in format `####-##` (e.g., `2511-09`) are automatically supported
+  - A warning will be displayed when legacy format is detected
+  - No `S%:` prefix required for legacy samples
 - The prefixes (`P%:` and `S%:`) must be uppercase and include the colon
 - Process names are case-insensitive (automatically normalized to lowercase)
 - Sample IDs preserve their original case
@@ -73,6 +76,7 @@ No additional installations are required.
 **Examples:**
 - `P%:c215ss_jv` — Sets process to C215 Solar Simulator JV measurement
 - `S%:2511-09` — Logs sample 2511-09 under the current process
+- `2511-09` — Legacy format, automatically recognized as a sample (logs with warning)
 
 **Process Validation:**
 If you scan a process that is not in the approved list, you will receive an error
