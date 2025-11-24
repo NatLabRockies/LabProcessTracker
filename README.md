@@ -36,6 +36,8 @@ The GUI provides:
 
 ### 3. Run the CLI (Command-Line Interface)
 
+> **⚠️ Deprecation Notice:** The CLI interface is deprecated as of v0.2.0 and will be removed in v0.3.0. Please use the GUI interface instead.
+
 ```bash
 python src/process_tracker.py
 ```
