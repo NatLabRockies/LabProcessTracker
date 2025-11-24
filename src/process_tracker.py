@@ -82,6 +82,10 @@ def main():
     """Main loop for the scanning control process."""
     global current_process, operator_name, tool_process, OUTPUTS_FOLDER, LOG_FILE
 
+    # --- Deprecation Warning ---
+    print("\n[DEPRECATION WARNING] The CLI is deprecated as of v0.2.0 and will not be maintained.")
+    print("It will be removed in v0.3.0. Please use the new GUI interface for future use.\n")
+
     # Parse args and set up paths
     args = parse_args()
     OUTPUTS_FOLDER = args.output_dir if args.output_dir else tu.get_default_output_dir()
@@ -189,10 +193,15 @@ def main():
                 print(f"\n>>> PROCESS UPDATED: Now running: '{process_display_name}'")
 
             elif data_type == 'SAMPLE':
-                # 2. Sample Scan: Log the event using the current process
                 if not tool_process or not current_process:
                     print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 else:
+                    log_scan_event(current_process, data_id)
+            elif data_type == 'SAMPLE_LEGACY':
+                if not tool_process or not current_process:
+                    print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
+                else:
+                    print(f"\n{tu.format_legacy_sample_warning(data_id)}")
                     log_scan_event(current_process, data_id)
             else:
                 print(f"\n[ERROR] Unknown data type: '{data_type}'")

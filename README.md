@@ -36,6 +36,8 @@ The GUI provides:
 
 ### 3. Run the CLI (Command-Line Interface)
 
+> **⚠️ Deprecation Notice:** The CLI interface is deprecated as of v0.2.0 and will be removed in v0.3.0. Please use the GUI interface instead.
+
 ```bash
 python src/process_tracker.py
 ```
@@ -69,10 +71,14 @@ No additional installations are required.
 - The prefixes (`P%:` and `S%:`) must be uppercase and include the colon
 - Process names are case-insensitive (automatically normalized to lowercase)
 - Sample IDs preserve their original case
+- Legacy sample QR codes in format `####-##` (e.g., `2511-09`) are supported
+  - A warning will be displayed when legacy format is detected
+  - No `S%:` prefix required for legacy samples
 
 **Examples:**
 - `P%:c215ss_jv` — Sets process to C215 Solar Simulator JV measurement
 - `S%:2511-09` — Logs sample 2511-09 under the current process
+- `2511-09` — Legacy format, automatically recognized as a sample (logs with warning)
 
 **Process Validation:**
 If you scan a process that is not in the approved list, you will receive an error

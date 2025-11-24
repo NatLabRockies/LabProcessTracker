@@ -40,6 +40,9 @@ Enhancements
   executable generation
 - Improve error messages for invalid process scans, now listing all available processes
   from the JSON.
+- Add support for legacy samples. Samples with the legacy QR code format ``####-##``
+  (4 digits, dash, 2 digits) are automatically recognized without requiring the ``S%:``
+  prefix. A warning message is displayed when legacy format is detected.
 
 Documentation
 ~~~~~~~~~~~~~
@@ -72,6 +75,11 @@ Maintenance
 - Add ``.github/CODEOWNERS.txt`` for repository management
 - Update ``.gitignore`` to track executables in ``exe/dist/``
 - Build artifacts now organized in ``exe/spec/`` directory
+
+Deprecations
+~~~~~~~~~~~~
+- CLI (`process_tracker.py`) is now deprecated and will not be maintained.
+  It will be removed in v0.3.0. Please migrate to the new GUI interface.
 
 Contributors
 ~~~~~~~~~~~~
