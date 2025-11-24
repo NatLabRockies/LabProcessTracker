@@ -189,13 +189,11 @@ def main():
                 print(f"\n>>> PROCESS UPDATED: Now running: '{process_display_name}'")
 
             elif data_type == 'SAMPLE':
-                # 2. Sample Scan: Log the event using the current process
                 if not tool_process or not current_process:
                     print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 else:
                     log_scan_event(current_process, data_id)
             elif data_type == 'SAMPLE_LEGACY':
-                # 3. Legacy Sample Scan: Warn user and log the event
                 if not tool_process or not current_process:
                     print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 else:
