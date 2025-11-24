@@ -272,3 +272,22 @@ class TestIntegrationWorkflow:
             rows = list(reader)
             assert len(rows) == 2
             assert rows[-1]["SampleID"] == "Sample2"
+
+
+class TestDeprecationWarning:
+    """Test cases for CLI deprecation warning."""
+
+    def test_deprecation_warning_in_cli_source(self):
+        """Test that deprecation warning is present in CLI source code."""
+        import process_tracker
+        import inspect
+
+        # Get the source code of main function
+        source = inspect.getsource(process_tracker.main)
+
+        # Verify deprecation warning is present
+        assert "DEPRECATION WARNING" in source
+        assert "CLI" in source
+        assert "deprecated as of v0.2.0" in source
+        assert "removed in v0.3.0" in source
+        assert "GUI interface" in source
