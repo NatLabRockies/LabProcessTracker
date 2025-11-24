@@ -300,3 +300,63 @@ class TestJSONDataLoading:
         data_type, data_id = tu.parse_input("S%:ABC123xyz")
         assert data_type == "SAMPLE"
         assert data_id == "ABC123xyz"  # Case preserved
+
+
+class TestParseInput:
+    """Test cases for QR code input parsing."""
+
+    def test_valid_process(self):
+        """Test parsing valid PROCESS input."""
+        data_type, data_id = tu.parse_input("P%:ftlb234_spinbox")
+        assert data_type == "PROCESS"
+        assert data_id == "ftlb234_spinbox"
+
+    def test_valid_sample(self):
+        """Test parsing valid SAMPLE input."""
+        data_type, data_id = tu.parse_input("S%:ABC123")
+        assert data_type == "SAMPLE"
+        assert data_id == "ABC123"
+
+    def test_legacy_sample_format(self):
+        """Test parsing legacy sample format (####-##)."""
+        data_type, data_id = tu.parse_input("2511-09")
+        assert data_type == "SAMPLE_LEGACY"
+        assert data_id == "2511-09"
+
+    def test_legacy_sample_various_patterns(self):
+        """Test various legacy sample patterns."""
+        # Valid legacy format
+        data_type, data_id = tu.parse_input("1234-56")
+        assert data_type == "SAMPLE_LEGACY"
+        assert data_id == "1234-56"
+
+        # Invalid patterns (should not match)
+        data_type, data_id = tu.parse_input("123-45")  # Only 3 digits before dash
+        assert data_type is None
+
+        data_type, data_id = tu.parse_input("12345-67")  # 5 digits before dash
+        assert data_type is None
+
+        data_type, data_id = tu.parse_input("1234-567")  # 3 digits after dash
+        assert data_type is None
+
+    def test_case_sensitive_prefix(self):
+        """Test that prefix must match exactly (case-sensitive)."""
+        # Lowercase prefix should not work
+        data_type, data_id = tu.parse_input("s%:Test")
+        assert data_type is None
+        assert data_id is None
+
+    @pytest.mark.parametrize("input_str,expected_type,expected_id", [
+        ("P%:ftlb234_spinbox", "PROCESS", "ftlb234_spinbox"),
+        ("S%:ABC123", "SAMPLE", "ABC123"),
+        ("P%:testing", "PROCESS", "testing"),
+        ("S%:999", "SAMPLE", "999"),
+        ("2511-09", "SAMPLE_LEGACY", "2511-09"),
+        ("9999-99", "SAMPLE_LEGACY", "9999-99"),
+    ])
+    def test_multiple_valid_inputs(self, input_str, expected_type, expected_id):
+        """Test multiple valid input combinations."""
+        data_type, data_id = tu.parse_input(input_str)
+        assert data_type == expected_type
+        assert data_id == expected_id
