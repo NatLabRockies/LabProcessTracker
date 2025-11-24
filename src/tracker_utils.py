@@ -283,6 +283,17 @@ def format_undo_message(record: dict) -> str:
         f"Sample: '{record['SampleID']}'"
     )
 
+def format_legacy_sample_warning(sample_id: str) -> str:
+    """Format a warning message for legacy sample format detection.
+
+    Args:
+        sample_id: The legacy sample ID that was detected
+
+    Returns:
+        Formatted warning message string
+    """
+    return f"[WARNING] Legacy sample format detected: {sample_id}"
+
 # --- Error Messages ---
 def get_process_display_name(abbreviated_name: str) -> str:
     """Get the human-readable process name for display.

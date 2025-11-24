@@ -194,6 +194,13 @@ def main():
                     print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 else:
                     log_scan_event(current_process, data_id)
+            elif data_type == 'SAMPLE_LEGACY':
+                # 3. Legacy Sample Scan: Warn user and log the event
+                if not tool_process or not current_process:
+                    print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
+                else:
+                    print(f"\n{tu.format_legacy_sample_warning(data_id)}")
+                    log_scan_event(current_process, data_id)
             else:
                 print(f"\n[ERROR] Unknown data type: '{data_type}'")
 

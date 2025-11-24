@@ -210,11 +210,13 @@ class ProcessTrackerGUI(tk.Tk):
             self.update_sample_block(None, status_type="RESET")
             process_display_name = tu.get_process_display_name(self.current_process)
             self.print_terminal(f">>> PROCESS UPDATED: Now running: '{process_display_name}'")
-        elif data_type == "SAMPLE":
+        elif data_type == "SAMPLE" or data_type == "SAMPLE_LEGACY":
             if not self.tool_process or not self.current_process:
                 self.print_terminal("[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 self.update_sample_block("No tool/process set", status_type="ALERT")
             else:
+                if data_type == "SAMPLE_LEGACY":
+                    self.print_terminal(tu.format_legacy_sample_warning(data_id))
                 self.log_scan_event(self.current_process, data_id)
                 self.update_sample_block(data_id, status_type="SAMPLE")
         else:

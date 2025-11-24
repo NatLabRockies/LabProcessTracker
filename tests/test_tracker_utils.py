@@ -178,6 +178,13 @@ class TestMessageFormatting:
         assert "test_process" in msg
         assert "SAMPLE123" in msg
 
+    def test_format_legacy_sample_warning(self):
+        """Test formatting a legacy sample warning."""
+        msg = tu.format_legacy_sample_warning("2511-09")
+        assert "[WARNING]" in msg
+        assert "Legacy sample format detected" in msg
+        assert "2511-09" in msg
+
 
 class TestCommandDetection:
     """Test cases for command detection."""
