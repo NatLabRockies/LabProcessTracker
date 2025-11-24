@@ -73,6 +73,11 @@ Maintenance
 - Update ``.gitignore`` to track executables in ``exe/dist/``
 - Build artifacts now organized in ``exe/spec/`` directory
 
+Deprecations
+~~~~~~~~~~~~
+- CLI interface (`process_tracker.py`) is now deprecated and will not be maintained.
+  It will be removed in v0.3.0. Please migrate to the new GUI interface.
+
 Contributors
 ~~~~~~~~~~~~
 - Rajiv Daxini (:ghuser:`rdaxini`)
