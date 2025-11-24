@@ -7,6 +7,7 @@ import csv
 import os
 import sys
 import json
+import re
 
 # --- Constants ---
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -114,10 +115,11 @@ def get_default_output_dir():
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     """Parse QR code text to determine type and ID.
 
-    Supports compact QR format (S%:ID, P%:ID).
+    Supports compact QR format (S%:ID, P%:ID) and legacy format (####-##).
 
     Args:
         qr_text: The QR code text in format 'TYPE:ID', where TYPE is one of 'S%' or 'P%'
+                 OR legacy format ####-## (4 digits, dash, 2 digits)
 
     Returns:
         Tuple of ('SAMPLE', sample_id) or ('PROCESS', process_id) or (None, None) if
@@ -135,6 +137,11 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
             data_id = qr_text[len(QR_PROCESS_PREFIX):].strip()
             if data_id:  # Ensure there's an ID after the prefix
                 return "PROCESS", data_id
+
+        # Legacy format: ####-## (4 digits, dash, 2 digits)
+        # This supports old sample QR codes that don't have the S%: prefix
+        if re.match(r'^\d{4}-\d{2}$', qr_text):
+            return "SAMPLE_LEGACY", qr_text
 
         return None, None
     except Exception:
@@ -275,6 +282,17 @@ def format_undo_message(record: dict) -> str:
         f"Process: '{record['ProcessName']}' | "
         f"Sample: '{record['SampleID']}'"
     )
+
+def format_legacy_sample_warning(sample_id: str) -> str:
+    """Format a warning message for legacy sample format detection.
+
+    Args:
+        sample_id: The legacy sample ID that was detected
+
+    Returns:
+        Formatted warning message string
+    """
+    return f"[WARNING] Legacy sample format detected: {sample_id}"
 
 # --- Error Messages ---
 def get_process_display_name(abbreviated_name: str) -> str:

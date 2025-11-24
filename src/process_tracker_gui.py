@@ -14,7 +14,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.geometry("700x650")
         self.configure(bg="#f0f0f0")
         self.current_process = None
-        self.tool_process = None  # The main tool/process for this session
+        self.tool_process = None
         self.log_file = None
         self.operator_name = None
         self.log_records = []
@@ -65,7 +65,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.sample_frame = tk.Frame(main_container, height=150, bg="#95a5a6")
         self.sample_frame.pack(pady=(5, 10), fill=tk.BOTH, expand=True)
 
-        # Single label that will show either "No sample" or "SAMPLE\n{ID}"
+        # Label "No sample" or "SAMPLE\n{ID}"
         self.sample_label = tk.Label(
             self.sample_frame,
             text="No sample",
@@ -185,7 +185,6 @@ class ProcessTrackerGUI(tk.Tk):
             self.print_terminal(f"[ERROR] Invalid format: '{qr_text}'. Use 'P%:Name' or 'S%:ID'")
             return
         if data_type == "PROCESS":
-            # Use centralized validation
             is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
 
             if not is_valid:
@@ -196,7 +195,6 @@ class ProcessTrackerGUI(tk.Tk):
             # Only set current_process if validation passed
             self.current_process = normalized_process
 
-            # If this is the first process scan, set it as the tool process
             if not self.tool_process:
                 self.tool_process = self.current_process
                 self.log_file = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(self.tool_process))
@@ -210,11 +208,13 @@ class ProcessTrackerGUI(tk.Tk):
             self.update_sample_block(None, status_type="RESET")
             process_display_name = tu.get_process_display_name(self.current_process)
             self.print_terminal(f">>> PROCESS UPDATED: Now running: '{process_display_name}'")
-        elif data_type == "SAMPLE":
+        elif data_type == "SAMPLE" or data_type == "SAMPLE_LEGACY":
             if not self.tool_process or not self.current_process:
                 self.print_terminal("[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
                 self.update_sample_block("No tool/process set", status_type="ALERT")
             else:
+                if data_type == "SAMPLE_LEGACY":
+                    self.print_terminal(tu.format_legacy_sample_warning(data_id))
                 self.log_scan_event(self.current_process, data_id)
                 self.update_sample_block(data_id, status_type="SAMPLE")
         else:
