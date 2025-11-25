@@ -262,7 +262,7 @@ class ProcessTrackerGUI(tk.Tk):
     def exit_app(self):
         """Exit the application with prompt to save unsaved data."""
         if self.log_records:
-            count = tu.get_unsaved_count(self.log_records)
+            count = len(self.log_records)
             if messagebox.askyesno("Unsaved Data", f"You have {count} unsaved record(s). Save before exiting?"):
                 self.save_log()
                 if not self.log_records:

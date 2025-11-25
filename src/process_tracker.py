@@ -149,7 +149,7 @@ def main():
 
             if is_cmd:
                 if cmd_type == tu.EXIT_CMD:
-                    if tu.has_unsaved_data(log_records) and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
+                    if log_records and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
                         save_log()
                     print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
                     pause_before_exit()

@@ -221,17 +221,6 @@ def validate_operator_name(name: str) -> tuple[bool, str]:
     return True, ""
 
 # --- Session State Helpers ---
-def has_unsaved_data(log_records: list) -> bool:
-    """Check if there are unsaved log records.
-
-    Args:
-        log_records: List of log record dictionaries
-
-    Returns:
-        True if there are unsaved records, False otherwise
-    """
-    return len(log_records) > 0
-
 def get_unsaved_count(log_records: list) -> int:
     """Get count of unsaved log records.
 
