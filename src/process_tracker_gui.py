@@ -11,8 +11,8 @@ class ProcessTrackerGUI(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Lab Process Tracker")
-        self.geometry("900x750")
-        self.minsize(800, 650)
+        self.geometry("900x800")
+        self.minsize(800, 700)
 
         # Modern dark theme colors
         self.colors = {
@@ -153,20 +153,24 @@ class ProcessTrackerGUI(tk.Tk):
         status_container = tk.Frame(main_container, bg=self.colors['bg_dark'])
         status_container.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
 
+        # Configure row weights to prevent process/sample from expanding too much
+        status_container.grid_rowconfigure(0, weight=1)
+        status_container.grid_rowconfigure(1, weight=1)
+        status_container.grid_columnconfigure(0, weight=1)
+
         # Process Status Block
         self.process_frame = tk.Frame(
             status_container,
             bg='grey',
             relief=tk.FLAT,
-            bd=0,
-            height=250  # Increased from 200
+            bd=0
         )
-        self.process_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        self.process_frame.grid(row=0, column=0, sticky='nsew', pady=(0, 10))
 
         self.process_label = tk.Label(
             self.process_frame,
             text="No process set",
-            font=('Segoe UI', 26, 'bold'),
+            font=('Segoe UI', 24, 'bold'),
             bg='grey',
             fg='white',
             wraplength=800,
@@ -179,15 +183,14 @@ class ProcessTrackerGUI(tk.Tk):
             status_container,
             bg='#95a5a6',
             relief=tk.FLAT,
-            bd=0,
-            height=250
+            bd=0
         )
-        self.sample_frame.pack(fill=tk.BOTH, expand=True)
+        self.sample_frame.grid(row=1, column=0, sticky='nsew')
 
         self.sample_label = tk.Label(
             self.sample_frame,
             text="No sample",
-            font=('Segoe UI', 26, 'bold'),
+            font=('Segoe UI', 24, 'bold'),
             bg='#95a5a6',
             fg='white',
             wraplength=800,
@@ -195,7 +198,7 @@ class ProcessTrackerGUI(tk.Tk):
         )
         self.sample_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        # QR Input section with modern styling
+        # QR Input section (always visible, fixed size)
         input_card = tk.Frame(
             main_container,
             bg=self.colors['bg_medium']
@@ -224,7 +227,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.qr_entry.pack(fill=tk.X, ipady=8)
         self.qr_entry.bind("<Return>", lambda e: self.handle_scan())
 
-        # Command Buttons with modern styling
+        # Command Buttons (always visible, fixed size)
         btn_frame = tk.Frame(main_container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=(0, 10))
 
@@ -264,15 +267,15 @@ class ProcessTrackerGUI(tk.Tk):
         )
         self.exit_btn.grid(row=0, column=2, padx=5)
 
-        # Terminal with dark theme
+        # Terminal (always visible, fixed size)
         terminal_card = tk.Frame(
             main_container,
             bg=self.colors['bg_medium']
         )
-        terminal_card.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        terminal_card.pack(fill=tk.X, pady=(0, 10))
 
         terminal_inner = tk.Frame(terminal_card, bg=self.colors['bg_medium'])
-        terminal_inner.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        terminal_inner.pack(fill=tk.X, padx=10, pady=10)
 
         tk.Label(
             terminal_inner,
@@ -284,7 +287,7 @@ class ProcessTrackerGUI(tk.Tk):
 
         self.terminal = scrolledtext.ScrolledText(
             terminal_inner,
-            height=5,
+            height=4,
             state='disabled',
             font=('Consolas', 10),
             bg='#1e272e',
@@ -294,7 +297,7 @@ class ProcessTrackerGUI(tk.Tk):
             bd=0,
             wrap=tk.WORD
         )
-        self.terminal.pack(fill=tk.BOTH, expand=True)
+        self.terminal.pack(fill=tk.X)  # fill=tk.X only, no expand
 
         # Footer info
         self.log_file_label = tk.Label(
@@ -482,29 +485,28 @@ class ProcessTrackerGUI(tk.Tk):
     def update_sample_block(self, sample_info, status_type="SAMPLE"):
         # Sample box stays neutral gray, only text changes
         if status_type == "SAMPLE":
-            # Display only the sample ID without "SAMPLE" prefix
             self.sample_label.config(
-                text=sample_info, font=("Segoe UI", 26, "bold")
+                text=sample_info, font=("Segoe UI", 24, "bold")
             )
         elif status_type == "UNDO":
             self.sample_label.config(
-                text="Last scan undone", font=("Segoe UI", 26, "bold")
+                text="Last scan undone", font=("Segoe UI", 24, "bold")
             )
         elif status_type == "ALERT":
             self.sample_label.config(
-                text=sample_info, font=("Segoe UI", 26, "bold")
+                text=sample_info, font=("Segoe UI", 24, "bold")
             )
         elif status_type == "ERROR":
             self.sample_label.config(
-                text=f"ERROR\n{sample_info}", font=("Segoe UI", 22, "bold")
+                text=f"ERROR\n{sample_info}", font=("Segoe UI", 20, "bold")
             )
         elif status_type == "RESET":
             self.sample_label.config(
-                text="No sample", font=("Segoe UI", 26, "bold")
+                text="No sample", font=("Segoe UI", 24, "bold")
             )
         else:
             self.sample_label.config(
-                text="No sample", font=("Segoe UI", 26, "bold")
+                text="No sample", font=("Segoe UI", 24, "bold")
             )
 
 
