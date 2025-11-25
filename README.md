@@ -59,7 +59,11 @@ No additional installations are required.
 
 3. **Scan SAMPLE QR codes** to log samples under the current process
 
-4. **Use commands:**
+4. **Switch between processes:** When you scan a different process QR code, the application
+   automatically saves your current records and switches to the new process. You'll see
+   a notification showing how many records were saved.
+
+5. **Use commands:**
    - `UNDO` — Remove the last scan from the session (not saved to log)
    - `SAVE` — Save all current session scans to the tool-specific CSV file
    - `RESET` — Change the operator (CLI) or click "Reset Operator" button (GUI)
@@ -90,6 +94,8 @@ message with:
 
 - Logs are saved to tool-specific CSV files (e.g., `scan_log_c215ss_jv.csv`,
   `scan_log_bd8_xrd.csv`)
+- **Multi-process sessions:** When you switch between different processes, the application
+  automatically saves records to the appropriate file for each process
 - Default output locations:
   - **Running from source:** `outputs/` folder in the project directory
   - **Running as executable:** `~/Documents/process_tracking_outputs/`

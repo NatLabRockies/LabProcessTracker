@@ -273,6 +273,46 @@ class TestIntegrationWorkflow:
             assert len(rows) == 2
             assert rows[-1]["SampleID"] == "Sample2"
 
+    def test_multi_process_auto_save(self, tmp_path):
+        """Test workflow with process switching and auto-save."""
+        # First process
+        log_file_1 = tmp_path / "scan_log_c212_sonicator.csv"
+        records_1 = []
+        records_1.append(tu.create_log_record("Alice", "c212_sonicator", "Sample1"))
+        records_1.append(tu.create_log_record("Alice", "c212_sonicator", "Sample2"))
+
+        # Check if auto-save should trigger
+        should_save = tu.should_auto_save_on_process_switch("c212_sonicator", "c215ss_jv", len(records_1) > 0)
+        assert should_save
+
+        # Auto-save first process
+        success, _ = tu.save_log_to_csv(records_1, str(log_file_1), str(tmp_path))
+        assert success
+        records_1.clear()
+
+        # Second process
+        log_file_2 = tmp_path / "scan_log_c215ss_jv.csv"
+        records_2 = []
+        records_2.append(tu.create_log_record("Alice", "c215ss_jv", "Sample3"))
+        records_2.append(tu.create_log_record("Alice", "c215ss_jv", "Sample4"))
+
+        # Save second process
+        tu.save_log_to_csv(records_2, str(log_file_2), str(tmp_path))
+
+        # Verify both files exist with correct data
+        assert log_file_1.exists()
+        assert log_file_2.exists()
+
+        with open(log_file_1, 'r') as f:
+            rows = list(csv.DictReader(f))
+            assert len(rows) == 2
+            assert all(row["ProcessName"] == "c212_sonicator" for row in rows)
+
+        with open(log_file_2, 'r') as f:
+            rows = list(csv.DictReader(f))
+            assert len(rows) == 2
+            assert all(row["ProcessName"] == "c215ss_jv" for row in rows)
+
 
 class TestDeprecationWarning:
     """Test cases for CLI deprecation warning."""
