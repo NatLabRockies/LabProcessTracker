@@ -189,7 +189,6 @@ class ProcessTrackerGUI(tk.Tk):
 
             if not is_valid:
                 self.print_terminal(f"[ERROR] {error_msg}")
-                self.update_sample_block("Invalid process", status_type="ERROR")
                 return
 
             # Check if we need to auto-save before switching processes
