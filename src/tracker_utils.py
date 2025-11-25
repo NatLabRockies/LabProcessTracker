@@ -309,8 +309,8 @@ def should_auto_save_on_process_switch(current_tool: str, new_process: str, has_
     # 1. We have a current tool set (not first process)
     # 2. The new process is different from current tool
     # 3. We have unsaved records
-    return (current_tool is not None and 
-            new_process != current_tool and 
+    return (current_tool is not None and
+            new_process != current_tool and
             has_records)
 
 def format_auto_save_message(count: int, filename: str) -> str:
