@@ -221,17 +221,6 @@ def validate_operator_name(name: str) -> tuple[bool, str]:
     return True, ""
 
 # --- Session State Helpers ---
-def has_unsaved_data(log_records: list) -> bool:
-    """Check if there are unsaved log records.
-
-    Args:
-        log_records: List of log record dictionaries
-
-    Returns:
-        True if there are unsaved records, False otherwise
-    """
-    return len(log_records) > 0
-
 def get_unsaved_count(log_records: list) -> int:
     """Get count of unsaved log records.
 
@@ -244,14 +233,6 @@ def get_unsaved_count(log_records: list) -> int:
     return len(log_records)
 
 # --- Runtime Environment ---
-def is_running_as_exe() -> bool:
-    """Check if the script is running as a compiled executable.
-
-    Returns:
-        True if running as .exe, False if running as .py script
-    """
-    return getattr(sys, 'frozen', False)
-
 def format_log_message(record: dict) -> str:
     """Format a log record into a human-readable message.
 
