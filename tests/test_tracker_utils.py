@@ -185,6 +185,13 @@ class TestMessageFormatting:
         assert "Legacy sample format detected" in msg
         assert "2511-09" in msg
 
+    def test_format_auto_save_message(self):
+        """Test formatting an auto-save message."""
+        msg = tu.format_auto_save_message(3, "scan_log_c212_sonicator.csv")
+        assert "[AUTO-SAVE]" in msg
+        assert "3 record(s)" in msg
+        assert "scan_log_c212_sonicator.csv" in msg
+
 
 class TestCommandDetection:
     """Test cases for command detection."""
@@ -367,3 +374,37 @@ class TestParseInput:
         data_type, data_id = tu.parse_input(input_str)
         assert data_type == expected_type
         assert data_id == expected_id
+
+
+class TestAutoSaveLogic:
+    """Test cases for auto-save on process switch logic."""
+
+    def test_should_auto_save_first_process(self):
+        """Test that auto-save doesn't trigger for first process."""
+        # No current tool, so should not auto-save
+        should_save = tu.should_auto_save_on_process_switch(None, "c215ss_jv", True)
+        assert not should_save
+
+    def test_should_auto_save_same_process(self):
+        """Test that auto-save doesn't trigger when same process rescanned."""
+        # Same process, should not auto-save
+        should_save = tu.should_auto_save_on_process_switch("c215ss_jv", "c215ss_jv", True)
+        assert not should_save
+
+    def test_should_auto_save_no_records(self):
+        """Test that auto-save doesn't trigger if no records exist."""
+        # Different process but no records, should not auto-save
+        should_save = tu.should_auto_save_on_process_switch("c212_sonicator", "c215ss_jv", False)
+        assert not should_save
+
+    def test_should_auto_save_different_process_with_records(self):
+        """Test that auto-save triggers when switching process with records."""
+        # Different process with records, SHOULD auto-save
+        should_save = tu.should_auto_save_on_process_switch("c212_sonicator", "c215ss_jv", True)
+        assert should_save
+
+    def test_should_auto_save_case_insensitive(self):
+        """Test that process comparison is case-sensitive (normalized)."""
+        # These should be treated as same process (already normalized to lowercase)
+        should_save = tu.should_auto_save_on_process_switch("c215ss_jv", "c215ss_jv", True)
+        assert not should_save

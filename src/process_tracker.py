@@ -10,7 +10,7 @@ LOG_FILE = None
 # --- Data Storage ---
 operator_name = None
 current_process = None
-tool_process = None  # The main tool/process for this session
+tool_process = None
 log_records = []
 
 def parse_args():
@@ -178,12 +178,23 @@ def main():
                     print(f"\n[ERROR] {error_msg}")
                     continue
 
+                # Check if we need to auto-save before switching processes
+                if tu.should_auto_save_on_process_switch(tool_process, normalized_process, len(log_records) > 0):
+                    # Auto-save current records before switching
+                    record_count = len(log_records)
+                    old_log_file = os.path.basename(LOG_FILE)
+                    success, _ = tu.save_log_to_csv(log_records, LOG_FILE, OUTPUTS_FOLDER)
+                    if success:
+                        log_records.clear()
+                        # Show notification to user
+                        print(f"\n{tu.format_auto_save_message(record_count, old_log_file)}")
+
                 # Only set current_process if validation passed
                 current_process = normalized_process
 
-                # If this is the first process scan, set it as the tool process
-                if not tool_process:
-                    tool_process = current_process
+                # Update tool_process and LOG_FILE when switching to a new process
+                if not tool_process or normalized_process != tool_process:
+                    tool_process = normalized_process
                     LOG_FILE = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(tool_process))
                     tool_display_name = tu.get_tool_display_name(tool_process)
                     print(f"\n>>> TOOL SET: '{tool_display_name}'")
