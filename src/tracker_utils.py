@@ -233,6 +233,14 @@ def get_unsaved_count(log_records: list) -> int:
     return len(log_records)
 
 # --- Runtime Environment ---
+def is_running_as_exe() -> bool:
+    """Check if the script is running as a compiled executable.
+
+    Returns:
+        True if running as .exe, False if running as .py script
+    """
+    return getattr(sys, 'frozen', False)
+
 def format_log_message(record: dict) -> str:
     """Format a log record into a human-readable message.
 
