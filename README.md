@@ -1,5 +1,5 @@
 <div align="left">
-  <img src="assets/logo_3.png" alt="Sample Tracker Logo" width="400">
+  <img src="assets/logo_text.png" alt="Sample Tracker Logo" width="400">
 </div>
 
 # Lab Event Tracker
