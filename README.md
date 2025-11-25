@@ -1,7 +1,12 @@
-# Lab Process Tracker
+<div align="left">
+  <img src="assets/logo_2.png" alt="Sample Tracker Logo" width="350">
+</div>
 
-A process tracking application for lab operations with both command-line and GUI interfaces.
-Track processes and sample scans using QR code input, with logs saved to CSV files.
+# Lab Event Tracker
+
+A sample and process tracking application for lab operations with both command-line and
+GUI interfaces. Track processes and sample scans using QR code input, with logs saved to
+CSV files.
 
 ## Features
 
