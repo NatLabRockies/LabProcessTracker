@@ -1,0 +1,41 @@
+.. _whatsnew0201:
+
+
+v0.2.1 (December 2025)
+------------------------
+
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fixed GUI incorrectly populating sample box with error message when scanning invalid
+  process QR codes. Invalid processes now only log errors to activity log while
+  maintaining current process state. (:issue:`41`, :pull:`42`)
+
+
+Documentation
+~~~~~~~~~~~~~
+
+
+Dependencies
+~~~~~~~~~~~~
+
+
+Testing
+~~~~~~~
+
+
+Deprecations
+~~~~~~~~~~~~
+
+
+Contributors
+~~~~~~~~~~~~
+- Rajiv Daxini (:ghuser:`rdaxini`)
