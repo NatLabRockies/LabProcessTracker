@@ -313,7 +313,6 @@ class TestIntegrationWorkflow:
             assert len(rows) == 2
             assert all(row["ProcessName"] == "c215ss_jv" for row in rows)
 
-
 class TestDeprecationWarning:
     """Test cases for CLI deprecation warning."""
 
