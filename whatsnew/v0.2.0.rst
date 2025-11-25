@@ -43,6 +43,10 @@ Enhancements
 - Add support for legacy samples. Samples with the legacy QR code format ``####-##``
   (4 digits, dash, 2 digits) are automatically recognized without requiring the ``S%:``
   prefix. A warning message is displayed when legacy format is detected.
+- Add autosave on process switch scan event. When switching between processes in a single
+  session, the application automatically saves the current records before switching.
+  Users receive a notification showing how many records were saved and to which file.
+  This ensures each process has its own correctly named CSV file.
 
 Documentation
 ~~~~~~~~~~~~~
@@ -78,7 +82,7 @@ Maintenance
 
 Deprecations
 ~~~~~~~~~~~~
-- CLI (`process_tracker.py`) is now deprecated and will not be maintained.
+- CLI (``process_tracker.py``) is now deprecated and will not be maintained.
   It will be removed in v0.3.0. Please migrate to the new GUI interface.
 
 Contributors

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "process_tracking"
-version = "0.1.0"
+version = "0.2.0"
 description = "A tracking application that logs scan events for samples and processes."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -33,3 +33,29 @@ include = ["*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "src/process_tracker_gui.py",
+    "src/process_tracker.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if False:",
+    "if typing.TYPE_CHECKING:",
+]

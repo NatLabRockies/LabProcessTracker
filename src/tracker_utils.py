@@ -221,17 +221,6 @@ def validate_operator_name(name: str) -> tuple[bool, str]:
     return True, ""
 
 # --- Session State Helpers ---
-def has_unsaved_data(log_records: list) -> bool:
-    """Check if there are unsaved log records.
-
-    Args:
-        log_records: List of log record dictionaries
-
-    Returns:
-        True if there are unsaved records, False otherwise
-    """
-    return len(log_records) > 0
-
 def get_unsaved_count(log_records: list) -> int:
     """Get count of unsaved log records.
 
@@ -293,6 +282,37 @@ def format_legacy_sample_warning(sample_id: str) -> str:
         Formatted warning message string
     """
     return f"[WARNING] Legacy sample format detected: {sample_id}"
+
+def should_auto_save_on_process_switch(current_tool: str, new_process: str, has_records: bool) -> bool:
+    """Check if auto-save should occur when switching processes.
+
+    Args:
+        current_tool: The currently active tool/process (tool_process)
+        new_process: The new process being switched to
+        has_records: Whether there are unsaved records
+
+    Returns:
+        True if auto-save should occur, False otherwise
+    """
+    # Only auto-save if:
+    # 1. We have a current tool set (not first process)
+    # 2. The new process is different from current tool
+    # 3. We have unsaved records
+    return (current_tool is not None and
+            new_process != current_tool and
+            has_records)
+
+def format_auto_save_message(count: int, filename: str) -> str:
+    """Format message for auto-save notification.
+
+    Args:
+        count: Number of records that were auto-saved
+        filename: Name of the file records were saved to
+
+    Returns:
+        Formatted auto-save notification message
+    """
+    return f"[AUTO-SAVE] Saved {count} record(s) to {filename}"
 
 # --- Error Messages ---
 def get_process_display_name(abbreviated_name: str) -> str:

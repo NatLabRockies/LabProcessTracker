@@ -189,14 +189,25 @@ class ProcessTrackerGUI(tk.Tk):
 
             if not is_valid:
                 self.print_terminal(f"[ERROR] {error_msg}")
-                self.update_sample_block("Invalid process", status_type="ERROR")
                 return
+
+            # Check if we need to auto-save before switching processes
+            if tu.should_auto_save_on_process_switch(self.tool_process, normalized_process, len(self.log_records) > 0):
+                # Auto-save current records before switching
+                record_count = len(self.log_records)
+                old_log_file = os.path.basename(self.log_file)
+                success, _ = tu.save_log_to_csv(self.log_records, self.log_file, OUTPUTS_FOLDER)
+                if success:
+                    self.log_records.clear()
+                    # Show notification to user
+                    self.print_terminal(tu.format_auto_save_message(record_count, old_log_file))
 
             # Only set current_process if validation passed
             self.current_process = normalized_process
 
-            if not self.tool_process:
-                self.tool_process = self.current_process
+            # Update tool_process and log_file when switching to a new process
+            if not self.tool_process or normalized_process != self.tool_process:
+                self.tool_process = normalized_process
                 self.log_file = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(self.tool_process))
                 tool_display_name = tu.get_tool_display_name(self.tool_process)
                 self.title(f"Lab Process Tracker GUI - {tool_display_name}")
@@ -250,7 +261,7 @@ class ProcessTrackerGUI(tk.Tk):
     def exit_app(self):
         """Exit the application with prompt to save unsaved data."""
         if self.log_records:
-            count = tu.get_unsaved_count(self.log_records)
+            count = len(self.log_records)
             if messagebox.askyesno("Unsaved Data", f"You have {count} unsaved record(s). Save before exiting?"):
                 self.save_log()
                 if not self.log_records:
