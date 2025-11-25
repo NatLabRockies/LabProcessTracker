@@ -11,12 +11,8 @@ def get_version():
         data = tomllib.load(f)
         return data['project']['version']
 
-def build_exe(target='both'):
-    """Build executable(s) for the process tracker.
-
-    Args:
-        target: 'cli', 'gui', or 'both' (default)
-    """
+def build_exe():
+    """Build GUI executable for the process tracker."""
     version = get_version()
 
     # Get project root and paths
@@ -30,77 +26,56 @@ def build_exe(target='both'):
     if os.path.exists(build_dir):
         shutil.rmtree(build_dir)
 
-    print(f"Building Process Tracker v{version}")
+    print(f"Building Process Tracker GUI v{version}")
     print("-" * 60)
 
-    builds = []
-    if target in ['cli', 'both']:
-        builds.append(('cli', 'process_tracker.py', f'process_tracker_cli_v{version}.exe'))
-    if target in ['gui', 'both']:
-        builds.append(('gui', 'process_tracker_gui.py', f'process_tracker_gui_v{version}.exe'))
+    script_name = 'process_tracker_gui.py'
+    exe_name = f'process_tracker_gui_v{version}.exe'
 
-    for build_type, script_name, exe_name in builds:
-        print(f"\nBuilding {build_type.upper()} executable...")
+    print(f"\nBuilding GUI executable...")
 
-        script_path = os.path.join(src_dir, script_name)
+    script_path = os.path.join(src_dir, script_name)
 
-        # Common PyInstaller arguments
-        args = [
-            script_path,
-            '--onefile',
-            '--name', exe_name.replace('.exe', ''),
-            '--distpath', os.path.join(exe_dir, 'dist'),
-            '--workpath', os.path.join(exe_dir, 'build'),
-            '--specpath', os.path.join(exe_dir, 'spec'),
-            '--clean',
-            '--add-data', f'{os.path.join(project_root, "tools_processes.json")}{os.pathsep}.',
-        ]
+    # PyInstaller arguments
+    args = [
+        script_path,
+        '--onefile',
+        '--name', exe_name.replace('.exe', ''),
+        '--distpath', os.path.join(exe_dir, 'dist'),
+        '--workpath', os.path.join(exe_dir, 'build'),
+        '--specpath', os.path.join(exe_dir, 'spec'),
+        '--clean',
+        '--add-data', f'{os.path.join(project_root, "tools_processes.json")}{os.pathsep}.',
+        '--windowed',  # No console window
+        '--noconsole',
+    ]
 
-        # GUI-specific arguments
-        if build_type == 'gui':
-            args.extend([
-                '--windowed',  # No console window
-                '--noconsole',
-            ])
+    # Add icon if available
+    icon_path = os.path.join(project_root, 'assets', 'icon.ico')
+    if os.path.exists(icon_path):
+        args.extend(['--icon', icon_path])
 
-        # Add icon if available
-        icon_path = os.path.join(project_root, 'assets', 'icon.ico')
-        if os.path.exists(icon_path):
-            args.extend(['--icon', icon_path])
+    # Run PyInstaller
+    PyInstaller.__main__.run(args)
 
-        # Run PyInstaller
-        PyInstaller.__main__.run(args)
+    # Rename the output file to include version
+    output_path = os.path.join(exe_dir, 'dist', exe_name.replace('.exe', '') + '.exe')
+    final_path = os.path.join(exe_dir, 'dist', exe_name)
 
-        # Rename the output file to include version
-        output_path = os.path.join(exe_dir, 'dist', exe_name.replace('.exe', '') + '.exe')
-        final_path = os.path.join(exe_dir, 'dist', exe_name)
+    if os.path.exists(output_path) and output_path != final_path:
+        if os.path.exists(final_path):
+            os.remove(final_path)
+        os.rename(output_path, final_path)
 
-        if os.path.exists(output_path) and output_path != final_path:
-            if os.path.exists(final_path):
-                os.remove(final_path)
-            os.rename(output_path, final_path)
-
-        print(f"✓ {build_type.upper()} executable created: {final_path}")
+    print(f"✓ GUI v{version} executable created: {final_path}")
 
     print("\n" + "=" * 60)
     print("Build completed successfully!")
-    print(f"Executables are in: {os.path.join(exe_dir, 'dist')}")
+    print(f"Executable is in: {os.path.join(exe_dir, 'dist')}")
     print("=" * 60)
 
     return True
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Build Process Tracker executables")
-    parser.add_argument(
-        '--target',
-        choices=['cli', 'gui', 'both'],
-        default='both',
-        help="Which executable(s) to build (default: both)"
-    )
-
-    args = parser.parse_args()
-
-    success = build_exe(target=args.target)
+    success = build_exe()
     sys.exit(0 if success else 1)

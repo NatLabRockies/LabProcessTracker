@@ -19,7 +19,7 @@ After downloading the repository from GitHub, you can run the tracker in multipl
 
 Navigate to the `exe/dist` folder and double-click one of the executables:
 - **`process_tracker_gui_v<version>.exe`** - GUI version (recommended)
-- **`process_tracker_cli_v<version>.exe`** - CLI version
+- **`process_tracker_cli_v0.2.0.exe`** - CLI version (deprecated, v0.2.0 only)
 
 ### 2. Run the GUI (Graphical Interface)
 
@@ -94,8 +94,8 @@ message with:
 
 - Logs are saved to tool-specific CSV files (e.g., `scan_log_c215ss_jv.csv`,
   `scan_log_bd8_xrd.csv`)
-- **Multi-process sessions:** When you switch between different processes, the application
-  automatically saves records to the appropriate file for each process
+- **Multi-process sessions:** When you switch between different processes, the
+  application automatically saves records to the appropriate file for each process
 - Default output locations:
   - **Running from source:** `outputs/` folder in the project directory
   - **Running as executable:** `~/Documents/process_tracking_outputs/`
@@ -177,19 +177,12 @@ pip install .[dev]
 To build standalone executables:
 
 ```bash
-# Build both CLI and GUI executables
+# Build the GUI executable (CLI build no longer supported)
 python scripts/create_exe.py
 
-# Build only GUI executable
-python scripts/create_exe.py --target gui
-
-# Build only CLI executable
-python scripts/create_exe.py --target cli
 ```
 
-The executables will be created in `exe/dist/` directory:
-- `process_tracker_gui_v<version>.exe` - GUI version (no console window)
-- `process_tracker_cli_v<version>.exe` - CLI version (with console window)
+The executable will be created in `exe/dist/` directory.
 
 **Note:** You need PyInstaller installed: `pip install .[build]`
 
