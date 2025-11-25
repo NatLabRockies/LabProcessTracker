@@ -15,7 +15,7 @@ Enhancements
 
 Bug fixes
 ~~~~~~~~~
-- Fixed GUI incorrectly populating sample box with error message when scanning invalid
+- Fix GUI incorrectly populating sample box with error message when scanning invalid
   process QR codes. Invalid processes now only log errors to activity log while
   maintaining current process state. (:issue:`41`, :pull:`42`)
 
@@ -34,6 +34,9 @@ Testing
 
 Deprecations
 ~~~~~~~~~~~~
+- Remove CLI executable build support from ``create_exe.py`` script. CLI version is
+  frozen at v0.2.0 and is no longer maintained. Only GUI executable builds are now
+  supported. (:issue:`43`, :pull:`44`)
 
 
 Contributors
