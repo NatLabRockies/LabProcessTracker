@@ -1,10 +1,10 @@
 <div align="left">
-  <img src="assets/logo_text.png" alt="Sample Tracker Logo" width="400">
+  <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
 </div>
 
-# Lab Event Tracker
+# Lab Process Tracker
 
-A sample and process tracking application for lab operations with both command-line and
+A tracking application for lab operations with both command-line and
 GUI interfaces. Track processes and sample scans using QR code input, with logs saved to
 CSV files.
 
