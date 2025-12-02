@@ -365,7 +365,7 @@ def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
     normalized = process_input.lower()
     if normalized not in PROCESS_COLORS:
         error_msg = (
-            "[WARNING] Process '{process_input}' is not implemented and will be quarantined.\n"
+            f"[WARNING] Process '{process_input}' is not implemented and will be quarantined.\n"
             "Records will be saved to a separate quarantine log file.\n"
             "Contact Rajiv.Daxini@nrel.gov to add this process to the database."
         )

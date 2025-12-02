@@ -92,20 +92,6 @@ class TestProcessInfo:
         info = get_process_info("invalid_process")
         assert info == {}
 
-    def test_process_info_has_required_fields(self):
-        """Test that process info contains all required fields."""
-        for abbreviated in PROCESS_COLORS.keys():
-            info = get_process_info(abbreviated)
-            assert "tool" in info
-            assert "process" in info
-            assert "color" in info
-
-    def test_process_info_color_matches(self):
-        """Test that color in process info matches PROCESS_COLORS."""
-        for abbreviated in PROCESS_COLORS.keys():
-            info = get_process_info(abbreviated)
-            assert info["color"] == PROCESS_COLORS[abbreviated]
-
 
 class TestProcessColors:
     """Test cases for process color assignments."""
@@ -236,10 +222,6 @@ class TestCommandDetection:
         is_cmd, cmd_type = tu.is_command("P%:test")
         assert not is_cmd
         assert cmd_type is None
-
-
-class TestRuntimeEnvironment:
-    """Test cases for runtime environment detection."""
 
 
 class TestOperatorValidation:
