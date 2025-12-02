@@ -18,6 +18,9 @@ Bug fixes
 - Fix GUI incorrectly populating sample box with error message when scanning invalid
   process QR codes. Invalid processes now only log errors to activity log while
   maintaining current process state. (:issue:`41`, :pull:`42`)
+- Make the activity log in the GUI non-focusable. Clicking or selecting text in the
+  activity log now always returns focus to the scan QR code box, ensuring reliable
+  scanning and preventing accidental focus loss. (:issue:`48`, :pull:`51`)
 
 
 Documentation
