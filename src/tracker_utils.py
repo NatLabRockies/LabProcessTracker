@@ -22,7 +22,6 @@ RESET_OPERATOR_CMD = 'RESET'
 # --- Process Color Mappings ---
 # Default color for unknown processes
 DEFAULT_PROCESS_COLOR = "#95a5a6"  # Grey
-UNAPPROVED_PROCESS_COLOR = "#000000"  # Black for warning
 
 # Map process names to colors (hex codes for GUI) - loaded from JSON
 PROCESS_COLORS = {}
@@ -80,22 +79,18 @@ def is_process_valid(process_name: str) -> bool:
     return process_name in PROCESS_COLORS
 
 def get_process_color(process_name: str) -> str:
-    """Get color for process, black if invalid."""
+    """Get color for process, default if invalid."""
     if is_process_valid(process_name):
         return PROCESS_COLORS.get(process_name, DEFAULT_PROCESS_COLOR)
     else:
-        return UNAPPROVED_PROCESS_COLOR
+        return DEFAULT_PROCESS_COLOR
 
 def get_process_info(process_name: str) -> dict:
-    """Get info for process, fallback for invalid."""
+    """Get info for process, empty dict if invalid."""
     if is_process_valid(process_name):
         return PROCESS_INFO.get(process_name, {})
     else:
-        return {
-            'tool': f"UNAPPROVED ({process_name})",
-            'process': f"UNAPPROVED ({process_name})",
-            'color': UNAPPROVED_PROCESS_COLOR
-        }
+        return {}
 
 def get_log_filename(process_name: str, valid: bool = True) -> str:
     """Get log filename, quarantine if invalid."""
@@ -370,7 +365,7 @@ def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
     normalized = process_input.lower()
     if normalized not in PROCESS_COLORS:
         error_msg = (
-            "[WARNING] Process '{process_input}' is not valid and will be quarantined.\n"
+            "[WARNING] Process '{process_input}' is not implemented and will be quarantined.\n"
             "Records will be saved to a separate quarantine log file.\n"
             "Contact Rajiv.Daxini@nrel.gov to add this process to the database."
         )
