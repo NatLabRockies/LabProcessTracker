@@ -22,10 +22,13 @@ RESET_OPERATOR_CMD = 'RESET'
 # --- Process Color Mappings ---
 # Default color for unknown processes
 DEFAULT_PROCESS_COLOR = "#95a5a6"  # Grey
+UNAPPROVED_PROCESS_COLOR = "#000000"  # Black for warning
 
 # Map process names to colors (hex codes for GUI) - loaded from JSON
 PROCESS_COLORS = {}
 PROCESS_INFO = {}  # Full process information
+
+UNAPPROVED_FOLDER_NAME = "unapproved"
 
 def load_process_data():
     """Load process and tool data from JSON file."""
@@ -64,38 +67,49 @@ def load_process_data():
 # Load process data at module import
 load_process_data()
 
+def get_unapproved_log_filename(process_name: str) -> str:
+    """Generate the quarantine log filename for unapproved processes."""
+    return f"scan_log_UNAPPROVED_{process_name}.csv"
+
+def get_unapproved_output_dir(base_outputs: str) -> str:
+    """Get the quarantine folder for unapproved process logs."""
+    return os.path.join(base_outputs, UNAPPROVED_FOLDER_NAME)
+
+def is_process_approved(process_name: str) -> bool:
+    """Check if a process is approved (exists in JSON)."""
+    return process_name in PROCESS_COLORS
+
 def get_process_color(process_name: str) -> str:
-    """Get the color assigned to a specific process.
-
-    Args:
-        process_name: Name of the process
-
-    Returns:
-        Hex color code for the process
-    """
-    return PROCESS_COLORS.get(process_name, DEFAULT_PROCESS_COLOR)
+    """Get color for process, black if unapproved."""
+    if is_process_approved(process_name):
+        return PROCESS_COLORS.get(process_name, DEFAULT_PROCESS_COLOR)
+    else:
+        return UNAPPROVED_PROCESS_COLOR
 
 def get_process_info(process_name: str) -> dict:
-    """Get full information for a specific process.
+    """Get info for process, fallback for unapproved."""
+    if is_process_approved(process_name):
+        return PROCESS_INFO.get(process_name, {})
+    else:
+        return {
+            'tool': f"UNAPPROVED ({process_name})",
+            'process': f"UNAPPROVED ({process_name})",
+            'color': UNAPPROVED_PROCESS_COLOR
+        }
 
-    Args:
-        process_name: Name of the process
+def get_log_filename(process_name: str, approved: bool = True) -> str:
+    """Get log filename, quarantine if unapproved."""
+    if approved:
+        return f"scan_log_{process_name}.csv"
+    else:
+        return get_unapproved_log_filename(process_name)
 
-    Returns:
-        Dictionary containing process information, or empty dict if not found
-    """
-    return PROCESS_INFO.get(process_name, {})
-
-def get_log_filename(process_name: str) -> str:
-    """Generate the log filename for a specific process.
-
-    Args:
-        process_name: Name of the process
-
-    Returns:
-        Filename in format 'scan_log_PROCESSNAME.csv'
-    """
-    return f"scan_log_{process_name}.csv"
+def get_output_dir(process_name: str, base_outputs: str) -> str:
+    """Get output dir, quarantine if unapproved."""
+    if is_process_approved(process_name):
+        return base_outputs
+    else:
+        return get_unapproved_output_dir(base_outputs)
 
 # --- Output Directory Logic ---
 def get_default_output_dir():
@@ -354,15 +368,13 @@ def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
         - error_message: Error message if invalid, empty string if valid
     """
     normalized = process_input.lower()
-
     if normalized not in PROCESS_COLORS:
         error_msg = (
-            f"Process '{process_input}' is not implemented.\n"
-            f"Available: {', '.join(sorted(PROCESS_COLORS.keys()))}\n"
-            f"Contact Rajiv.Daxini@nrel.gov to add new processes."
+            "[WARNING] Process '{process_input}' is not approved and will be quarantined.\n"
+            "Records will be saved to a separate quarantine log file.\n"
+            "Contact Rajiv.Daxini@nrel.gov to add this process to the database."
         )
         return False, normalized, error_msg
-
     return True, normalized, ""
 
 def is_command(qr_text: str) -> tuple[bool, str | None]:
