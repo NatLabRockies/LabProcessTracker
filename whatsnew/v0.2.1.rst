@@ -15,7 +15,11 @@ Enhancements
 - Make the activity log in the GUI non-focusable. Clicking or selecting text in the
   activity log now always returns focus to the scan QR code box, ensuring reliable
   scanning and preventing accidental focus loss. (:issue:`48`, :pull:`51`)
-- Unapproved process QR codes (`P%:name` not in JSON) are now **quarantined**: scans are logged in a separate CSV file (`scan_log_UNAPPROVED_<process>.csv`) in `outputs/unapproved/`. Users receive a warning and can continue logging, but should contact Rajiv.Daxini@nrel.gov to add new processes. This improves rapid deployment and avoids blocking workflow. (:issue:`45`, :pull:`46`)
+- Unapproved process QR codes (`P%:name` not in JSON) are now **quarantined**: scans are
+  logged in a separate CSV file (`scan_log_UNAPPROVED_<process>.csv`) in
+  `outputs/unapproved/`. Users receive a warning and can continue logging, but should
+  contact Rajiv.Daxini@nrel.gov to add new processes. This improves rapid deployment and
+  avoids blocking workflow. (:issue:`45`, :pull:`46`)
 - Increase font size for sample and process QR code labels in GUI to improve
   readability. (:issue:`50`, :pull:`52`)
 
