@@ -1,7 +1,14 @@
+[![Version](https://img.shields.io/badge/version-v0.2.1-blue.svg)](https://github.com/rdaxini/process_tracking)
+
+<div align="left">
+  <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
+</div>
+
 # Lab Process Tracker
 
-A process tracking application for lab operations with both command-line and GUI interfaces.
-Track processes and sample scans using QR code input, with logs saved to CSV files.
+A tracking application for lab operations with both command-line and
+GUI interfaces. Track processes and sample scans using QR code input, with logs saved to
+CSV files.
 
 ## Features
 
@@ -89,6 +96,18 @@ If you scan a process that is not in the approved list, you will receive an erro
 message with:
 - The list of available processes
 - Contact information to request adding new processes (Rajiv.Daxini@nrel.gov)
+
+## Unapproved Processes (Quarantine Logging)
+
+If you scan a process QR code (`P%:process_name`) that is **not listed in `tools_processes.json`**, the tracker will:
+
+- Show a **WARNING** in the activity log and process block.
+- Log all scans for this process in a **quarantine CSV file** named `scan_log_UNAPPROVED_<process_name>.csv`.
+- Quarantine logs are saved in a separate folder: `outputs/unapproved/`.
+- You can continue logging samples for this process, but records are kept separate from approved processes.
+- **Contact Rajiv.Daxini@nrel.gov** to request adding new processes to the database.
+
+This allows rapid deployment on new systems without blocking workflow, while ensuring unapproved processes are tracked and not mixed with approved logs.
 
 ## Output
 
@@ -205,3 +224,8 @@ pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
 
 The test suite focuses on the testable core logic in `tracker_utils.py`. The CLI main
 loop and GUI are validated through manual testing and usage.
+
+## Test Coverage
+
+Test coverage reports are generated in `htmlcov/` after running tests.
+See the terminal output for summary and open `htmlcov/index.html` for details.

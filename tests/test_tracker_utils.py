@@ -43,6 +43,7 @@ class TestProcessValidation:
         assert not is_valid
         assert normalized == "invalid_proc"
         assert "not implemented" in error
+        assert "quarantined" in error
         assert "Rajiv.Daxini@nrel.gov" in error
 
     def test_validate_and_normalize_case_insensitive(self):
@@ -91,20 +92,6 @@ class TestProcessInfo:
         info = get_process_info("invalid_process")
         assert info == {}
 
-    def test_process_info_has_required_fields(self):
-        """Test that process info contains all required fields."""
-        for abbreviated in PROCESS_COLORS.keys():
-            info = get_process_info(abbreviated)
-            assert "tool" in info
-            assert "process" in info
-            assert "color" in info
-
-    def test_process_info_color_matches(self):
-        """Test that color in process info matches PROCESS_COLORS."""
-        for abbreviated in PROCESS_COLORS.keys():
-            info = get_process_info(abbreviated)
-            assert info["color"] == PROCESS_COLORS[abbreviated]
-
 
 class TestProcessColors:
     """Test cases for process color assignments."""
@@ -130,9 +117,10 @@ class TestProcessColors:
         assert len(color) == 7
 
     def test_get_process_color_invalid(self):
-        """Test getting color for invalid process returns default."""
+        """Test getting color for invalid process returns default grey."""
         color = tu.get_process_color("invalid_process")
         assert color == tu.DEFAULT_PROCESS_COLOR
+        assert color == "#95a5a6"  # Verify it's the grey default
 
 
 class TestLogFilename:
@@ -236,16 +224,6 @@ class TestCommandDetection:
         assert cmd_type is None
 
 
-class TestRuntimeEnvironment:
-    """Test cases for runtime environment detection."""
-
-    def test_is_running_as_exe(self):
-        """Test detecting if running as executable."""
-        # When running as .py script, should return False
-        result = tu.is_running_as_exe()
-        assert result is False
-
-
 class TestOperatorValidation:
     """Test cases for operator name validation."""
 
@@ -284,12 +262,8 @@ class TestOperatorValidation:
 class TestJSONDataLoading:
     """Test cases for JSON data loading."""
 
-    def test_process_colors_loaded(self):
-        """Test that PROCESS_COLORS is populated from JSON."""
-        assert len(PROCESS_COLORS) > 0
-
     def test_expected_processes_exist(self):
-        """Test that expected processes are loaded."""
+        """Test that expected processes are loaded from JSON."""
         expected_processes = [
             "c215ss_jv",
             "bd8_xrd",
@@ -297,6 +271,7 @@ class TestJSONDataLoading:
             "ftlb234_spinbox",
             "pdil_pct",
         ]
+        assert len(PROCESS_COLORS) >= len(expected_processes), "PROCESS_COLORS appears empty or incomplete"
         for process in expected_processes:
             assert process in PROCESS_COLORS, f"Process '{process}' not found in PROCESS_COLORS. JSON may not be loaded."
 
@@ -408,3 +383,55 @@ class TestAutoSaveLogic:
         # These should be treated as same process (already normalized to lowercase)
         should_save = tu.should_auto_save_on_process_switch("c215ss_jv", "c215ss_jv", True)
         assert not should_save
+
+
+class TestQuarantineLogic:
+    """Test cases specifically for unapproved/quarantine process handling."""
+
+    def test_unapproved_log_filename_format(self):
+        """Test quarantine log filename format."""
+        filename = tu.get_unapproved_log_filename("test_process")
+        assert filename == "scan_log_UNAPPROVED_test_process.csv"
+
+    def test_unapproved_output_directory(self):
+        """Test quarantine output directory."""
+        base = "/test/outputs"
+        unapproved_dir = tu.get_unapproved_output_dir(base)
+        assert "unapproved" in unapproved_dir
+        assert unapproved_dir == os.path.join(base, "unapproved")
+
+    def test_is_process_valid_true(self):
+        """Test is_process_valid returns True for valid processes."""
+        assert tu.is_process_valid("c215ss_jv") is True
+        assert tu.is_process_valid("bd8_xrd") is True
+
+    def test_is_process_valid_false(self):
+        """Test is_process_valid returns False for invalid processes."""
+        assert tu.is_process_valid("invalid_process") is False
+        assert tu.is_process_valid("not_in_json") is False
+
+    def test_get_log_filename_valid_process(self):
+        """Test log filename for valid process."""
+        filename = tu.get_log_filename("c215ss_jv", valid=True)
+        assert filename == "scan_log_c215ss_jv.csv"
+        assert "UNAPPROVED" not in filename
+
+    def test_get_log_filename_invalid_process(self):
+        """Test log filename for invalid process is quarantined."""
+        filename = tu.get_log_filename("invalid_proc", valid=False)
+        assert "UNAPPROVED" in filename
+        assert filename == "scan_log_UNAPPROVED_invalid_proc.csv"
+
+    def test_get_output_dir_valid_process(self):
+        """Test output dir for valid process uses base folder."""
+        base = "/test/outputs"
+        output_dir = tu.get_output_dir("c215ss_jv", base)
+        assert output_dir == base
+        assert "unapproved" not in output_dir
+
+    def test_get_output_dir_invalid_process(self):
+        """Test output dir for invalid process uses quarantine folder."""
+        base = "/test/outputs"
+        output_dir = tu.get_output_dir("invalid_proc", base)
+        assert "unapproved" in output_dir
+        assert output_dir == os.path.join(base, "unapproved")

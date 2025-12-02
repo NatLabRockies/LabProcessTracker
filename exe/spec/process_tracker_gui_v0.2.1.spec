@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='process_tracker_gui_v0.1.0',
+    name='process_tracker_gui_v0.2.1',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
