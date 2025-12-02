@@ -1,3 +1,5 @@
+[![Version](https://img.shields.io/badge/version-v0.2.1-blue.svg)](https://github.com/rdaxini/process_tracking)
+
 <div align="left">
   <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
 </div>
@@ -222,3 +224,8 @@ pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
 
 The test suite focuses on the testable core logic in `tracker_utils.py`. The CLI main
 loop and GUI are validated through manual testing and usage.
+
+## Test Coverage
+
+Test coverage reports are generated in `htmlcov/` after running tests.  
+See the terminal output for summary and open `htmlcov/index.html` for details.
