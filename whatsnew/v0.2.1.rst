@@ -12,6 +12,9 @@ Breaking Changes
 
 Enhancements
 ~~~~~~~~~~~~
+- Increase font size for sample and process QR code labels in GUI to improve
+  readability. (:issue:`50`, :pull:`52`)
+
 
 Bug fixes
 ~~~~~~~~~
