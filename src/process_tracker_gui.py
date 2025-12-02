@@ -298,7 +298,7 @@ class ProcessTrackerGUI(tk.Tk):
             insertbackground='white',
             relief=tk.FLAT,
             bd=0,
-            wrap=tk.WORD
+            wrap=tk.WORD,
             takefocus=0
 
         )
