@@ -7,15 +7,29 @@ __pycache__/
 /exe/build/
 /exe/*.spec
 
-# VSCode settings
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # Environment files
 .env
 .venv/
 venv/
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# outputs
 /outputs
