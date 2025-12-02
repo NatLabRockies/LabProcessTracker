@@ -90,6 +90,18 @@ message with:
 - The list of available processes
 - Contact information to request adding new processes (Rajiv.Daxini@nrel.gov)
 
+## Unapproved Processes (Quarantine Logging)
+
+If you scan a process QR code (`P%:process_name`) that is **not listed in `tools_processes.json`**, the tracker will:
+
+- Show a **WARNING** in the activity log and process block.
+- Log all scans for this process in a **quarantine CSV file** named `scan_log_UNAPPROVED_<process_name>.csv`.
+- Quarantine logs are saved in a separate folder: `outputs/unapproved/`.
+- You can continue logging samples for this process, but records are kept separate from approved processes.
+- **Contact Rajiv.Daxini@nrel.gov** to request adding new processes to the database.
+
+This allows rapid deployment on new systems without blocking workflow, while ensuring unapproved processes are tracked and not mixed with approved logs.
+
 ## Output
 
 - Logs are saved to tool-specific CSV files (e.g., `scan_log_c215ss_jv.csv`,
