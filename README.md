@@ -227,5 +227,5 @@ loop and GUI are validated through manual testing and usage.
 
 ## Test Coverage
 
-Test coverage reports are generated in `htmlcov/` after running tests.  
+Test coverage reports are generated in `htmlcov/` after running tests.
 See the terminal output for summary and open `htmlcov/index.html` for details.
