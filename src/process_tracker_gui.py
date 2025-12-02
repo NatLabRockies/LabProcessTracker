@@ -54,7 +54,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.process_label = tk.Label(
             self.process_frame,
             text="No process",
-            font=("Arial", 18, "bold"),
+            font=("Arial", 26, "bold"),
             bg="grey",
             fg="white",
             wraplength=380,
@@ -69,7 +69,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.sample_label = tk.Label(
             self.sample_frame,
             text="No sample",
-            font=("Arial", 18, "bold"),
+            font=("Arial", 26, "bold"),
             bg="#95a5a6",
             fg="white",
             wraplength=380,
@@ -302,27 +302,27 @@ class ProcessTrackerGUI(tk.Tk):
         if status_type == "SAMPLE":
             # Display only the sample ID without "SAMPLE" prefix
             self.sample_label.config(
-                text=sample_info, font=("Arial", 18, "bold")
+                text=sample_info, font=("Arial", 26, "bold")
             )
         elif status_type == "UNDO":
             self.sample_label.config(
-                text="Last scan undone", font=("Arial", 18, "bold")
+                text="Last scan undone", font=("Arial", 26, "bold")
             )
         elif status_type == "ALERT":
             self.sample_label.config(
-                text=sample_info, font=("Arial", 18, "bold")
+                text=sample_info, font=("Arial", 26, "bold")
             )
         elif status_type == "ERROR":
             self.sample_label.config(
-                text=f"ERROR\n{sample_info}", font=("Arial", 14, "bold")
+                text=f"ERROR\n{sample_info}", font=("Arial", 22, "bold")
             )
         elif status_type == "RESET":
             self.sample_label.config(
-                text="No sample", font=("Arial", 18, "bold")
+                text="No sample", font=("Arial", 26, "bold")
             )
         else:
             self.sample_label.config(
-                text="No sample", font=("Arial", 18, "bold")
+                text="No sample", font=("Arial", 26, "bold")
             )
 
 
