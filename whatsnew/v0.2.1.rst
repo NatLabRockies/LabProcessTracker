@@ -26,6 +26,8 @@ Bug fixes
 
 Documentation
 ~~~~~~~~~~~~~
+- Add new logo (:file:`logo/logo_text.jpg` and :file:`logo/logo_graphic.jpg`) to
+  documentation. (:issue:`45`, :pull:`46`)
 
 
 Dependencies
