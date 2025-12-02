@@ -107,8 +107,12 @@ class ProcessTrackerGUI(tk.Tk):
             height=5,
             state="disabled",
             font=("Consolas", 9),
+            takefocus=0
         )
         self.terminal.pack(pady=5, fill=tk.BOTH, expand=True)
+        # Prevent focus and selection in the activity log
+        self.terminal.bind("<1>", lambda e: (self.qr_entry.focus_set(), "break"))
+        self.terminal.bind("<FocusIn>", lambda e: self.qr_entry.focus_set())
 
         # Info
         self.log_file_label = tk.Label(
