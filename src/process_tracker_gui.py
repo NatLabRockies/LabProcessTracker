@@ -5,6 +5,9 @@ import tracker_utils as tu
 
 OUTPUTS_FOLDER = tu.get_default_output_dir()
 
+FONT_SIZE_LARGE = 26
+FONT_SIZE_MEDIUM = 22
+
 
 # --- GUI Class ---
 class ProcessTrackerGUI(tk.Tk):
@@ -54,7 +57,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.process_label = tk.Label(
             self.process_frame,
             text="No process",
-            font=("Arial", 18, "bold"),
+            font=("Arial", FONT_SIZE_LARGE, "bold"),
             bg="grey",
             fg="white",
             wraplength=380,
@@ -69,7 +72,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.sample_label = tk.Label(
             self.sample_frame,
             text="No sample",
-            font=("Arial", 18, "bold"),
+            font=("Arial", FONT_SIZE_LARGE, "bold"),
             bg="#95a5a6",
             fg="white",
             wraplength=380,
@@ -107,8 +110,12 @@ class ProcessTrackerGUI(tk.Tk):
             height=5,
             state="disabled",
             font=("Consolas", 9),
+            takefocus=0
         )
         self.terminal.pack(pady=5, fill=tk.BOTH, expand=True)
+        # Prevent focus and selection in the activity log
+        self.terminal.bind("<1>", lambda e: (self.qr_entry.focus_set(), "break"))
+        self.terminal.bind("<FocusIn>", lambda e: self.qr_entry.focus_set())
 
         # Info
         self.log_file_label = tk.Label(
@@ -187,35 +194,37 @@ class ProcessTrackerGUI(tk.Tk):
         if data_type == "PROCESS":
             is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
 
-            if not is_valid:
-                self.print_terminal(f"[ERROR] {error_msg}")
-                return
-
-            # Check if we need to auto-save before switching processes
+            # Auto-save if switching processes
             if tu.should_auto_save_on_process_switch(self.tool_process, normalized_process, len(self.log_records) > 0):
-                # Auto-save current records before switching
                 record_count = len(self.log_records)
                 old_log_file = os.path.basename(self.log_file)
-                success, _ = tu.save_log_to_csv(self.log_records, self.log_file, OUTPUTS_FOLDER)
+                success, _ = tu.save_log_to_csv(self.log_records, self.log_file, self.outputs_folder)
                 if success:
                     self.log_records.clear()
-                    # Show notification to user
                     self.print_terminal(tu.format_auto_save_message(record_count, old_log_file))
 
-            # Only set current_process if validation passed
+            # Always allow setting the process, but warn if invalid
+            if not is_valid:
+                self.print_terminal(error_msg)
+
             self.current_process = normalized_process
 
-            # Update tool_process and log_file when switching to a new process
-            if not self.tool_process or normalized_process != self.tool_process:
-                self.tool_process = normalized_process
-                self.log_file = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(self.tool_process))
-                tool_display_name = tu.get_tool_display_name(self.tool_process)
-                self.title(f"Lab Process Tracker GUI - {tool_display_name}")
-                self.log_file_label.config(text=f"Log will be saved to: {self.log_file}")
-                self.print_terminal(f">>> TOOL SET: '{tool_display_name}'")
-                self.print_terminal(f">>> Log file: {self.log_file}")
+            # Set quarantine folder and file if invalid
+            self.outputs_folder = tu.get_output_dir(normalized_process, OUTPUTS_FOLDER)
+            valid = tu.is_process_valid(normalized_process)
+            self.tool_process = normalized_process
+            self.log_file = os.path.join(self.outputs_folder, tu.get_log_filename(self.tool_process, valid=valid))
+            tool_display_name = tu.get_tool_display_name(self.tool_process)
+            self.title(f"Lab Process Tracker GUI - {tool_display_name}")
+            self.log_file_label.config(text=f"Log will be saved to: {self.log_file}")
+            if not valid:
+                self.log_file_label.config(fg="orange")
+            else:
+                self.log_file_label.config(fg="gray")
+            self.print_terminal(f">>> TOOL SET: '{tool_display_name}'")
+            self.print_terminal(f">>> Log file: {self.log_file}")
 
-            self.update_process_block(self.current_process)
+            self.update_process_block(self.current_process, valid=valid)
             self.update_sample_block(None, status_type="RESET")
             process_display_name = tu.get_process_display_name(self.current_process)
             self.print_terminal(f">>> PROCESS UPDATED: Now running: '{process_display_name}'")
@@ -281,12 +290,13 @@ class ProcessTrackerGUI(tk.Tk):
         self.terminal.see(tk.END)
         self.terminal.config(state="disabled")
 
-    def update_process_block(self, process_name):
+    def update_process_block(self, process_name, valid=True):
         if process_name:
             color = tu.get_process_color(process_name)
-            # Display the human-readable process name
             display_name = tu.get_process_display_name(process_name)
             text = display_name
+            if not tu.is_process_valid(process_name):
+                text += "\n[UNAPPROVED — quarantined]"
         else:
             color = "grey"
             text = "No process"
@@ -298,27 +308,27 @@ class ProcessTrackerGUI(tk.Tk):
         if status_type == "SAMPLE":
             # Display only the sample ID without "SAMPLE" prefix
             self.sample_label.config(
-                text=sample_info, font=("Arial", 18, "bold")
+                text=sample_info, font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         elif status_type == "UNDO":
             self.sample_label.config(
-                text="Last scan undone", font=("Arial", 18, "bold")
+                text="Last scan undone", font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         elif status_type == "ALERT":
             self.sample_label.config(
-                text=sample_info, font=("Arial", 18, "bold")
+                text=sample_info, font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         elif status_type == "ERROR":
             self.sample_label.config(
-                text=f"ERROR\n{sample_info}", font=("Arial", 14, "bold")
+                text=f"ERROR\n{sample_info}", font=("Arial", FONT_SIZE_MEDIUM, "bold")
             )
         elif status_type == "RESET":
             self.sample_label.config(
-                text="No sample", font=("Arial", 18, "bold")
+                text="No sample", font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         else:
             self.sample_label.config(
-                text="No sample", font=("Arial", 18, "bold")
+                text="No sample", font=("Arial", FONT_SIZE_LARGE, "bold")
             )
 
 
