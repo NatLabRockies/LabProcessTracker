@@ -27,6 +27,8 @@ DEFAULT_PROCESS_COLOR = "#95a5a6"  # Grey
 PROCESS_COLORS = {}
 PROCESS_INFO = {}  # Full process information
 
+UNAPPROVED_FOLDER_NAME = "unapproved"
+
 def load_process_data():
     """Load process and tool data from JSON file."""
     global PROCESS_COLORS, PROCESS_INFO
@@ -64,38 +66,45 @@ def load_process_data():
 # Load process data at module import
 load_process_data()
 
+def get_unapproved_log_filename(process_name: str) -> str:
+    """Generate the quarantine log filename for unapproved processes."""
+    return f"scan_log_UNAPPROVED_{process_name}.csv"
+
+def get_unapproved_output_dir(base_outputs: str) -> str:
+    """Get the quarantine folder for unapproved process logs."""
+    return os.path.join(base_outputs, UNAPPROVED_FOLDER_NAME)
+
+def is_process_valid(process_name: str) -> bool:
+    """Check if a process is valid (exists in JSON)."""
+    return process_name in PROCESS_COLORS
+
 def get_process_color(process_name: str) -> str:
-    """Get the color assigned to a specific process.
-
-    Args:
-        process_name: Name of the process
-
-    Returns:
-        Hex color code for the process
-    """
-    return PROCESS_COLORS.get(process_name, DEFAULT_PROCESS_COLOR)
+    """Get color for process, default if invalid."""
+    if is_process_valid(process_name):
+        return PROCESS_COLORS.get(process_name, DEFAULT_PROCESS_COLOR)
+    else:
+        return DEFAULT_PROCESS_COLOR
 
 def get_process_info(process_name: str) -> dict:
-    """Get full information for a specific process.
+    """Get info for process, empty dict if invalid."""
+    if is_process_valid(process_name):
+        return PROCESS_INFO.get(process_name, {})
+    else:
+        return {}
 
-    Args:
-        process_name: Name of the process
+def get_log_filename(process_name: str, valid: bool = True) -> str:
+    """Get log filename, quarantine if invalid."""
+    if valid:
+        return f"scan_log_{process_name}.csv"
+    else:
+        return get_unapproved_log_filename(process_name)
 
-    Returns:
-        Dictionary containing process information, or empty dict if not found
-    """
-    return PROCESS_INFO.get(process_name, {})
-
-def get_log_filename(process_name: str) -> str:
-    """Generate the log filename for a specific process.
-
-    Args:
-        process_name: Name of the process
-
-    Returns:
-        Filename in format 'scan_log_PROCESSNAME.csv'
-    """
-    return f"scan_log_{process_name}.csv"
+def get_output_dir(process_name: str, base_outputs: str) -> str:
+    """Get output dir, quarantine if invalid."""
+    if is_process_valid(process_name):
+        return base_outputs
+    else:
+        return get_unapproved_output_dir(base_outputs)
 
 # --- Output Directory Logic ---
 def get_default_output_dir():
@@ -115,7 +124,7 @@ def get_default_output_dir():
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     """Parse QR code text to determine type and ID.
 
-    Supports compact QR format (S%:ID, P%:ID) and legacy format (####-##).
+    Supports compact QR prefixes (S%:ID, P%:ID) and legacy format (####-##).
 
     Args:
         qr_text: The QR code text in format 'TYPE:ID', where TYPE is one of 'S%' or 'P%'
@@ -354,15 +363,13 @@ def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
         - error_message: Error message if invalid, empty string if valid
     """
     normalized = process_input.lower()
-
     if normalized not in PROCESS_COLORS:
         error_msg = (
-            f"Process '{process_input}' is not implemented.\n"
-            f"Available: {', '.join(sorted(PROCESS_COLORS.keys()))}\n"
-            f"Contact Rajiv.Daxini@nrel.gov to add new processes."
+            "[WARNING] Process '{process_input}' is not implemented and will be quarantined.\n"
+            "Records will be saved to a separate quarantine log file.\n"
+            "Contact Rajiv.Daxini@nrel.gov to add this process to the database."
         )
         return False, normalized, error_msg
-
     return True, normalized, ""
 
 def is_command(qr_text: str) -> tuple[bool, str | None]:
