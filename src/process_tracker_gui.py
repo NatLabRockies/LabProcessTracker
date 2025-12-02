@@ -5,6 +5,9 @@ import tracker_utils as tu
 
 OUTPUTS_FOLDER = tu.get_default_output_dir()
 
+FONT_SIZE_LARGE = 26
+FONT_SIZE_MEDIUM = 22
+
 
 # --- GUI Class ---
 class ProcessTrackerGUI(tk.Tk):
@@ -54,7 +57,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.process_label = tk.Label(
             self.process_frame,
             text="No process",
-            font=("Arial", 26, "bold"),
+            font=("Arial", FONT_SIZE_LARGE, "bold"),
             bg="grey",
             fg="white",
             wraplength=380,
@@ -69,7 +72,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.sample_label = tk.Label(
             self.sample_frame,
             text="No sample",
-            font=("Arial", 26, "bold"),
+            font=("Arial", FONT_SIZE_LARGE, "bold"),
             bg="#95a5a6",
             fg="white",
             wraplength=380,
@@ -305,27 +308,27 @@ class ProcessTrackerGUI(tk.Tk):
         if status_type == "SAMPLE":
             # Display only the sample ID without "SAMPLE" prefix
             self.sample_label.config(
-                text=sample_info, font=("Arial", 26, "bold")
+                text=sample_info, font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         elif status_type == "UNDO":
             self.sample_label.config(
-                text="Last scan undone", font=("Arial", 26, "bold")
+                text="Last scan undone", font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         elif status_type == "ALERT":
             self.sample_label.config(
-                text=sample_info, font=("Arial", 26, "bold")
+                text=sample_info, font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         elif status_type == "ERROR":
             self.sample_label.config(
-                text=f"ERROR\n{sample_info}", font=("Arial", 22, "bold")
+                text=f"ERROR\n{sample_info}", font=("Arial", FONT_SIZE_MEDIUM, "bold")
             )
         elif status_type == "RESET":
             self.sample_label.config(
-                text="No sample", font=("Arial", 26, "bold")
+                text="No sample", font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         else:
             self.sample_label.config(
-                text="No sample", font=("Arial", 26, "bold")
+                text="No sample", font=("Arial", FONT_SIZE_LARGE, "bold")
             )
 
 
