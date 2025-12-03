@@ -91,23 +91,21 @@ No additional installations are required.
 - `S%:2511-09` — Logs sample 2511-09 under the current process
 - `2511-09` — Legacy format, automatically recognized as a sample (logs with warning)
 
-**Process Validation:**
-If you scan a process that is not in the approved list, you will receive an error
-message with:
-- The list of available processes
-- Contact information to request adding new processes (Rajiv.Daxini@nrel.gov)
+**Process Validation & Quarantine Logging:**
 
-## Unapproved Processes (Quarantine Logging)
+When you scan a process QR code (`P%:process_name`):
 
-If you scan a process QR code (`P%:process_name`) that is **not listed in `tools_processes.json`**, the tracker will:
+- If the process **is listed in `tools_processes.json`**:
+  - The process is set and scans are logged to a dedicated CSV file (e.g., `scan_log_c215ss_jv.csv`).
+  - The process block is color-coded and the activity log confirms the process/tool.
 
-- Show a **WARNING** in the activity log and process block.
-- Log all scans for this process in a **quarantine CSV file** named `scan_log_UNAPPROVED_<process_name>.csv`.
-- Quarantine logs are saved in a separate folder: `outputs/unapproved/`.
-- You can continue logging samples for this process, but records are kept separate from approved processes.
-- **Contact Rajiv.Daxini@nrel.gov** to request adding new processes to the database.
+- If the process **is NOT listed in `tools_processes.json`**:
+  - You will see a **WARNING** in the activity log and process block.
+  - All scans for this process are logged in a **quarantine CSV file** named `scan_log_UNAPPROVED_<process_name>.csv` in `outputs/unapproved/`.
+  - You can continue logging samples for this process, but records are kept separate from approved processes.
+  - **Contact Rajiv.Daxini@nrel.gov** to request adding new processes to the database.
 
-This allows rapid deployment on new systems without blocking workflow, while ensuring unapproved processes are tracked and not mixed with approved logs.
+The quarantine logic allows rapid deployment on new systems without blocking workflow, while ensuring unapproved processes are tracked and not mixed with approved logs.
 
 ## Output
 
