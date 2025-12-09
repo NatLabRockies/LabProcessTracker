@@ -3,11 +3,10 @@ Integration tests to ensure CLI and GUI use shared logic consistently.
 """
 import sys
 import os
-import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-import tracker_utils as tu
+import tracker_utils as tu  # noqa: E402
 
 
 class TestCLIGUIConsistency:
@@ -70,7 +69,10 @@ class TestCLIGUIConsistency:
 
         if not data_type:
             # Both CLI and GUI should show same error
-            expected_error = f"Invalid format: '{invalid_qr}'. Use 'P%:Name' or 'S%:ID'"
+            expected_error = (
+                f"Invalid format: '{invalid_qr}'. "
+                "Use 'P%:Name' or 'S%:ID'"
+            )
             # This documents the expected error format
             assert "Invalid format" in expected_error
             assert "P%:" in expected_error

@@ -3,16 +3,15 @@ Unit tests for process_tracker module using pytest.
 """
 import sys
 import os
-import pytest
-import tempfile
-import csv
 from datetime import datetime
 
 # Add src directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-import tracker_utils as tu
-import process_tracker
+import pytest  # noqa: E402
+import csv  # noqa: E402
+import tracker_utils as tu  # noqa: E402
+import process_tracker  # noqa: E402
 
 
 class TestParseInput:
@@ -219,9 +218,7 @@ class TestOutputDirectory:
         assert output_dir is not None
 
     def test_parse_args_custom_output_dir(self):
-        """Test that custom output directory can be specified via args."""
-        # This tests the argparse setup in process_tracker
-        parser = process_tracker.parse_args.__wrapped__ if hasattr(process_tracker.parse_args, '__wrapped__') else None
+        """Test that custom output directory can be specified."""
         # Basic test that parse_args function exists
         assert hasattr(process_tracker, 'parse_args')
 
@@ -278,11 +275,17 @@ class TestIntegrationWorkflow:
         # First process
         log_file_1 = tmp_path / "scan_log_c212_sonicator.csv"
         records_1 = []
-        records_1.append(tu.create_log_record("Alice", "c212_sonicator", "Sample1"))
-        records_1.append(tu.create_log_record("Alice", "c212_sonicator", "Sample2"))
+        records_1.append(
+            tu.create_log_record("Alice", "c212_sonicator", "Sample1")
+        )
+        records_1.append(
+            tu.create_log_record("Alice", "c212_sonicator", "Sample2")
+        )
 
         # Check if auto-save should trigger
-        should_save = tu.should_auto_save_on_process_switch("c212_sonicator", "c215ss_jv", len(records_1) > 0)
+        should_save = tu.should_auto_save_on_process_switch(
+            "c212_sonicator", "c215ss_jv", len(records_1) > 0
+        )
         assert should_save
 
         # Auto-save first process
@@ -312,6 +315,7 @@ class TestIntegrationWorkflow:
             rows = list(csv.DictReader(f))
             assert len(rows) == 2
             assert all(row["ProcessName"] == "c215ss_jv" for row in rows)
+
 
 class TestDeprecationWarning:
     """Test cases for CLI deprecation warning."""
