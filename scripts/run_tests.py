@@ -4,7 +4,10 @@ import pytest
 
 def main():
     python_version = sys.version_info
-    print(f"Running tests with Python {python_version.major}.{python_version.minor}.{python_version.micro}")
+    print(
+        f"Running tests with Python "
+        f"{python_version.major}.{python_version.minor}.{python_version.micro}"
+    )
     print("-" * 60)
 
     # Get project root directory
@@ -30,7 +33,10 @@ def main():
     if exit_code == 0:
         print("\n" + "=" * 60)
         print("All tests passed successfully!")
-        print(f"Coverage report generated in: {os.path.join(project_root, 'htmlcov', 'index.html')}")
+        print(
+            f"Coverage report generated in: "
+            f"{os.path.join(project_root, 'htmlcov', 'index.html')}"
+        )
         print("=" * 60)
     else:
         print("\n" + "=" * 60)

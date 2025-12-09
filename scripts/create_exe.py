@@ -6,7 +6,9 @@ import tomllib
 
 def get_version():
     """Get version from pyproject.toml or use default."""
-    pyproject_path = os.path.join(os.path.dirname(__file__), '..', 'pyproject.toml')
+    pyproject_path = os.path.join(
+        os.path.dirname(__file__), '..', 'pyproject.toml'
+    )
     with open(pyproject_path, 'rb') as f:
         data = tomllib.load(f)
         return data['project']['version']
@@ -45,8 +47,9 @@ def build_exe():
         '--workpath', os.path.join(exe_dir, 'build'),
         '--specpath', os.path.join(exe_dir, 'spec'),
         '--clean',
-        '--add-data', f'{os.path.join(project_root, "tools_processes.json")}{os.pathsep}.',
-        '--windowed',  # No console window
+        '--add-data',
+        f'{os.path.join(project_root, "tools_processes.json")}{os.pathsep}.',
+        '--windowed',
         '--noconsole',
     ]
 
@@ -59,7 +62,9 @@ def build_exe():
     PyInstaller.__main__.run(args)
 
     # Rename the output file to include version
-    output_path = os.path.join(exe_dir, 'dist', exe_name.replace('.exe', '') + '.exe')
+    output_path = os.path.join(
+        exe_dir, 'dist', exe_name.replace('.exe', '') + '.exe'
+    )
     final_path = os.path.join(exe_dir, 'dist', exe_name)
 
     if os.path.exists(output_path) and output_path != final_path:
