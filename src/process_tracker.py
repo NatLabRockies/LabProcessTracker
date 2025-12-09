@@ -77,7 +77,7 @@ def pause_before_exit(message="Press Enter to exit..."):
     if is_running_as_exe():
         try:
             input(f"\n{message}")
-        except:
+        except Exception:
             pass
 
 
@@ -240,10 +240,10 @@ def main():
                     if success:
                         log_records.clear()
                         # Show notification to user
-                        print(
-                            f"\n{tu.format_auto_save_message(
-                                record_count, old_log_file)}"
+                        auto_save_msg = tu.format_auto_save_message(
+                            record_count, old_log_file
                         )
+                        print(f"\n{auto_save_msg}")
 
                 # Only set current_process if validation passed
                 current_process = normalized_process
