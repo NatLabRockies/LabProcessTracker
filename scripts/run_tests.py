@@ -2,6 +2,7 @@ import sys
 import os
 import pytest
 
+
 def main():
     python_version = sys.version_info
     print(
@@ -44,6 +45,7 @@ def main():
         print("=" * 60)
 
     sys.exit(exit_code)
+
 
 if __name__ == "__main__":
     main()

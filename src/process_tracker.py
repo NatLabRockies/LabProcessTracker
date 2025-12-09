@@ -13,6 +13,7 @@ current_process = None
 tool_process = None
 log_records = []
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Lab Process Tracker")
     parser.add_argument(
@@ -22,6 +23,7 @@ def parse_args():
     )
     return parser.parse_args()
 
+
 def log_scan_event(process_name: str, sample_id: str):
     """Creates a new log record with the current PC time."""
     global log_records, operator_name
@@ -29,6 +31,7 @@ def log_scan_event(process_name: str, sample_id: str):
     record = tu.create_log_record(operator_name, process_name, sample_id)
     log_records.append(record)
     print(f"\n{tu.format_log_message(record)}")
+
 
 def undo_last_scan():
     """Removes the last logged scan from the records."""
@@ -40,6 +43,7 @@ def undo_last_scan():
 
     removed_record = log_records.pop()
     print(f"\n{tu.format_undo_message(removed_record)}")
+
 
 def save_log():
     """Saves all collected log records to the CSV file."""
@@ -62,9 +66,11 @@ def save_log():
     else:
         print(f"\n[CRITICAL ERROR] {message}")
 
+
 def is_running_as_exe():
     """Check if the script is running as a compiled executable."""
     return tu.is_running_as_exe()
+
 
 def pause_before_exit(message="Press Enter to exit..."):
     """Pause execution to allow user to read messages before window closes."""
@@ -73,6 +79,7 @@ def pause_before_exit(message="Press Enter to exit..."):
             input(f"\n{message}")
         except:
             pass
+
 
 def reset_operator():
     """Reset the operator name, allowing a new operator to take over."""
@@ -86,6 +93,7 @@ def reset_operator():
     operator_name = None
     print(f"\n[RESET] Operator '{old_operator}' has been reset.")
     print("Please enter a new operator name to continue.")
+
 
 def main():
     """Main loop for the scanning control process."""

@@ -4,6 +4,7 @@ import sys
 import shutil
 import tomllib
 
+
 def get_version():
     """Get version from pyproject.toml or use default."""
     pyproject_path = os.path.join(
@@ -12,6 +13,7 @@ def get_version():
     with open(pyproject_path, 'rb') as f:
         data = tomllib.load(f)
         return data['project']['version']
+
 
 def build_exe():
     """Build GUI executable for the process tracker."""
@@ -80,6 +82,7 @@ def build_exe():
     print("=" * 60)
 
     return True
+
 
 if __name__ == "__main__":
     success = build_exe()

@@ -66,17 +66,21 @@ def load_process_data():
 # Load process data at module import
 load_process_data()
 
+
 def get_unapproved_log_filename(process_name: str) -> str:
     """Generate the quarantine log filename for unapproved processes."""
     return f"scan_log_UNAPPROVED_{process_name}.csv"
+
 
 def get_unapproved_output_dir(base_outputs: str) -> str:
     """Get the quarantine folder for unapproved process logs."""
     return os.path.join(base_outputs, UNAPPROVED_FOLDER_NAME)
 
+
 def is_process_valid(process_name: str) -> bool:
     """Check if a process is valid (exists in JSON)."""
     return process_name in PROCESS_COLORS
+
 
 def get_process_color(process_name: str) -> str:
     """Get color for process, default if invalid."""
@@ -85,12 +89,14 @@ def get_process_color(process_name: str) -> str:
     else:
         return DEFAULT_PROCESS_COLOR
 
+
 def get_process_info(process_name: str) -> dict:
     """Get info for process, empty dict if invalid."""
     if is_process_valid(process_name):
         return PROCESS_INFO.get(process_name, {})
     else:
         return {}
+
 
 def get_log_filename(process_name: str, valid: bool = True) -> str:
     """Get log filename, quarantine if invalid."""
@@ -99,12 +105,14 @@ def get_log_filename(process_name: str, valid: bool = True) -> str:
     else:
         return get_unapproved_log_filename(process_name)
 
+
 def get_output_dir(process_name: str, base_outputs: str) -> str:
     """Get output dir, quarantine if invalid."""
     if is_process_valid(process_name):
         return base_outputs
     else:
         return get_unapproved_output_dir(base_outputs)
+
 
 # --- Output Directory Logic ---
 def get_default_output_dir():
@@ -126,6 +134,7 @@ def get_default_output_dir():
         r"~\Documents\process_tracking_outputs"
     )
     return user_docs
+
 
 # --- Input Parsing ---
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
@@ -165,6 +174,7 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     except Exception:
         return None, None
 
+
 # --- Logging Functions ---
 def create_log_record(operator_name: str, process_name: str, sample_id: str) -> dict:
     """Create a log record dictionary with current timestamp.
@@ -184,6 +194,7 @@ def create_log_record(operator_name: str, process_name: str, sample_id: str) -> 
         'ProcessName': process_name,
         'SampleID': sample_id,
     }
+
 
 def save_log_to_csv(
     log_records: list, log_file: str, outputs_folder: str
@@ -224,6 +235,7 @@ def save_log_to_csv(
     except Exception as e:
         return False, f"Could not save log to file: {e}"
 
+
 # --- Operator Management ---
 def validate_operator_name(name: str) -> tuple[bool, str]:
     """Validate an operator name.
@@ -243,6 +255,7 @@ def validate_operator_name(name: str) -> tuple[bool, str]:
         return False, "Operator name must be less than 50 characters."
     return True, ""
 
+
 # --- Session State Helpers ---
 def get_unsaved_count(log_records: list) -> int:
     """Get count of unsaved log records.
@@ -255,6 +268,7 @@ def get_unsaved_count(log_records: list) -> int:
     """
     return len(log_records)
 
+
 # --- Runtime Environment ---
 def is_running_as_exe() -> bool:
     """Check if the script is running as a compiled executable.
@@ -263,6 +277,7 @@ def is_running_as_exe() -> bool:
         True if running as .exe, False if running as .py script
     """
     return getattr(sys, 'frozen', False)
+
 
 def format_log_message(record: dict) -> str:
     """Format a log record into a human-readable message.
@@ -280,6 +295,7 @@ def format_log_message(record: dict) -> str:
         f"Sample: '{record['SampleID']}'"
     )
 
+
 def format_undo_message(record: dict) -> str:
     """Format an undo message for a log record.
 
@@ -295,6 +311,7 @@ def format_undo_message(record: dict) -> str:
         f"Sample: '{record['SampleID']}'"
     )
 
+
 def format_legacy_sample_warning(sample_id: str) -> str:
     """Format a warning message for legacy sample format detection.
 
@@ -305,6 +322,7 @@ def format_legacy_sample_warning(sample_id: str) -> str:
         Formatted warning message string
     """
     return f"[WARNING] Legacy sample format detected: {sample_id}"
+
 
 def should_auto_save_on_process_switch(
     current_tool: str, new_process: str, has_records: bool
@@ -329,6 +347,7 @@ def should_auto_save_on_process_switch(
         and has_records
     )
 
+
 def format_auto_save_message(count: int, filename: str) -> str:
     """Format message for auto-save notification.
 
@@ -340,6 +359,7 @@ def format_auto_save_message(count: int, filename: str) -> str:
         Formatted auto-save notification message
     """
     return f"[AUTO-SAVE] Saved {count} record(s) to {filename}"
+
 
 # --- Error Messages ---
 def get_process_display_name(abbreviated_name: str) -> str:
@@ -356,6 +376,7 @@ def get_process_display_name(abbreviated_name: str) -> str:
     info = PROCESS_INFO.get(abbreviated_name, {})
     return info.get('process', abbreviated_name)
 
+
 def get_tool_display_name(abbreviated_name: str) -> str:
     """Get the human-readable tool name for display.
 
@@ -369,6 +390,7 @@ def get_tool_display_name(abbreviated_name: str) -> str:
     """
     info = PROCESS_INFO.get(abbreviated_name, {})
     return info.get('tool', abbreviated_name)
+
 
 def validate_and_normalize_process(
     process_input: str
@@ -398,6 +420,7 @@ def validate_and_normalize_process(
         )
         return False, normalized, error_msg
     return True, normalized, ""
+
 
 def is_command(qr_text: str) -> tuple[bool, str | None]:
     """Check if input is a command and return the command type.
