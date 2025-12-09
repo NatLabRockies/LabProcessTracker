@@ -29,6 +29,7 @@ PROCESS_INFO = {}  # Full process information
 
 UNAPPROVED_FOLDER_NAME = "unapproved"
 
+
 def load_process_data():
     """Load process and tool data from JSON file."""
     global PROCESS_COLORS, PROCESS_INFO

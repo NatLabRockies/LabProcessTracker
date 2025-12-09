@@ -1,5 +1,4 @@
 import os
-import sys
 import argparse
 import tracker_utils as tu
 
@@ -301,6 +300,7 @@ def main():
             save_log()
             pause_before_exit()
             break
+
 
 if __name__ == "__main__":
     main()

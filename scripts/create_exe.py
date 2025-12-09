@@ -36,7 +36,7 @@ def build_exe():
     script_name = 'process_tracker_gui.py'
     exe_name = f'process_tracker_gui_v{version}.exe'
 
-    print(f"\nBuilding GUI executable...")
+    print("\nBuilding GUI executable...")
 
     script_path = os.path.join(src_dir, script_name)
 
