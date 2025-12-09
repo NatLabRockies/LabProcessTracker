@@ -109,30 +109,39 @@ def get_output_dir(process_name: str, base_outputs: str) -> str:
 # --- Output Directory Logic ---
 def get_default_output_dir():
     """Determine the appropriate output directory for log files."""
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )
     project_outputs = os.path.join(project_root, "outputs")
     # Check if running from a temp directory (PyInstaller .exe)
     temp_dirs = [os.environ.get('TEMP'), os.environ.get('TMP')]
-    is_temp = any(project_root.lower().startswith(td.lower()) for td in temp_dirs if td)
+    is_temp = any(
+        project_root.lower().startswith(td.lower())
+        for td in temp_dirs if td
+    )
     if os.path.isdir(project_outputs) and not is_temp:
         return project_outputs
     # Fallback to user's Documents
-    user_docs = os.path.expanduser(r"~\Documents\process_tracking_outputs")
+    user_docs = os.path.expanduser(
+        r"~\Documents\process_tracking_outputs"
+    )
     return user_docs
 
 # --- Input Parsing ---
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     """Parse QR code text to determine type and ID.
 
-    Supports compact QR prefixes (S%:ID, P%:ID) and legacy format (####-##).
+    Supports compact QR prefixes (S%:ID, P%:ID) and legacy format
+    (####-##).
 
     Args:
-        qr_text: The QR code text in format 'TYPE:ID', where TYPE is one of 'S%' or 'P%'
+        qr_text: The QR code text in format 'TYPE:ID', where TYPE is
+                 one of 'S%' or 'P%'
                  OR legacy format ####-## (4 digits, dash, 2 digits)
 
     Returns:
-        Tuple of ('SAMPLE', sample_id) or ('PROCESS', process_id) or (None, None) if
-        invalid
+        Tuple of ('SAMPLE', sample_id) or ('PROCESS', process_id) or
+        (None, None) if invalid
     """
     try:
         qr_text = qr_text.strip()
@@ -176,7 +185,9 @@ def create_log_record(operator_name: str, process_name: str, sample_id: str) -> 
         'SampleID': sample_id,
     }
 
-def save_log_to_csv(log_records: list, log_file: str, outputs_folder: str) -> tuple[bool, str]:
+def save_log_to_csv(
+    log_records: list, log_file: str, outputs_folder: str
+) -> tuple[bool, str]:
     """Save log records to CSV file.
 
     Args:
@@ -206,7 +217,10 @@ def save_log_to_csv(log_records: list, log_file: str, outputs_folder: str) -> tu
 
             writer.writerows(log_records)
 
-        return True, f"Successfully saved {len(log_records)} records to {log_file}."
+        return (
+            True,
+            f"Successfully saved {len(log_records)} records to {log_file}."
+        )
     except Exception as e:
         return False, f"Could not save log to file: {e}"
 
@@ -292,7 +306,9 @@ def format_legacy_sample_warning(sample_id: str) -> str:
     """
     return f"[WARNING] Legacy sample format detected: {sample_id}"
 
-def should_auto_save_on_process_switch(current_tool: str, new_process: str, has_records: bool) -> bool:
+def should_auto_save_on_process_switch(
+    current_tool: str, new_process: str, has_records: bool
+) -> bool:
     """Check if auto-save should occur when switching processes.
 
     Args:
@@ -307,9 +323,11 @@ def should_auto_save_on_process_switch(current_tool: str, new_process: str, has_
     # 1. We have a current tool set (not first process)
     # 2. The new process is different from current tool
     # 3. We have unsaved records
-    return (current_tool is not None and
-            new_process != current_tool and
-            has_records)
+    return (
+        current_tool is not None
+        and new_process != current_tool
+        and has_records
+    )
 
 def format_auto_save_message(count: int, filename: str) -> str:
     """Format message for auto-save notification.
@@ -328,10 +346,12 @@ def get_process_display_name(abbreviated_name: str) -> str:
     """Get the human-readable process name for display.
 
     Args:
-        abbreviated_name: The abbreviated process name (e.g., 'ftlb234_spinbox')
+        abbreviated_name: The abbreviated process name
+                          (e.g., 'ftlb234_spinbox')
 
     Returns:
-        Human-readable process name (e.g., 'Spincoating') or abbreviated name if not found
+        Human-readable process name (e.g., 'Spincoating') or
+        abbreviated name if not found
     """
     info = PROCESS_INFO.get(abbreviated_name, {})
     return info.get('process', abbreviated_name)
@@ -340,18 +360,23 @@ def get_tool_display_name(abbreviated_name: str) -> str:
     """Get the human-readable tool name for display.
 
     Args:
-        abbreviated_name: The abbreviated process name (e.g., 'ftlb234_spinbox')
+        abbreviated_name: The abbreviated process name
+                          (e.g., 'ftlb234_spinbox')
 
     Returns:
-        Human-readable tool name (e.g., 'FTLB 234 spincoating glovebox') or abbreviated name if not found
+        Human-readable tool name (e.g., 'FTLB 234 spincoating glovebox')
+        or abbreviated name if not found
     """
     info = PROCESS_INFO.get(abbreviated_name, {})
     return info.get('tool', abbreviated_name)
 
-def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
+def validate_and_normalize_process(
+    process_input: str
+) -> tuple[bool, str, str]:
     """Validate process input and normalize to lowercase.
 
-    This function centralizes the validation logic used by both CLI and GUI.
+    This function centralizes the validation logic used by both CLI
+    and GUI.
 
     Args:
         process_input: Raw process input from QR code
@@ -365,9 +390,11 @@ def validate_and_normalize_process(process_input: str) -> tuple[bool, str, str]:
     normalized = process_input.lower()
     if normalized not in PROCESS_COLORS:
         error_msg = (
-            f"[WARNING] Process '{process_input}' is not implemented and will be quarantined.\n"
+            f"[WARNING] Process '{process_input}' is not implemented "
+            "and will be quarantined.\n"
             "Records will be saved to a separate quarantine log file.\n"
-            "Contact Rajiv.Daxini@nrel.gov to add this process to the database."
+            "Contact Rajiv.Daxini@nrel.gov to add this process to "
+            "the database."
         )
         return False, normalized, error_msg
     return True, normalized, ""

@@ -15,7 +15,11 @@ log_records = []
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Lab Process Tracker")
-    parser.add_argument("--output-dir", type=str, help="Custom output directory for scan logs")
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        help="Custom output directory for scan logs"
+    )
     return parser.parse_args()
 
 def log_scan_event(process_name: str, sample_id: str):
@@ -42,10 +46,15 @@ def save_log():
     global log_records, LOG_FILE
 
     if not LOG_FILE:
-        print("\n[ERROR] No log file defined. Please scan a PROCESS QR code first.")
+        print(
+            "\n[ERROR] No log file defined. "
+            "Please scan a PROCESS QR code first."
+        )
         return
 
-    success, message = tu.save_log_to_csv(log_records, LOG_FILE, OUTPUTS_FOLDER)
+    success, message = tu.save_log_to_csv(
+        log_records, LOG_FILE, OUTPUTS_FOLDER
+    )
 
     if success:
         print(f"\n[SUCCESS] {message}")
@@ -80,15 +89,25 @@ def reset_operator():
 
 def main():
     """Main loop for the scanning control process."""
-    global current_process, operator_name, tool_process, OUTPUTS_FOLDER, LOG_FILE
+    global current_process, operator_name, tool_process
+    global OUTPUTS_FOLDER, LOG_FILE
 
     # --- Deprecation Warning ---
-    print("\n[DEPRECATION WARNING] The CLI is deprecated as of v0.2.0 and will not be maintained.")
-    print("It will be removed in v0.3.0. Please use the new GUI interface for future use.\n")
+    print(
+        "\n[DEPRECATION WARNING] The CLI is deprecated as of v0.2.0 "
+        "and will not be maintained."
+    )
+    print(
+        "It will be removed in v0.3.0. "
+        "Please use the new GUI interface for future use.\n"
+    )
 
     # Parse args and set up paths
     args = parse_args()
-    OUTPUTS_FOLDER = args.output_dir if args.output_dir else tu.get_default_output_dir()
+    OUTPUTS_FOLDER = (
+        args.output_dir if args.output_dir
+        else tu.get_default_output_dir()
+    )
 
     # Ensure the outputs folder exists at startup
     os.makedirs(OUTPUTS_FOLDER, exist_ok=True)
@@ -105,9 +124,15 @@ def main():
         else:
             operator_name = name
 
-    print(f"\nHello, {operator_name}. Have fun scanning... ps I hope your processes have a UWL file")
+    print(
+        f"\nHello, {operator_name}. Have fun scanning... "
+        "ps I hope your processes have a UWL file"
+    )
     print("---------------------------------------")
-    print(f"Enter '{tu.EXIT_CMD}' or '{tu.SAVE_CMD}' to quit or save the current session.")
+    print(
+        f"Enter '{tu.EXIT_CMD}' or '{tu.SAVE_CMD}' to quit or "
+        "save the current session."
+    )
     print(f"Enter '{tu.UNDO_CMD}' to remove the last scan.")
     print(f"Enter '{tu.RESET_OPERATOR_CMD}' to change the operator.")
     print("Scan a PROCESS QR code to set the tool and begin logging.")
@@ -138,7 +163,11 @@ def main():
                 status_parts.append(f"PROCESS: {process_name}")
 
             status_str = " | ".join(status_parts)
-            prompt = f"\n[{status_str}] >> Scan QR Code (or {tu.EXIT_CMD}/{tu.SAVE_CMD}/{tu.UNDO_CMD}/{tu.RESET_OPERATOR_CMD}): "
+            prompt = (
+                f"\n[{status_str}] >> Scan QR Code "
+                f"(or {tu.EXIT_CMD}/{tu.SAVE_CMD}/"
+                f"{tu.UNDO_CMD}/{tu.RESET_OPERATOR_CMD}): "
+            )
             qr_input = input(prompt).strip()
 
             if not qr_input:
@@ -149,9 +178,14 @@ def main():
 
             if is_cmd:
                 if cmd_type == tu.EXIT_CMD:
-                    if log_records and input("Unsaved data exists. Save before exiting? (Y/N): ").upper() == 'Y':
+                    if log_records and input(
+                        "Unsaved data exists. Save before exiting? (Y/N): "
+                    ).upper() == 'Y':
                         save_log()
-                    print(f"\nExiting tracker. Goodbye, {operator_name}. Seriously though, does your process have a UWL?")
+                    print(
+                        f"\nExiting tracker. Goodbye, {operator_name}. "
+                        "Seriously though, does your process have a UWL?"
+                    )
                     pause_before_exit()
                     break
                 elif cmd_type == tu.SAVE_CMD:
@@ -167,52 +201,84 @@ def main():
             # --- Core Logic: Parse and Act ---
             data_type, data_id = tu.parse_input(qr_input)
             if not data_type:
-                print(f"\n[ERROR] Invalid format: '{qr_input}'. Use 'P%:Name' or 'S%:ID'")
+                print(
+                    f"\n[ERROR] Invalid format: '{qr_input}'. "
+                    "Use 'P%:Name' or 'S%:ID'"
+                )
                 continue
 
             if data_type == 'PROCESS':
                 # Use centralized validation
-                is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
+                is_valid, normalized_process, error_msg = (
+                    tu.validate_and_normalize_process(data_id)
+                )
 
                 if not is_valid:
                     print(f"\n[ERROR] {error_msg}")
                     continue
 
                 # Check if we need to auto-save before switching processes
-                if tu.should_auto_save_on_process_switch(tool_process, normalized_process, len(log_records) > 0):
+                if tu.should_auto_save_on_process_switch(
+                    tool_process,
+                    normalized_process,
+                    len(log_records) > 0
+                ):
                     # Auto-save current records before switching
                     record_count = len(log_records)
                     old_log_file = os.path.basename(LOG_FILE)
-                    success, _ = tu.save_log_to_csv(log_records, LOG_FILE, OUTPUTS_FOLDER)
+                    success, _ = tu.save_log_to_csv(
+                        log_records, LOG_FILE, OUTPUTS_FOLDER
+                    )
                     if success:
                         log_records.clear()
                         # Show notification to user
-                        print(f"\n{tu.format_auto_save_message(record_count, old_log_file)}")
+                        print(
+                            f"\n{tu.format_auto_save_message(
+                                record_count, old_log_file)}"
+                        )
 
                 # Only set current_process if validation passed
                 current_process = normalized_process
 
-                # Update tool_process and LOG_FILE when switching to a new process
+                # Update tool_process and LOG_FILE when switching
                 if not tool_process or normalized_process != tool_process:
                     tool_process = normalized_process
-                    LOG_FILE = os.path.join(OUTPUTS_FOLDER, tu.get_log_filename(tool_process))
-                    tool_display_name = tu.get_tool_display_name(tool_process)
+                    LOG_FILE = os.path.join(
+                        OUTPUTS_FOLDER,
+                        tu.get_log_filename(tool_process)
+                    )
+                    tool_display_name = tu.get_tool_display_name(
+                        tool_process
+                    )
                     print(f"\n>>> TOOL SET: '{tool_display_name}'")
                     print(f">>> Log file: {LOG_FILE}")
 
-                process_display_name = tu.get_process_display_name(current_process)
-                print(f"\n>>> PROCESS UPDATED: Now running: '{process_display_name}'")
+                process_display_name = tu.get_process_display_name(
+                    current_process
+                )
+                print(
+                    f"\n>>> PROCESS UPDATED: "
+                    f"Now running: '{process_display_name}'"
+                )
 
             elif data_type == 'SAMPLE':
                 if not tool_process or not current_process:
-                    print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
+                    print(
+                        "\n[ALERT] Cannot log sample. "
+                        "Please scan a PROCESS QR code first."
+                    )
                 else:
                     log_scan_event(current_process, data_id)
             elif data_type == 'SAMPLE_LEGACY':
                 if not tool_process or not current_process:
-                    print("\n[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
+                    print(
+                        "\n[ALERT] Cannot log sample. "
+                        "Please scan a PROCESS QR code first."
+                    )
                 else:
-                    print(f"\n{tu.format_legacy_sample_warning(data_id)}")
+                    print(
+                        f"\n{tu.format_legacy_sample_warning(data_id)}"
+                    )
                     log_scan_event(current_process, data_id)
             else:
                 print(f"\n[ERROR] Unknown data type: '{data_type}'")
