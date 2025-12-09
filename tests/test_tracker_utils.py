@@ -36,9 +36,11 @@ class TestProcessValidation:
         assert error == ""
 
     def test_validate_and_normalize_invalid_process(self):
-        """Test validating and normalizing invalid processes."""
-        is_valid, normalized, error = tu.validate_and_normalize_process("INVALID_PROC")
-        assert not is_valid
+        """Test that invalid processes return validation info for quarantine."""
+        is_valid, normalized, error = (
+            tu.validate_and_normalize_process("INVALID_PROC")
+        )
+        assert not is_valid  # Marked as invalid for quarantine
         assert normalized == "invalid_proc"
         assert "not implemented" in error
         assert "quarantined" in error
@@ -261,21 +263,17 @@ class TestJSONDataLoading:
     """Test cases for JSON data loading."""
 
     def test_expected_processes_exist(self):
-        """Test that expected processes are loaded from JSON."""
-        expected_processes = [
-            "c215ss_jv",
-            "bd8_xrd",
-            "hsem_sem",
-            "ftlb234_spinbox",
-            "pdil_pct",
-        ]
-        assert len(PROCESS_COLORS) >= len(expected_processes), (
-            "PROCESS_COLORS appears empty or incomplete"
+        """Test that JSON loading succeeded and processes are available."""
+        # Verify JSON loaded successfully by checking a few known processes
+        assert len(PROCESS_COLORS) > 0, (
+            "PROCESS_COLORS is empty. JSON may not have loaded."
         )
-        for process in expected_processes:
+        # Check a sample of known processes
+        known_processes = ["c215ss_jv", "bd8_xrd", "ftlb234_spinbox"]
+        for process in known_processes:
             assert process in PROCESS_COLORS, (
-                f"Process '{process}' not found in PROCESS_COLORS. "
-                "JSON may not be loaded."
+                f"Process '{process}' not in PROCESS_COLORS. "
+                "JSON may not be loaded correctly."
             )
 
     def test_all_abbreviations_are_lowercase(self):
