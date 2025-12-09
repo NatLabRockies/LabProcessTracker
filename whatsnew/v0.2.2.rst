@@ -1,0 +1,37 @@
+.. _whatsnew022:
+
+
+v0.2.2 (Unreleased)
+-------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+
+
+Bug fixes
+~~~~~~~~~
+
+
+Documentation
+~~~~~~~~~~~~~
+
+
+Dependencies
+~~~~~~~~~~~~
+
+
+Testing
+~~~~~~~
+
+
+Deprecations
+~~~~~~~~~~~~
+
+
+Contributors
+~~~~~~~~~~~~
