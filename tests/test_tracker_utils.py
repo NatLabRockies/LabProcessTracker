@@ -309,6 +309,12 @@ class TestParseInput:
         assert data_type == "SAMPLE"
         assert data_id == "ABC123"
 
+    def test_valid_batch(self):
+        """Test parsing valid BATCH input."""
+        data_type, data_id = tu.parse_input("B%:BATCH001")
+        assert data_type == "BATCH"
+        assert data_id == "BATCH001"
+
     def test_legacy_sample_format(self):
         """Test parsing legacy sample format (####-##)."""
         data_type, data_id = tu.parse_input("2511-09")
@@ -342,8 +348,10 @@ class TestParseInput:
     @pytest.mark.parametrize("input_str,expected_type,expected_id", [
         ("P%:ftlb234_spinbox", "PROCESS", "ftlb234_spinbox"),
         ("S%:ABC123", "SAMPLE", "ABC123"),
+        ("B%:BATCH001", "BATCH", "BATCH001"),
         ("P%:testing", "PROCESS", "testing"),
         ("S%:999", "SAMPLE", "999"),
+        ("B%:test", "BATCH", "test"),
         ("2511-09", "SAMPLE_LEGACY", "2511-09"),
         ("9999-99", "SAMPLE_LEGACY", "9999-99"),
     ])
@@ -352,6 +360,164 @@ class TestParseInput:
         data_type, data_id = tu.parse_input(input_str)
         assert data_type == expected_type
         assert data_id == expected_id
+
+
+class TestBatchScanning:
+    """Test cases specifically for batch ID scanning."""
+
+    def test_parse_batch_qr_code(self):
+        """Test parsing batch QR codes."""
+        data_type, data_id = tu.parse_input("B%:BATCH123")
+        assert data_type == "BATCH"
+        assert data_id == "BATCH123"
+
+    def test_batch_type_detection(self):
+        """Test is_batch_type helper function."""
+        assert tu.is_batch_type("BATCH") is True
+        assert tu.is_batch_type("SAMPLE") is False
+        assert tu.is_batch_type("SAMPLE_LEGACY") is False
+        assert tu.is_batch_type("PROCESS") is False
+
+    def test_is_data_type_includes_batch(self):
+        """Test that is_data_type includes BATCH."""
+        assert tu.is_data_type("BATCH") is True
+        assert tu.is_data_type("SAMPLE") is True
+        assert tu.is_data_type("SAMPLE_LEGACY") is True
+        assert tu.is_data_type("PROCESS") is False
+
+    def test_create_log_record_with_batch(self):
+        """Test creating log record with batch ID."""
+        record = tu.create_log_record(
+            operator_name="TestOp",
+            process_name="test_process",
+            sample_id="",
+            batch_id="BATCH123"
+        )
+        assert record['Operator'] == "TestOp"
+        assert record['ProcessName'] == "test_process"
+        assert record['SampleID'] == ""
+        assert record['BatchID'] == "BATCH123"
+        assert 'Timestamp' in record
+
+    def test_create_log_record_with_sample(self):
+        """Test creating log record with sample ID."""
+        record = tu.create_log_record(
+            operator_name="TestOp",
+            process_name="test_process",
+            sample_id="SAMPLE123",
+            batch_id=""
+        )
+        assert record['Operator'] == "TestOp"
+        assert record['ProcessName'] == "test_process"
+        assert record['SampleID'] == "SAMPLE123"
+        assert record['BatchID'] == ""
+        assert 'Timestamp' in record
+
+    def test_create_log_record_mutual_exclusivity(self):
+        """Test that sample and batch are mutually exclusive."""
+        # Only batch should be set
+        record_batch = tu.create_log_record(
+            "Op", "proc", batch_id="B001"
+        )
+        assert record_batch['SampleID'] == ""
+        assert record_batch['BatchID'] == "B001"
+
+        # Only sample should be set
+        record_sample = tu.create_log_record(
+            "Op", "proc", sample_id="S001"
+        )
+        assert record_sample['SampleID'] == "S001"
+        assert record_sample['BatchID'] == ""
+
+    def test_format_log_message_batch(self):
+        """Test formatting log message for batch."""
+        record = {
+            'Timestamp': '2025-01-01 12:00:00',
+            'Operator': 'TestOp',
+            'ProcessName': 'test_process',
+            'SampleID': '',
+            'BatchID': 'BATCH123'
+        }
+        msg = tu.format_log_message(record)
+        assert "[LOGGED]" in msg
+        assert "TestOp" in msg
+        assert "test_process" in msg
+        assert "Batch: 'BATCH123'" in msg
+        assert "Sample:" not in msg
+
+    def test_format_log_message_sample(self):
+        """Test formatting log message for sample."""
+        record = {
+            'Timestamp': '2025-01-01 12:00:00',
+            'Operator': 'TestOp',
+            'ProcessName': 'test_process',
+            'SampleID': 'SAMPLE123',
+            'BatchID': ''
+        }
+        msg = tu.format_log_message(record)
+        assert "[LOGGED]" in msg
+        assert "Sample: 'SAMPLE123'" in msg
+        assert "Batch:" not in msg
+
+    def test_format_undo_message_batch(self):
+        """Test formatting undo message for batch."""
+        record = {
+            'Timestamp': '2025-01-01 12:00:00',
+            'ProcessName': 'test_process',
+            'SampleID': '',
+            'BatchID': 'BATCH123'
+        }
+        msg = tu.format_undo_message(record)
+        assert "[UNDO]" in msg
+        assert "test_process" in msg
+        assert "Batch: 'BATCH123'" in msg
+        assert "Sample:" not in msg
+
+    def test_format_undo_message_sample(self):
+        """Test formatting undo message for sample."""
+        record = {
+            'Timestamp': '2025-01-01 12:00:00',
+            'ProcessName': 'test_process',
+            'SampleID': 'SAMPLE123',
+            'BatchID': ''
+        }
+        msg = tu.format_undo_message(record)
+        assert "[UNDO]" in msg
+        assert "Sample: 'SAMPLE123'" in msg
+        assert "Batch:" not in msg
+
+    def test_batch_with_various_formats(self):
+        """Test batch IDs with various formats."""
+        test_cases = [
+            "B%:123",
+            "B%:BATCH-2025-001",
+            "B%:test_batch",
+            "B%:BATCH_A1B2",
+        ]
+        for test_input in test_cases:
+            data_type, data_id = tu.parse_input(test_input)
+            assert data_type == "BATCH", f"Failed for {test_input}"
+            assert data_id == test_input[3:], f"ID mismatch for {test_input}"
+
+    def test_batch_prefix_case_sensitive(self):
+        """Test that batch prefix is case-sensitive."""
+        # Lowercase should not work
+        data_type, data_id = tu.parse_input("b%:test")
+        assert data_type is None
+
+        # Mixed case should not work
+        data_type, data_id = tu.parse_input("B%:Test")
+        assert data_type == "BATCH"  # Prefix works, ID preserved
+
+    def test_empty_batch_id(self):
+        """Test that empty batch ID after prefix is invalid."""
+        data_type, data_id = tu.parse_input("B%:")
+        assert data_type is None
+        assert data_id is None
+
+        data_type, data_id = tu.parse_input("B%:   ")
+        assert data_type is None
+        assert data_id is None
 
 
 class TestAutoSaveLogic:
