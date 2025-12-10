@@ -1,0 +1,42 @@
+.. _whatsnew022:
+
+
+v0.2.2 (Unreleased)
+-------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+- Lint entire codebase for PEP8 compliance using flake8. Address style issues
+  including line lengths, imports, and whitespace for improved code quality and
+  maintainability. (:issue:`32`, :pull:`58`)
+
+
+Bug fixes
+~~~~~~~~~
+
+
+Documentation
+~~~~~~~~~~~~~
+
+
+Dependencies
+~~~~~~~~~~~~
+
+
+Testing
+~~~~~~~
+- Add flake8 workflow for linting code on pull requests. (:issue:`32`, :pull:`58`)
+
+
+Deprecations
+~~~~~~~~~~~~
+
+
+Contributors
+~~~~~~~~~~~~
+- Rajiv Daxini (:ghuser:`rdaxini`)

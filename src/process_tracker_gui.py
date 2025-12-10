@@ -35,7 +35,9 @@ class ProcessTrackerGUI(tk.Tk):
         operator_frame = tk.Frame(main_container, bg="#f0f0f0")
         operator_frame.pack(pady=(10, 0))
 
-        tk.Label(operator_frame, text="Operator Name:", bg="#f0f0f0").pack(side=tk.LEFT, padx=(0, 5))
+        tk.Label(
+            operator_frame, text="Operator Name:", bg="#f0f0f0"
+        ).pack(side=tk.LEFT, padx=(0, 5))
         self.operator_entry = tk.Entry(operator_frame, width=25)
         self.operator_entry.pack(side=tk.LEFT, padx=(0, 5))
         self.operator_entry.focus_set()
@@ -47,7 +49,10 @@ class ProcessTrackerGUI(tk.Tk):
         self.set_operator_btn.pack(side=tk.LEFT, padx=(0, 5))
 
         self.reset_operator_btn = tk.Button(
-            operator_frame, text="Reset Operator", command=self.reset_operator, state="disabled"
+            operator_frame,
+            text="Reset Operator",
+            command=self.reset_operator,
+            state="disabled"
         )
         self.reset_operator_btn.pack(side=tk.LEFT)
 
@@ -114,7 +119,9 @@ class ProcessTrackerGUI(tk.Tk):
         )
         self.terminal.pack(pady=5, fill=tk.BOTH, expand=True)
         # Prevent focus and selection in the activity log
-        self.terminal.bind("<1>", lambda e: (self.qr_entry.focus_set(), "break"))
+        self.terminal.bind(
+            "<1>", lambda e: (self.qr_entry.focus_set(), "break")
+        )
         self.terminal.bind("<FocusIn>", lambda e: self.qr_entry.focus_set())
 
         # Info
@@ -189,19 +196,36 @@ class ProcessTrackerGUI(tk.Tk):
         # Parse input
         data_type, data_id = tu.parse_input(qr_text)
         if not data_type:
-            self.print_terminal(f"[ERROR] Invalid format: '{qr_text}'. Use 'P%:Name' or 'S%:ID'")
+            self.print_terminal(
+                f"[ERROR] Invalid format: '{qr_text}'. "
+                "Use 'P%:Name' or 'S%:ID'"
+            )
             return
         if data_type == "PROCESS":
-            is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
+            is_valid, normalized_process, error_msg = (
+                tu.validate_and_normalize_process(data_id)
+            )
 
             # Auto-save if switching processes
-            if tu.should_auto_save_on_process_switch(self.tool_process, normalized_process, len(self.log_records) > 0):
+            if tu.should_auto_save_on_process_switch(
+                self.tool_process,
+                normalized_process,
+                len(self.log_records) > 0
+            ):
                 record_count = len(self.log_records)
                 old_log_file = os.path.basename(self.log_file)
-                success, _ = tu.save_log_to_csv(self.log_records, self.log_file, self.outputs_folder)
+                success, _ = tu.save_log_to_csv(
+                    self.log_records,
+                    self.log_file,
+                    self.outputs_folder
+                )
                 if success:
                     self.log_records.clear()
-                    self.print_terminal(tu.format_auto_save_message(record_count, old_log_file))
+                    self.print_terminal(
+                        tu.format_auto_save_message(
+                            record_count, old_log_file
+                        )
+                    )
 
             # Always allow setting the process, but warn if invalid
             if not is_valid:
@@ -210,13 +234,20 @@ class ProcessTrackerGUI(tk.Tk):
             self.current_process = normalized_process
 
             # Set quarantine folder and file if invalid
-            self.outputs_folder = tu.get_output_dir(normalized_process, OUTPUTS_FOLDER)
+            self.outputs_folder = tu.get_output_dir(
+                normalized_process, OUTPUTS_FOLDER
+            )
             valid = tu.is_process_valid(normalized_process)
             self.tool_process = normalized_process
-            self.log_file = os.path.join(self.outputs_folder, tu.get_log_filename(self.tool_process, valid=valid))
+            self.log_file = os.path.join(
+                self.outputs_folder,
+                tu.get_log_filename(self.tool_process, valid=valid)
+            )
             tool_display_name = tu.get_tool_display_name(self.tool_process)
             self.title(f"Lab Process Tracker GUI - {tool_display_name}")
-            self.log_file_label.config(text=f"Log will be saved to: {self.log_file}")
+            self.log_file_label.config(
+                text=f"Log will be saved to: {self.log_file}"
+            )
             if not valid:
                 self.log_file_label.config(fg="orange")
             else:
@@ -226,23 +257,38 @@ class ProcessTrackerGUI(tk.Tk):
 
             self.update_process_block(self.current_process, valid=valid)
             self.update_sample_block(None, status_type="RESET")
-            process_display_name = tu.get_process_display_name(self.current_process)
-            self.print_terminal(f">>> PROCESS UPDATED: Now running: '{process_display_name}'")
+            process_display_name = tu.get_process_display_name(
+                self.current_process
+            )
+            self.print_terminal(
+                f">>> PROCESS UPDATED: Now running: '{process_display_name}'"
+            )
         elif data_type == "SAMPLE" or data_type == "SAMPLE_LEGACY":
             if not self.tool_process or not self.current_process:
-                self.print_terminal("[ALERT] Cannot log sample. Please scan a PROCESS QR code first.")
-                self.update_sample_block("No tool/process set", status_type="ALERT")
+                self.print_terminal(
+                    "[ALERT] Cannot log sample. "
+                    "Please scan a PROCESS QR code first."
+                )
+                self.update_sample_block(
+                    "No tool/process set", status_type="ALERT"
+                )
             else:
                 if data_type == "SAMPLE_LEGACY":
-                    self.print_terminal(tu.format_legacy_sample_warning(data_id))
+                    self.print_terminal(
+                        tu.format_legacy_sample_warning(data_id)
+                    )
                 self.log_scan_event(self.current_process, data_id)
                 self.update_sample_block(data_id, status_type="SAMPLE")
         else:
-            self.print_terminal(f"[ERROR] Unknown data type: '{data_type}'")
+            self.print_terminal(
+                f"[ERROR] Unknown data type: '{data_type}'"
+            )
             self.update_sample_block(data_type, status_type="ERROR")
 
     def log_scan_event(self, process_name, sample_id):
-        record = tu.create_log_record(self.operator_name, process_name, sample_id)
+        record = tu.create_log_record(
+            self.operator_name, process_name, sample_id
+        )
         self.log_records.append(record)
         self.print_terminal(tu.format_log_message(record))
 
@@ -256,10 +302,15 @@ class ProcessTrackerGUI(tk.Tk):
 
     def save_log(self):
         if not self.log_file:
-            self.print_terminal("[ERROR] No log file defined. Please scan a PROCESS QR code first.")
+            self.print_terminal(
+                "[ERROR] No log file defined. "
+                "Please scan a PROCESS QR code first."
+            )
             return
 
-        success, message = tu.save_log_to_csv(self.log_records, self.log_file, OUTPUTS_FOLDER)
+        success, message = tu.save_log_to_csv(
+            self.log_records, self.log_file, OUTPUTS_FOLDER
+        )
 
         if success:
             self.print_terminal(f"[SUCCESS] {message}")
@@ -271,16 +322,21 @@ class ProcessTrackerGUI(tk.Tk):
         """Exit the application with prompt to save unsaved data."""
         if self.log_records:
             count = len(self.log_records)
-            if messagebox.askyesno("Unsaved Data", f"You have {count} unsaved record(s). Save before exiting?"):
+            if messagebox.askyesno(
+                "Unsaved Data",
+                f"You have {count} unsaved record(s). "
+                "Save before exiting?"
+            ):
                 self.save_log()
                 if not self.log_records:
                     self.destroy()
                 else:
-                    if messagebox.askyesno("Save Failed", "Failed to save records. Exit anyway?"):
+                    if messagebox.askyesno(
+                        "Confirm Exit",
+                        "Exit without saving? "
+                        "All unsaved data will be lost."
+                    ):
                         self.destroy()
-            else:
-                if messagebox.askyesno("Confirm Exit", "Exit without saving? All unsaved data will be lost."):
-                    self.destroy()
         else:
             self.destroy()
 
@@ -308,27 +364,33 @@ class ProcessTrackerGUI(tk.Tk):
         if status_type == "SAMPLE":
             # Display only the sample ID without "SAMPLE" prefix
             self.sample_label.config(
-                text=sample_info, font=("Arial", FONT_SIZE_LARGE, "bold")
+                text=sample_info,
+                font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         elif status_type == "UNDO":
             self.sample_label.config(
-                text="Last scan undone", font=("Arial", FONT_SIZE_LARGE, "bold")
+                text="Last scan undone",
+                font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         elif status_type == "ALERT":
             self.sample_label.config(
-                text=sample_info, font=("Arial", FONT_SIZE_LARGE, "bold")
+                text=sample_info,
+                font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         elif status_type == "ERROR":
             self.sample_label.config(
-                text=f"ERROR\n{sample_info}", font=("Arial", FONT_SIZE_MEDIUM, "bold")
+                text=f"ERROR\n{sample_info}",
+                font=("Arial", FONT_SIZE_MEDIUM, "bold")
             )
         elif status_type == "RESET":
             self.sample_label.config(
-                text="No sample", font=("Arial", FONT_SIZE_LARGE, "bold")
+                text="No sample",
+                font=("Arial", FONT_SIZE_LARGE, "bold")
             )
         else:
             self.sample_label.config(
-                text="No sample", font=("Arial", FONT_SIZE_LARGE, "bold")
+                text="No sample",
+                font=("Arial", FONT_SIZE_LARGE, "bold")
             )
 
 
