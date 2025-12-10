@@ -293,6 +293,21 @@ def is_running_as_exe() -> bool:
     return getattr(sys, 'frozen', False)
 
 
+def _format_data_id(record: dict) -> str:
+    """Helper to format either batch or sample ID for display.
+    
+    Args:
+        record: Log record dictionary
+        
+    Returns:
+        Formatted string like "Batch: 'ID'" or "Sample: 'ID'"
+    """
+    if record.get('BatchID'):
+        return f"Batch: '{record['BatchID']}'"
+    else:
+        return f"Sample: '{record['SampleID']}'"
+
+
 def format_log_message(record: dict) -> str:
     """Format a log record into a human-readable message.
 
@@ -307,11 +322,7 @@ def format_log_message(record: dict) -> str:
         f"Operator: '{record['Operator']}' | "
         f"Process: '{record['ProcessName']}' | "
     )
-
-    if record.get('BatchID'):
-        return base_msg + f"Batch: '{record['BatchID']}'"
-    else:
-        return base_msg + f"Sample: '{record['SampleID']}'"
+    return base_msg + _format_data_id(record)
 
 
 def format_undo_message(record: dict) -> str:
@@ -327,11 +338,7 @@ def format_undo_message(record: dict) -> str:
         f"[UNDO] Removed last scan: {record['Timestamp']} | "
         f"Process: '{record['ProcessName']}' | "
     )
-
-    if record.get('BatchID'):
-        return base_msg + f"Batch: '{record['BatchID']}'"
-    else:
-        return base_msg + f"Sample: '{record['SampleID']}'"
+    return base_msg + _format_data_id(record)
 
 
 def format_legacy_sample_warning(sample_id: str) -> str:
