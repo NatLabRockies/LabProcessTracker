@@ -295,10 +295,10 @@ def is_running_as_exe() -> bool:
 
 def _format_data_id(record: dict) -> str:
     """Helper to format either batch or sample ID for display.
-    
+
     Args:
         record: Log record dictionary
-        
+
     Returns:
         Formatted string like "Batch: 'ID'" or "Sample: 'ID'"
     """
