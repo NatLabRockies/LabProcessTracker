@@ -16,7 +16,7 @@ def get_version():
 
 
 def build_exe():
-    """Build GUI executable for the process tracker."""
+    """Build executable for the process tracker GUI."""
     version = get_version()
 
     # Get project root and paths
