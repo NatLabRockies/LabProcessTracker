@@ -31,26 +31,26 @@ class ProcessTrackerGUI(tk.Tk):
         main_container = tk.Frame(self, bg="#f0f0f0")
         main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
 
-        # Operator Name Entry
-        operator_frame = tk.Frame(main_container, bg="#f0f0f0")
-        operator_frame.pack(pady=(10, 0))
+        # NREL Username Entry
+        username_frame = tk.Frame(main_container, bg="#f0f0f0")
+        username_frame.pack(pady=(10, 0))
 
         tk.Label(
-            operator_frame, text="Operator Name:", bg="#f0f0f0"
+            username_frame, text="NREL Username:", bg="#f0f0f0"
         ).pack(side=tk.LEFT, padx=(0, 5))
-        self.operator_entry = tk.Entry(operator_frame, width=25)
+        self.operator_entry = tk.Entry(username_frame, width=25)
         self.operator_entry.pack(side=tk.LEFT, padx=(0, 5))
         self.operator_entry.focus_set()
         self.operator_entry.bind("<Return>", lambda e: self.set_operator())
 
         self.set_operator_btn = tk.Button(
-            operator_frame, text="Set Operator", command=self.set_operator
+            username_frame, text="Set", command=self.set_operator
         )
         self.set_operator_btn.pack(side=tk.LEFT, padx=(0, 5))
 
         self.reset_operator_btn = tk.Button(
-            operator_frame,
-            text="Reset Operator",
+            username_frame,
+            text="Reset",
             command=self.reset_operator,
             state="disabled"
         )
@@ -152,9 +152,9 @@ class ProcessTrackerGUI(tk.Tk):
         self.qr_entry.focus_set()
 
     def reset_operator(self):
-        """Reset the operator name, allowing a new operator to take over."""
+        """Reset the NREL username, allowing a new user to take over."""
         if not self.operator_name:
-            self.print_terminal("[INFO] No operator is currently set.")
+            self.print_terminal("[INFO] No NREL username is currently set.")
             return
 
         old_operator = self.operator_name
@@ -163,8 +163,8 @@ class ProcessTrackerGUI(tk.Tk):
         self.operator_entry.config(state="normal")
         self.set_operator_btn.config(state="normal")
         self.reset_operator_btn.config(state="disabled")
-        self.print_terminal(f"[RESET] Operator '{old_operator}' has been reset.")
-        self.print_terminal("Please enter a new operator name to continue.")
+        self.print_terminal(f"[RESET] NREL username '{old_operator}' has been reset.")
+        self.print_terminal("Please enter a new NREL username to continue.")
         self.operator_entry.focus_set()
 
     def handle_scan(self):

@@ -14,7 +14,7 @@ Track processes and sample scans using QR code input, with logs saved to CSV fil
 - **Graphical User Interface (GUI)**
 - **Per-Tool Logging:** Each tool/process has its own dedicated CSV log file
 - Track tool, process, and sample scans with timestamps
-- RESET (operator), UNDO, SAVE, and EXIT commands
+- RESET (username), UNDO, SAVE, and EXIT commands
 - Centralized process/tool configuration via JSON file
 
 ## Start the tracker
@@ -36,16 +36,15 @@ The GUI provides:
 - Visual status blocks for current process and sample
 - Color-coded feedback for different processes
 - Terminal-style activity log
-- Button controls for SAVE, UNDO, EXIT, and Reset Operator
-- Operator management with reset capability
+- Button controls for SAVE, UNDO, EXIT, and Reset user
 
 No additional installations are required.
 
 ## How to use
 
-1. **Enter operator name** when prompted
-   - Type name and click "Set Operator" or press Enter
-   - Use "Reset Operator" button to change operators
+1. **Enter your NREL username** when prompted
+  - Type your NREL username and click "Set" or press Enter
+  - Use "Reset" button to change users
 
 2. **Scan a PROCESS QR code** to set the tool/process:
    - This must be done first before scanning any samples
@@ -62,7 +61,7 @@ No additional installations are required.
 5. **Use commands:**
    - `UNDO` — Remove the last scan from the session (not saved to log)
    - `SAVE` — Save all current session scans to the tool-specific CSV file
-   - `RESET` — Change the operator by clicking "Reset Operator" button
+  - `RESET` — Change the user by clicking "Reset" button
    - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
 
 **QR Code Format:**
