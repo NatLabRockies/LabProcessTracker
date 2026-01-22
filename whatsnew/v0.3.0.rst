@@ -1,11 +1,11 @@
 .. _whatsnew0300:
 
-
 v0.3.0 (TBD)
 ------------------------
 
 This release removes the deprecated CLI interface and streamlines the codebase
-to focus on the GUI experience.
+to focus on the GUI experience. Other documentation improvements and enhancements have
+also been pushed.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
@@ -15,6 +15,7 @@ Breaking Changes
 - Executable: Only GUI executable is now built (``process_tracker_gui_v<version>.exe``).
   The CLI executable is no longer available.
 
+
 Maintenance
 ~~~~~~~~~~~
 - Remove ``src/process_tracker.py`` (deprecated CLI interface)
@@ -23,6 +24,17 @@ Maintenance
 - Update build scripts to only build GUI executable
 - Simplify documentation to focus on GUI usage
 - All core functionality remains tested in ``tests/test_tracker_utils.py``
+
+
+Documentation
+~~~~~~~~~~~~~
+- Update README and GUI to specify operator username format to be their NREL username
+  (:issue:`60`, :pull:`61`)
+
+
+Enhancements
+~~~~~~~~~~~~
+
 
 Contributors
 ~~~~~~~~~~~~
