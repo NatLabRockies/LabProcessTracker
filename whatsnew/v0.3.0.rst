@@ -24,6 +24,8 @@ Maintenance
 - Update build scripts to only build GUI executable
 - Simplify documentation to focus on GUI usage
 - All core functionality remains tested in ``tests/test_tracker_utils.py``
+- Remove upload step of coverage reports to Codecov from CI workflow
+  (:issue:`62`, :pull:`63`)
 
 
 Documentation
