@@ -2,11 +2,107 @@ import tkinter as tk
 from tkinter import scrolledtext, messagebox
 import os
 import tracker_utils as tu
+import tray_layouts
 
 OUTPUTS_FOLDER = tu.get_default_output_dir()
 
 FONT_SIZE_LARGE = 26
 FONT_SIZE_MEDIUM = 22
+
+
+# --- Tray Position Prompt Dialog ---
+class TrayPositionDialog(tk.Toplevel):
+    """Popup dialog for prompting user to scan samples for tray positions."""
+    
+    def __init__(self, parent, position, on_skip_callback, on_skip_all_callback):
+        super().__init__(parent)
+        self.title("Tray Mode")
+        self.geometry("450x180")
+        self.configure(bg="#eaf6ff")
+        self.resizable(False, False)
+        
+        self.parent = parent
+        self.on_skip_callback = on_skip_callback
+        self.on_skip_all_callback = on_skip_all_callback
+        
+        # Make dialog stay on top but NOT modal (so QR entry stays accessible)
+        self.transient(parent)
+        self.attributes('-topmost', True)
+        
+        # Center the dialog on parent
+        self.update_idletasks()
+        x = parent.winfo_x() + (parent.winfo_width() // 2) - (self.winfo_width() // 2)
+        y = parent.winfo_y() + (parent.winfo_height() // 2) - (self.winfo_height() // 2)
+        self.geometry(f"+{x}+{y}")
+        
+        # Message label
+        self.message_label = tk.Label(
+            self,
+            text=f"Scan sample for position:\n{position}",
+            bg="#eaf6ff",
+            fg="#1a5276",
+            font=("Arial", 16, "bold"),
+            wraplength=400
+        )
+        self.message_label.pack(pady=(20, 15), padx=20)
+        
+        # Buttons frame
+        btn_frame = tk.Frame(self, bg="#eaf6ff")
+        btn_frame.pack(pady=(0, 20))
+        
+        # Skip current button
+        self.skip_btn = tk.Button(
+            btn_frame,
+            text="Skip Current",
+            command=self.skip_current,
+            bg="#f39c12",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            relief=tk.RAISED,
+            padx=15,
+            pady=8,
+            width=15
+        )
+        self.skip_btn.grid(row=0, column=0, padx=5)
+        
+        # Skip all button
+        self.skip_all_btn = tk.Button(
+            btn_frame,
+            text="Skip All Remaining",
+            command=self.skip_all_remaining,
+            bg="#e74c3c",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            relief=tk.RAISED,
+            padx=15,
+            pady=8,
+            width=15
+        )
+        self.skip_all_btn.grid(row=0, column=1, padx=5)
+        
+        # Handle window close (X button) - treat as skip all
+        self.protocol("WM_DELETE_WINDOW", self.skip_all_remaining)
+    
+    def update_position(self, position):
+        """Update the position being prompted for."""
+        self.message_label.config(text=f"Scan sample for position:\n{position}")
+    
+    def skip_current(self):
+        """Call the skip current callback."""
+        self.on_skip_callback()
+        # Refocus QR entry in parent window
+        self.parent.qr_entry.focus_set()
+    
+    def skip_all_remaining(self):
+        """Call the skip all callback and close dialog."""
+        # Refocus QR entry before closing
+        self.parent.qr_entry.focus_set()
+        self.on_skip_all_callback()
+        self.destroy()
+    
+    def close(self):
+        """Close the dialog."""
+        self.destroy()
 
 
 # --- GUI Class ---
@@ -21,6 +117,13 @@ class ProcessTrackerGUI(tk.Tk):
         self.log_file = None
         self.operator_name = None
         self.log_records = []
+        # Tray mode state
+        self.tray_mode = False
+        self.tray_id = None
+        self.tray_positions = []
+        self.tray_samples = []  # List of dicts: {"position": pos, "sample_id": id}
+        self.tray_position_index = 0
+        self.tray_dialog = None
         self.create_widgets()
 
         # Handle window close event (X button)
@@ -167,6 +270,46 @@ class ProcessTrackerGUI(tk.Tk):
         self.print_terminal("Please enter a new NREL username to continue.")
         self.operator_entry.focus_set()
 
+    def show_tray_dialog(self, position):
+        """Show or update the tray position dialog."""
+        if self.tray_dialog is None or not self.tray_dialog.winfo_exists():
+            self.tray_dialog = TrayPositionDialog(
+                self, position, self.skip_current_position, self.skip_all_remaining_positions
+            )
+        else:
+            self.tray_dialog.update_position(position)
+            self.tray_dialog.lift()
+        # Always refocus QR entry after showing/updating dialog
+        self.qr_entry.focus_set()
+
+    def close_tray_dialog(self):
+        """Close the tray position dialog if it exists."""
+        if self.tray_dialog and self.tray_dialog.winfo_exists():
+            self.tray_dialog.close()
+            self.tray_dialog = None
+
+    def skip_current_position(self):
+        """Skip the current position and move to next."""
+        if self.tray_mode and self.tray_position_index < len(self.tray_positions):
+            skipped_pos = self.tray_positions[self.tray_position_index]
+            self.print_terminal(f"[TRAY] Skipped position {skipped_pos}.")
+            self.tray_position_index += 1
+            if self.tray_position_index < len(self.tray_positions):
+                next_pos = self.tray_positions[self.tray_position_index]
+                self.show_tray_dialog(next_pos)
+            else:
+                self.close_tray_dialog()
+                self.print_terminal("[TRAY] All positions complete. Please scan PROCESS QR code.")
+
+    def skip_all_remaining_positions(self):
+        """Skip all remaining tray positions and allow process scanning."""
+        if self.tray_mode and self.tray_position_index < len(self.tray_positions):
+            skipped = len(self.tray_positions) - self.tray_position_index
+            self.print_terminal(f"[TRAY] Skipped {skipped} remaining position(s).")
+            self.tray_position_index = len(self.tray_positions)
+            self.close_tray_dialog()
+            self.print_terminal("[TRAY] Ready for PROCESS scan.")
+
     def handle_scan(self):
         if not self.operator_name:
             self.print_terminal("[ERROR] Please enter operator name first.")
@@ -198,9 +341,94 @@ class ProcessTrackerGUI(tk.Tk):
         if not data_type:
             self.print_terminal(
                 f"[ERROR] Invalid format: '{qr_text}'. "
-                "Use 'P%:Name' or 'S%:ID'"
+                "Use 'P%:Name', 'S%:ID', or 'T%:TrayID'"
             )
             return
+
+        # --- Tray Mode Entry ---
+        if not self.tray_mode and data_type == "TRAY":
+            tray_id = data_id
+            layout = tray_layouts.TRAY_LAYOUTS.get(tray_id)
+            if not layout:
+                self.print_terminal(f"[ERROR] Unknown tray ID: {tray_id}")
+                return
+            self.tray_mode = True
+            self.tray_id = tray_id
+            self.tray_positions = layout
+            self.tray_samples = []
+            self.tray_position_index = 0
+            self.show_tray_dialog(self.tray_positions[0])
+            self.print_terminal(f"[TRAY MODE] Tray {tray_id} loaded ({len(layout)} positions).")
+            self.update_sample_block(None, status_type="RESET")
+            return
+
+        # --- Tray Mode: Sequential Sample Scanning ---
+        if self.tray_mode:
+            if data_type == "SAMPLE" or data_type == "SAMPLE_LEGACY":
+                pos = self.tray_positions[self.tray_position_index]
+                sample_id = data_id
+                if data_type == "SAMPLE_LEGACY":
+                    self.print_terminal(tu.format_legacy_sample_warning(sample_id))
+                self.tray_samples.append({"position": pos, "sample_id": sample_id})
+                self.print_terminal(f"[TRAY] Sample '{sample_id}' → position {pos}.")
+                self.tray_position_index += 1
+                if self.tray_position_index < len(self.tray_positions):
+                    next_pos = self.tray_positions[self.tray_position_index]
+                    self.show_tray_dialog(next_pos)
+                    self.update_sample_block(sample_id, status_type="SAMPLE")
+                else:
+                    self.close_tray_dialog()
+                    self.print_terminal("[TRAY] All positions filled. Please scan PROCESS QR code.")
+                    self.update_sample_block(None, status_type="RESET")
+                return
+            elif data_type == "PROCESS":
+                if self.tray_position_index < len(self.tray_positions):
+                    self.print_terminal("[ERROR] Complete all tray positions or skip remaining before scanning process.")
+                    return
+                # Assign process to all tray samples
+                is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
+                if not is_valid:
+                    self.print_terminal(error_msg)
+                self.current_process = normalized_process
+                self.tool_process = normalized_process
+                self.outputs_folder = tu.get_output_dir(normalized_process, OUTPUTS_FOLDER)
+                valid = tu.is_process_valid(normalized_process)
+                self.log_file = os.path.join(
+                    self.outputs_folder,
+                    tu.get_log_filename(self.tool_process, valid=valid)
+                )
+                tool_display_name = tu.get_tool_display_name(self.tool_process)
+                self.title(f"Lab Process Tracker GUI - {tool_display_name}")
+                self.log_file_label.config(text=f"Log will be saved to: {self.log_file}")
+                if not valid:
+                    self.log_file_label.config(fg="orange")
+                else:
+                    self.log_file_label.config(fg="gray")
+                # Log all tray samples with process
+                for entry in self.tray_samples:
+                    record = tu.create_log_record_with_tray(
+                        self.operator_name,
+                        self.tray_id,
+                        entry["position"],
+                        entry["sample_id"],
+                        self.current_process
+                    )
+                    self.log_records.append(record)
+                    self.print_terminal(tu.format_log_message(record))
+                self.print_terminal(f"[TRAY] Process '{tool_display_name}' assigned to {len(self.tray_samples)} sample(s).")
+                # Reset tray mode
+                self.tray_mode = False
+                self.tray_id = None
+                self.tray_positions = []
+                self.tray_samples = []
+                self.tray_position_index = 0
+                self.update_sample_block(None, status_type="RESET")
+                self.update_process_block(self.current_process, valid=valid)
+                return
+            else:
+                self.print_terminal(f"[ERROR] In tray mode, only SAMPLE or PROCESS QR codes are accepted.")
+                return
+
         if data_type == "PROCESS":
             is_valid, normalized_process, error_msg = (
                 tu.validate_and_normalize_process(data_id)
@@ -293,12 +521,23 @@ class ProcessTrackerGUI(tk.Tk):
         self.print_terminal(tu.format_log_message(record))
 
     def undo_last_scan(self):
-        if not self.log_records:
-            self.print_terminal("[INFO] No scans to undo.")
-            return
-        removed_record = self.log_records.pop()
-        self.print_terminal(tu.format_undo_message(removed_record))
-        self.update_sample_block("Last scan undone", status_type="UNDO")
+        if self.tray_mode:
+            # Undo in tray mode: remove last tray sample
+            if self.tray_samples and self.tray_position_index > 0:
+                removed = self.tray_samples.pop()
+                self.tray_position_index -= 1
+                pos = self.tray_positions[self.tray_position_index]
+                self.show_tray_dialog(pos)
+                self.print_terminal(f"[UNDO] Removed sample '{removed['sample_id']}' from position {removed['position']}.")
+            else:
+                self.print_terminal("[INFO] No tray scans to undo.")
+        else:
+            if not self.log_records:
+                self.print_terminal("[INFO] No scans to undo.")
+                return
+            removed_record = self.log_records.pop()
+            self.print_terminal(tu.format_undo_message(removed_record))
+            self.update_sample_block("Last scan undone", status_type="UNDO")
 
     def save_log(self):
         if not self.log_file:
@@ -320,6 +559,9 @@ class ProcessTrackerGUI(tk.Tk):
 
     def exit_app(self):
         """Exit the application with prompt to save unsaved data."""
+        # Close tray dialog if open
+        self.close_tray_dialog()
+        
         if self.log_records:
             count = len(self.log_records)
             if messagebox.askyesno(

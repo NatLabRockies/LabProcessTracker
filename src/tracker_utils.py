@@ -166,6 +166,10 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
             data_id = qr_text[len(QR_PROCESS_PREFIX):].strip()
             if data_id:  # Ensure there's an ID after the prefix
                 return "PROCESS", data_id
+        elif qr_text.startswith("T%:"):
+            data_id = qr_text[len("T%:"):].strip()
+            if data_id:
+                return "TRAY", data_id
 
         # Legacy format: ####-## (4 digits, dash, 2 digits)
         # This supports old sample QR codes that don't have the S%: prefix
@@ -198,6 +202,30 @@ def create_log_record(operator_name: str, process_name: str, sample_id: str) -> 
     }
 
 
+def create_log_record_with_tray(operator_name: str, tray_id: str, position: str, sample_id: str, process_name: str) -> dict:
+    """Create a log record with tray and position info.
+    
+    Args:
+        operator_name: Name of the operator
+        tray_id: ID of the tray
+        position: Position in the tray (e.g., 'A1', 'B2')
+        sample_id: ID of the sample
+        process_name: Name of the process
+    
+    Returns:
+        Dictionary containing the log record with tray info
+    """
+    scan_time = datetime.datetime.now().strftime(DATE_FORMAT)
+    return {
+        'Timestamp': scan_time,
+        'Operator': operator_name,
+        'TrayID': tray_id,
+        'Position': position,
+        'SampleID': sample_id,
+        'ProcessName': process_name,
+    }
+
+
 def save_log_to_csv(
     log_records: list, log_file: str, outputs_folder: str
 ) -> tuple[bool, str]:
@@ -219,7 +247,13 @@ def save_log_to_csv(
 
     # Check if file exists to decide whether to write headers
     file_exists = os.path.exists(log_file)
-    fieldnames = list(log_records[0].keys())
+    
+    # Always include TrayID and Position columns for consistency
+    has_tray = any(('TrayID' in r and 'Position' in r) for r in log_records)
+    if has_tray:
+        fieldnames = ['Timestamp', 'Operator', 'TrayID', 'Position', 'SampleID', 'ProcessName']
+    else:
+        fieldnames = ['Timestamp', 'Operator', 'SampleID', 'ProcessName']
 
     try:
         with open(log_file, 'a', newline='', encoding='utf-8') as csvfile:
@@ -290,12 +324,11 @@ def format_log_message(record: dict) -> str:
     Returns:
         Formatted log message string
     """
-    return (
-        f"[LOGGED] {record['Timestamp']} | "
-        f"Operator: '{record['Operator']}' | "
-        f"Process: '{record['ProcessName']}' | "
-        f"Sample: '{record['SampleID']}'"
-    )
+    msg = f"[LOGGED] {record['Timestamp']} | Operator: '{record['Operator']}'"
+    if 'TrayID' in record and 'Position' in record:
+        msg += f" | Tray: '{record['TrayID']}' | Pos: '{record['Position']}'"
+    msg += f" | Sample: '{record.get('SampleID', '')}' | Process: '{record.get('ProcessName', '')}'"  
+    return msg
 
 
 def format_undo_message(record: dict) -> str:
