@@ -60,8 +60,8 @@ class ProcessTrackerGUI(tk.Tk):
             font=('Segoe UI', 10, 'bold')
         )
         self.style.map('Modern.TButton',
-            background=[('active', '#2980b9')],
-            relief=[('pressed', 'flat')]
+                       background=[('active', '#2980b9')],
+                       relief=[('pressed', 'flat')]
         )
 
         # Entry style
