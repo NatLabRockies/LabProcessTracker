@@ -27,6 +27,7 @@ DEFAULT_PROCESS_COLOR = "#95a5a6"  # Grey
 # Map process names to colors (hex codes for GUI) - loaded from JSON
 PROCESS_COLORS = {}
 PROCESS_INFO = {}  # Full process information
+TRAY_LAYOUTS = {}  # Tray position mappings - loaded from JSON
 
 UNAPPROVED_FOLDER_NAME = "unapproved"
 
@@ -66,8 +67,39 @@ def load_process_data():
         print("Using default/empty process configuration.")
 
 
-# Load process data at module import
+def load_tray_data():
+    """Load tray layout data from JSON file."""
+    global TRAY_LAYOUTS
+
+    # Determine base path - handles both script and PyInstaller .exe
+    if getattr(sys, 'frozen', False):
+        # Running as compiled executable
+        base_path = sys._MEIPASS
+    else:
+        # Running as script
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    json_path = os.path.join(base_path, "tray_layouts.json")
+
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        for tray in data.get('trays', []):
+            tray_id = tray.get('tray_id', '')
+            if tray_id:
+                TRAY_LAYOUTS[tray_id] = tray.get('positions', [])
+    except FileNotFoundError:
+        print(f"Warning: tray_layouts.json not found at {json_path}")
+        print("Tray tracking will not be available.")
+    except json.JSONDecodeError as e:
+        print(f"Warning: Error parsing tray_layouts.json: {e}")
+        print("Tray tracking will not be available.")
+
+
+# Load process and tray data at module import
 load_process_data()
+load_tray_data()
 
 
 def get_unapproved_log_filename(process_name: str) -> str:

@@ -131,9 +131,9 @@ The quarantine logic allows rapid deployment on new systems without blocking wor
 process_tracking/
 ├── src/                           # Main application code
 │   ├── tracker_utils.py           # Shared core utilities and business logic
-│   ├── process_tracker_gui.py     # GUI application
-│   └── tray_layouts.py            # Tray position mappings (2x2, 5x5, 8x8)
+│   └── process_tracker_gui.py     # GUI application
 ├── tools_processes.json           # Central database of all tools/processes
+├── tray_layouts.json              # Tray position mappings (2x2, 5x5, 8x8)
 ├── scripts/                       # Utility and build scripts
 │   ├── create_exe.py              # Build script for creating executable
 │   └── run_tests.py               # Test runner script

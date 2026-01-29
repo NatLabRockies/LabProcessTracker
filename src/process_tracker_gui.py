@@ -38,7 +38,7 @@ class TrayPositionDialog(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
 
         # Message label
-        prompt_text = f"Scan sample for position: \\n{position}"
+        prompt_text = f"Scan sample for position: {position}"
         self.message_label = tk.Label(
             self,
             text=prompt_text,
