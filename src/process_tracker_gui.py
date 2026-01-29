@@ -38,9 +38,10 @@ class TrayPositionDialog(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
 
         # Message label
+        prompt_text = f"Scan sample for position:\\n{position}"
         self.message_label = tk.Label(
             self,
-            text=f"Scan sample for position:\n{position}",
+            text=prompt_text,
             bg="#eaf6ff",
             fg="#1a5276",
             font=("Arial", 16, "bold"),
@@ -87,7 +88,8 @@ class TrayPositionDialog(tk.Toplevel):
 
     def update_position(self, position):
         """Update the position being prompted for."""
-        self.message_label.config(text=f"Scan sample for position:\n{position}")
+        prompt_text = f"Scan sample for position:\n{position}"
+        self.message_label.config(text=prompt_text)
 
     def skip_current(self):
         """Call the skip current callback."""
@@ -275,9 +277,13 @@ class ProcessTrackerGUI(tk.Tk):
 
     def show_tray_dialog(self, position):
         """Show or update the tray position dialog."""
-        if self.tray_dialog is None or not self.tray_dialog.winfo_exists():
+        if (self.tray_dialog is None or
+                not self.tray_dialog.winfo_exists()):
             self.tray_dialog = TrayPositionDialog(
-                self, position, self.skip_current_position, self.skip_all_remaining_positions
+                self,
+                position,
+                self.skip_current_position,
+                self.skip_all_remaining_positions
             )
         else:
             self.tray_dialog.update_position(position)
@@ -303,7 +309,10 @@ class ProcessTrackerGUI(tk.Tk):
                 self.show_tray_dialog(next_pos)
             else:
                 self.close_tray_dialog()
-                self.print_terminal("[TRAY] All positions complete. Please scan PROCESS QR code.")
+                self.print_terminal(
+                    "[TRAY] All positions complete. "
+                    "Please scan PROCESS QR code."
+                )
 
     def skip_all_remaining_positions(self):
         """Skip all remaining tray positions and allow process scanning."""
