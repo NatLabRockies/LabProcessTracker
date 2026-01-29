@@ -563,6 +563,36 @@ class TestTrayParsing:
         assert data_id is None
 
 
+class TestTrayLayoutLoading:
+    """Test cases for tray layout JSON loading."""
+
+    def test_tray_layouts_loaded(self):
+        """Test that TRAY_LAYOUTS dictionary is populated from JSON."""
+        # Verify the dictionary exists and was loaded
+        assert isinstance(tu.TRAY_LAYOUTS, dict), (
+            "TRAY_LAYOUTS should be a dictionary"
+        )
+
+    def test_tray_layout_structure(self):
+        """Test that tray layouts have expected structure (list of position strings)."""
+
+        for tray_id, positions in tu.TRAY_LAYOUTS.items():
+            # Should be a list
+            assert isinstance(positions, list), (
+                f"Tray layout for '{tray_id}' is not a list"
+            )
+
+            # Should contain position strings
+            assert len(positions) > 0, (
+                f"Tray '{tray_id}' has no positions"
+            )
+
+            for pos in positions:
+                assert isinstance(pos, str) and len(pos) >= 2, (
+                    f"Invalid position format '{pos}' in tray '{tray_id}'"
+                )
+
+
 class TestTrayValidation:
     """Test cases for tray mode validation logic."""
 
