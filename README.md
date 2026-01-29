@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/badge/version-v0.2.1-blue.svg)](https://github.com/rdaxini/process_tracking)
+[![Version](https://img.shields.io/github/v/release/rdaxini/process_tracking?label=version)](https://github.com/rdaxini/process_tracking/releases)
 
 <div align="left">
   <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
