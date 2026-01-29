@@ -1,6 +1,6 @@
 .. _whatsnew0300:
 
-v0.3.0 (TBD)
+v0.3.0 (January 2026)
 ------------------------
 
 This release removes the deprecated CLI interface and streamlines the codebase
@@ -16,6 +16,17 @@ Breaking Changes
   The CLI executable is no longer available.
 
 
+Enhancements
+~~~~~~~~~~~~
+- Add support for batch ID tracking with ``B%:`` prefix. Batches can now be
+  scanned and logged alongside individual samples, with scan logs containing
+  separate SampleID and BatchID columns. (:issue:`56`, :pull:`59`)
+- Lint entire codebase for PEP8 compliance using flake8. Address style issues
+  including line lengths, imports, and whitespace for improved code quality and
+  maintainability. (:issue:`32`, :pull:`58`)
+- Remove unused is_running_as_exe() function from tracker_utils.py. (:pull:`66`)
+
+
 Maintenance
 ~~~~~~~~~~~
 - Remove ``src/process_tracker.py`` (deprecated CLI interface)
@@ -26,16 +37,18 @@ Maintenance
 - All core functionality remains tested in ``tests/test_tracker_utils.py``
 - Remove upload step of coverage reports to Codecov from CI workflow
   (:issue:`62`, :pull:`63`)
+- Remove codecov reporting upload step to bypass errors. (:issue:`62`, :pull:`63`)
+
+
+Testing
+~~~~~~~
+- Add flake8 workflow for linting code on pull requests. (:issue:`32`, :pull:`58`)
 
 
 Documentation
 ~~~~~~~~~~~~~
 - Update README and GUI to specify operator username format to be their NREL username
   (:issue:`60`, :pull:`61`)
-
-
-Enhancements
-~~~~~~~~~~~~
 
 
 Contributors
