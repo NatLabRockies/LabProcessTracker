@@ -214,31 +214,13 @@ def create_log_record(
     }
 
 
-def create_log_record_with_tray(operator_name: str, tray_id: str, position: str, sample_id: str, process_name: str) -> dict:
-    """Create a log record with tray and position info.
-
-    Args:
-        operator_name: Name of the operator
-        tray_id: ID of the tray
-        position: Position in the tray (e.g., 'A1', 'B2')
-        sample_id: ID of the sample
-        process_name: Name of the process
-
-    Returns:
-        Dictionary containing the log record with tray info
-    """
-    scan_time = datetime.datetime.now().strftime(DATE_FORMAT)
-    return {
-        'Timestamp': scan_time,
-        'Operator': operator_name,
-        'TrayID': tray_id,
-        'Position': position,
-        'SampleID': sample_id,
-        'ProcessName': process_name,
-    }
-
-
-def create_log_record_with_tray(operator_name: str, tray_id: str, position: str, sample_id: str, process_name: str) -> dict:
+def create_log_record_with_tray(
+    operator_name: str,
+    tray_id: str,
+    position: str,
+    sample_id: str,
+    process_name: str
+) -> dict:
     """Create a log record with tray and position info.
 
     Args:
@@ -285,11 +267,18 @@ def save_log_to_csv(
     file_exists = os.path.exists(log_file)
 
     # Always include TrayID and Position columns for consistency
-    has_tray = any(('TrayID' in r and 'Position' in r) for r in log_records)
+    has_tray = any(
+        ('TrayID' in r and 'Position' in r) for r in log_records
+    )
     if has_tray:
-        fieldnames = ['Timestamp', 'Operator', 'TrayID', 'Position', 'SampleID', 'ProcessName']
+        fieldnames = [
+            'Timestamp', 'Operator', 'TrayID', 'Position',
+            'SampleID', 'ProcessName'
+        ]
     else:
-        fieldnames = ['Timestamp', 'Operator', 'SampleID', 'ProcessName']
+        fieldnames = [
+            'Timestamp', 'Operator', 'SampleID', 'ProcessName'
+        ]
 
     try:
         with open(log_file, 'a', newline='', encoding='utf-8') as csvfile:
@@ -574,7 +563,9 @@ def is_data_type(scan_type: str) -> bool:
 
 
 # --- Tray Mode Logic ---
-def validate_tray_ready_for_process(tray_position_index: int, total_positions: int) -> tuple[bool, str]:
+def validate_tray_ready_for_process(
+    tray_position_index: int, total_positions: int
+) -> tuple[bool, str]:
     """Check if tray is ready for process assignment.
 
     Args:
@@ -585,11 +576,17 @@ def validate_tray_ready_for_process(tray_position_index: int, total_positions: i
         Tuple of (is_ready: bool, error_message: str or empty string)
     """
     if tray_position_index < total_positions:
-        return False, "[ERROR] Complete all tray positions or skip remaining before scanning process."
+        return (
+            False,
+            "[ERROR] Complete all tray positions or skip remaining "
+            "before scanning process."
+        )
     return True, ""
 
 
-def should_accept_scan_in_tray_mode(data_type: str, tray_position_index: int, total_positions: int) -> tuple[bool, str]:
+def should_accept_scan_in_tray_mode(
+    data_type: str, tray_position_index: int, total_positions: int
+) -> tuple[bool, str]:
     """Determine if a scan should be accepted in tray mode.
 
     Args:
@@ -605,12 +602,23 @@ def should_accept_scan_in_tray_mode(data_type: str, tray_position_index: int, to
         return True, ""
     elif data_type == "PROCESS":
         # Only accept process if all positions are filled/skipped
-        return validate_tray_ready_for_process(tray_position_index, total_positions)
+        return validate_tray_ready_for_process(
+            tray_position_index, total_positions
+        )
     else:
-        return False, "[ERROR] In tray mode, only SAMPLE or PROCESS QR codes are accepted."
+        return (
+            False,
+            "[ERROR] In tray mode, only SAMPLE or PROCESS QR codes "
+            "are accepted."
+        )
 
 
-def create_tray_batch_records(operator_name: str, tray_id: str, tray_samples: list, process_name: str) -> list:
+def create_tray_batch_records(
+    operator_name: str,
+    tray_id: str,
+    tray_samples: list,
+    process_name: str
+) -> list:
     """Create log records for all samples in a tray with the assigned process.
 
     Args:
