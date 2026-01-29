@@ -13,28 +13,28 @@ FONT_SIZE_MEDIUM = 22
 # --- Tray Position Prompt Dialog ---
 class TrayPositionDialog(tk.Toplevel):
     """Popup dialog for prompting user to scan samples for tray positions."""
-    
+
     def __init__(self, parent, position, on_skip_callback, on_skip_all_callback):
         super().__init__(parent)
         self.title("Tray Mode")
         self.geometry("450x180")
         self.configure(bg="#eaf6ff")
         self.resizable(False, False)
-        
+
         self.parent = parent
         self.on_skip_callback = on_skip_callback
         self.on_skip_all_callback = on_skip_all_callback
-        
+
         # Make dialog stay on top but NOT modal (so QR entry stays accessible)
         self.transient(parent)
         self.attributes('-topmost', True)
-        
+
         # Center the dialog on parent
         self.update_idletasks()
         x = parent.winfo_x() + (parent.winfo_width() // 2) - (self.winfo_width() // 2)
         y = parent.winfo_y() + (parent.winfo_height() // 2) - (self.winfo_height() // 2)
         self.geometry(f"+{x}+{y}")
-        
+
         # Message label
         self.message_label = tk.Label(
             self,
@@ -45,11 +45,11 @@ class TrayPositionDialog(tk.Toplevel):
             wraplength=400
         )
         self.message_label.pack(pady=(20, 15), padx=20)
-        
+
         # Buttons frame
         btn_frame = tk.Frame(self, bg="#eaf6ff")
         btn_frame.pack(pady=(0, 20))
-        
+
         # Skip current button
         self.skip_btn = tk.Button(
             btn_frame,
@@ -64,7 +64,7 @@ class TrayPositionDialog(tk.Toplevel):
             width=15
         )
         self.skip_btn.grid(row=0, column=0, padx=5)
-        
+
         # Skip all button
         self.skip_all_btn = tk.Button(
             btn_frame,
@@ -79,27 +79,27 @@ class TrayPositionDialog(tk.Toplevel):
             width=15
         )
         self.skip_all_btn.grid(row=0, column=1, padx=5)
-        
+
         # Handle window close (X button) - treat as skip all
         self.protocol("WM_DELETE_WINDOW", self.skip_all_remaining)
-    
+
     def update_position(self, position):
         """Update the position being prompted for."""
         self.message_label.config(text=f"Scan sample for position:\n{position}")
-    
+
     def skip_current(self):
         """Call the skip current callback."""
         self.on_skip_callback()
         # Refocus QR entry in parent window
         self.parent.qr_entry.focus_set()
-    
+
     def skip_all_remaining(self):
         """Call the skip all callback and close dialog."""
         # Refocus QR entry before closing
         self.parent.qr_entry.focus_set()
         self.on_skip_all_callback()
         self.destroy()
-    
+
     def close(self):
         """Close the dialog."""
         self.destroy()
@@ -429,6 +429,7 @@ class ProcessTrackerGUI(tk.Tk):
                 self.print_terminal(f"[ERROR] In tray mode, only SAMPLE or PROCESS QR codes are accepted.")
                 return
 
+        # --- Normal Mode (no tray) ---
         if data_type == "PROCESS":
             is_valid, normalized_process, error_msg = (
                 tu.validate_and_normalize_process(data_id)
@@ -532,6 +533,7 @@ class ProcessTrackerGUI(tk.Tk):
             else:
                 self.print_terminal("[INFO] No tray scans to undo.")
         else:
+            # Normal mode undo (existing functionality)
             if not self.log_records:
                 self.print_terminal("[INFO] No scans to undo.")
                 return
@@ -561,7 +563,7 @@ class ProcessTrackerGUI(tk.Tk):
         """Exit the application with prompt to save unsaved data."""
         # Close tray dialog if open
         self.close_tray_dialog()
-        
+
         if self.log_records:
             count = len(self.log_records)
             if messagebox.askyesno(

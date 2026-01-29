@@ -204,14 +204,14 @@ def create_log_record(operator_name: str, process_name: str, sample_id: str) -> 
 
 def create_log_record_with_tray(operator_name: str, tray_id: str, position: str, sample_id: str, process_name: str) -> dict:
     """Create a log record with tray and position info.
-    
+
     Args:
         operator_name: Name of the operator
         tray_id: ID of the tray
         position: Position in the tray (e.g., 'A1', 'B2')
         sample_id: ID of the sample
         process_name: Name of the process
-    
+
     Returns:
         Dictionary containing the log record with tray info
     """
@@ -247,7 +247,7 @@ def save_log_to_csv(
 
     # Check if file exists to decide whether to write headers
     file_exists = os.path.exists(log_file)
-    
+
     # Always include TrayID and Position columns for consistency
     has_tray = any(('TrayID' in r and 'Position' in r) for r in log_records)
     if has_tray:
@@ -327,7 +327,7 @@ def format_log_message(record: dict) -> str:
     msg = f"[LOGGED] {record['Timestamp']} | Operator: '{record['Operator']}'"
     if 'TrayID' in record and 'Position' in record:
         msg += f" | Tray: '{record['TrayID']}' | Pos: '{record['Position']}'"
-    msg += f" | Sample: '{record.get('SampleID', '')}' | Process: '{record.get('ProcessName', '')}'"  
+    msg += f" | Sample: '{record.get('SampleID', '')}' | Process: '{record.get('ProcessName', '')}'"
     return msg
 
 
