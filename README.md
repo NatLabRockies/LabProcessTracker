@@ -6,29 +6,27 @@
 
 # Lab Process Tracker
 
-A tracking application for lab operations with both command-line and
-GUI interfaces. Track processes and sample scans using QR code input, with logs saved to
-CSV files.
+A tracking application for lab operations with a graphical user interface.
+Track processes and sample scans using QR code input, with logs saved to CSV files.
 
 ## Features
 
-- **Dual Interface:** Command-line (CLI) and graphical user interface (GUI)
+- **Graphical User Interface (GUI)**
 - **Per-Tool Logging:** Each tool/process has its own dedicated CSV log file
 - Track tool, process, and sample scans with timestamps
-- RESET (operator), UNDO, SAVE, and EXIT commands
+- RESET (username), UNDO, SAVE, and EXIT commands
 - Centralized process/tool configuration via JSON file
 
 ## Start the tracker
 
 After downloading the repository from GitHub, you can run the tracker in multiple ways:
 
-### 1. Run the standalone executables
+### 1. Run the standalone executable
 
-Navigate to the `exe/dist` folder and double-click one of the executables:
-- **`process_tracker_gui_v<version>.exe`** - GUI version (recommended)
-- **`process_tracker_cli_v0.2.0.exe`** - CLI version (deprecated, v0.2.0 only)
+Navigate to the `exe/dist` folder and double-click the executable:
+- **`process_tracker_gui_v<version>.exe`**
 
-### 2. Run the GUI (Graphical Interface)
+### 2. Run the GUI from source
 
 ```bash
 python src/process_tracker_gui.py
@@ -38,25 +36,15 @@ The GUI provides:
 - Visual status blocks for current process and sample
 - Color-coded feedback for different processes
 - Terminal-style activity log
-- Button controls for SAVE, UNDO, EXIT, and Reset Operator
-- Operator management with reset capability
-
-### 3. Run the CLI (Command-Line Interface)
-
-> **⚠️ Deprecation Notice:** The CLI interface is deprecated as of v0.2.0 and will be removed in v0.3.0. Please use the GUI interface instead.
-
-```bash
-python src/process_tracker.py
-```
+- Button controls for SAVE, UNDO, EXIT, and Reset user
 
 No additional installations are required.
 
 ## How to use
 
-1. **Enter operator name** when prompted
-   - GUI: Type name and click "Set Operator" or press Enter
-   - CLI: Type name and press Enter
-   - Use "Reset Operator" button (GUI) or `RESET` command (CLI) to change operators
+1. **Enter your NREL username** when prompted
+  - Type your NREL username and click "Set" or press Enter
+  - Use "Reset" button to change users
 
 2. **Scan a PROCESS QR code** to set the tool/process:
    - This must be done first before scanning any samples
@@ -73,15 +61,16 @@ No additional installations are required.
 5. **Use commands:**
    - `UNDO` — Remove the last scan from the session (not saved to log)
    - `SAVE` — Save all current session scans to the tool-specific CSV file
-   - `RESET` — Change the operator (CLI) or click "Reset Operator" button (GUI)
+  - `RESET` — Change the user by clicking "Reset" button
    - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
 
 **QR Code Format:**
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
 - Sample QR codes must contain: `S%:SampleID` (e.g., `S%:2511-09`)
-- The prefixes (`P%:` and `S%:`) must be uppercase and include the colon
+- Batch QR codes must contain: `B%:BatchID` (e.g., `B%:BATCH2025-001`)
+- The prefixes (`P%:`, `S%:`, and `B%:`) must be uppercase and include the colon
 - Process names are case-insensitive (automatically normalized to lowercase)
-- Sample IDs preserve their original case
+- Sample IDs and Batch IDs preserve their original case
 - Legacy sample QR codes in format `####-##` (e.g., `2511-09`) are supported
   - A warning will be displayed when legacy format is detected
   - No `S%:` prefix required for legacy samples
@@ -89,25 +78,31 @@ No additional installations are required.
 **Examples:**
 - `P%:c215ss_jv` — Sets process to C215 Solar Simulator JV measurement
 - `S%:2511-09` — Logs sample 2511-09 under the current process
+- `B%:BATCH2025-001` — Logs batch BATCH2025-001 under the current process
 - `2511-09` — Legacy format, automatically recognized as a sample (logs with warning)
 
-**Process Validation:**
-If you scan a process that is not in the approved list, you will receive an error
-message with:
-- The list of available processes
-- Contact information to request adding new processes (Rajiv.Daxini@nrel.gov)
+**Batch vs Sample Logging:**
+- **Sample scanning:** Used to log individual samples processed through a tool
+- **Batch scanning:** Used to log that an entire batch of samples processed
+  - The batch scan records that the whole batch went through this specific process
+  - CSV logs contain separate `SampleID` and `BatchID` columns
+  - Only one is populated per scan (mutually exclusive)
 
-## Unapproved Processes (Quarantine Logging)
+**Process Validation & Quarantine Logging:**
 
-If you scan a process QR code (`P%:process_name`) that is **not listed in `tools_processes.json`**, the tracker will:
+When you scan a process QR code (`P%:process_name`):
 
-- Show a **WARNING** in the activity log and process block.
-- Log all scans for this process in a **quarantine CSV file** named `scan_log_UNAPPROVED_<process_name>.csv`.
-- Quarantine logs are saved in a separate folder: `outputs/unapproved/`.
-- You can continue logging samples for this process, but records are kept separate from approved processes.
-- **Contact Rajiv.Daxini@nrel.gov** to request adding new processes to the database.
+- If the process **is listed in `tools_processes.json`**:
+  - The process is set and scans are logged to a dedicated CSV file (e.g., `scan_log_c215ss_jv.csv`).
+  - The process block is color-coded and the activity log confirms the process/tool.
 
-This allows rapid deployment on new systems without blocking workflow, while ensuring unapproved processes are tracked and not mixed with approved logs.
+- If the process **is NOT listed in `tools_processes.json`**:
+  - You will see a **WARNING** in the activity log and process block.
+  - All scans for this process are logged in a **quarantine CSV file** named `scan_log_UNAPPROVED_<process_name>.csv` in `outputs/unapproved/`.
+  - You can continue logging samples for this process, but records are kept separate from approved processes.
+  - **Contact Rajiv.Daxini@nrel.gov** to request adding new processes to the database.
+
+The quarantine logic allows rapid deployment on new systems without blocking workflow, while ensuring unapproved processes are tracked and not mixed with approved logs.
 
 ## Output
 
@@ -119,15 +114,6 @@ This allows rapid deployment on new systems without blocking workflow, while ens
   - **Running from source:** `outputs/` folder in the project directory
   - **Running as executable:** `~/Documents/process_tracking_outputs/`
 - If a log file already exists, new session outputs will be appended
-- **Custom output location (CLI only):**
-
-  ```bash
-  python src/process_tracker.py --output-dir /path/to/your/folder
-  ```
-  or, for the executable:
-  ```
-  process_tracker_cli_v<version>.exe --output-dir C:\path\to\your\folder
-  ```
 
 ## Folder Structure
 
@@ -135,24 +121,21 @@ This allows rapid deployment on new systems without blocking workflow, while ens
 process_tracking/
 ├── src/                           # Main application code
 │   ├── tracker_utils.py           # Shared core utilities and business logic
-│   ├── process_tracker.py         # CLI application
 │   └── process_tracker_gui.py     # GUI application (Tkinter)
-├── tools_processes.json           # Central database of all tools/processe
+├── tools_processes.json           # Central database of all tools/processes
 ├── scripts/                       # Utility and build scripts
-│   ├── create_exe.py              # Build script for creating executables
+│   ├── create_exe.py              # Build script for creating executable
 │   └── run_tests.py               # Test runner script
 ├── tests/                         # Test suite
 │   ├── __init__.py
-│   ├── test_process_tracker.py    # CLI/core tests
-│   └── test_tracker_utils.py      # Utility function tests
+│   └── test_tracker_utils.py      # Core functionality tests
 ├── outputs/                       # Default output location (auto-created)
 │   ├── scan_log_c215ss_jv.csv     # Example: c215ss_jv tool log
 │   ├── scan_log_bd8_xrd.csv       # Example: bd8_xrd tool log
 │   └── ...                        # One CSV per tool/process
-├── exe/                           # Compiled executables
+├── exe/                           # Compiled executable
 │   └── dist/
-│       ├── process_tracker_gui_v<version>.exe
-│       └── process_tracker_cli_v<version>.exe
+│       └── process_tracker_gui_v<version>.exe
 ├── .github/                       # CI/CD workflows
 │   └── workflows/
 │       └── pytest.yml             # Automated testing workflow
@@ -191,17 +174,16 @@ pip install .[test]
 pip install .[dev]
 ```
 
-#### Building Executables
+#### Building Executable
 
-To build standalone executables:
+To build the standalone executable:
 
 ```bash
-# Build the GUI executable (CLI build no longer supported)
 python scripts/create_exe.py
-
 ```
 
-The executable will be created in `exe/dist/` directory.
+The executable will be created in `exe/dist/` directory:
+- `process_tracker_gui_v<version>.exe` - GUI version (no console window)
 
 **Note:** You need PyInstaller installed: `pip install .[build]`
 
