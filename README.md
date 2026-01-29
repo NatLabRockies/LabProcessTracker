@@ -67,9 +67,10 @@ No additional installations are required.
 **QR Code Format:**
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
 - Sample QR codes must contain: `S%:SampleID` (e.g., `S%:2511-09`)
-- The prefixes (`P%:` and `S%:`) must be uppercase and include the colon
+- Batch QR codes must contain: `B%:BatchID` (e.g., `B%:BATCH2025-001`)
+- The prefixes (`P%:`, `S%:`, and `B%:`) must be uppercase and include the colon
 - Process names are case-insensitive (automatically normalized to lowercase)
-- Sample IDs preserve their original case
+- Sample IDs and Batch IDs preserve their original case
 - Legacy sample QR codes in format `####-##` (e.g., `2511-09`) are supported
   - A warning will be displayed when legacy format is detected
   - No `S%:` prefix required for legacy samples
@@ -77,7 +78,15 @@ No additional installations are required.
 **Examples:**
 - `P%:c215ss_jv` — Sets process to C215 Solar Simulator JV measurement
 - `S%:2511-09` — Logs sample 2511-09 under the current process
+- `B%:BATCH2025-001` — Logs batch BATCH2025-001 under the current process
 - `2511-09` — Legacy format, automatically recognized as a sample (logs with warning)
+
+**Batch vs Sample Logging:**
+- **Sample scanning:** Used to log individual samples processed through a tool
+- **Batch scanning:** Used to log that an entire batch of samples processed
+  - The batch scan records that the whole batch went through this specific process
+  - CSV logs contain separate `SampleID` and `BatchID` columns
+  - Only one is populated per scan (mutually exclusive)
 
 **Process Validation & Quarantine Logging:**
 

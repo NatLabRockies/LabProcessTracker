@@ -11,6 +11,9 @@ Breaking Changes
 
 Enhancements
 ~~~~~~~~~~~~
+- Add support for batch ID tracking with ``B%:`` prefix. Batches can now be
+  scanned and logged alongside individual samples, with scan logs containing
+  separate SampleID and BatchID columns. (:issue:`56`, :pull:`59`)
 - Lint entire codebase for PEP8 compliance using flake8. Address style issues
   including line lengths, imports, and whitespace for improved code quality and
   maintainability. (:issue:`32`, :pull:`58`)

@@ -341,7 +341,7 @@ class ProcessTrackerGUI(tk.Tk):
         if not data_type:
             self.print_terminal(
                 f"[ERROR] Invalid format: '{qr_text}'. "
-                "Use 'P%:Name', 'S%:ID', or 'T%:TrayID'"
+                "Use 'P%:Name', 'S%:ID', 'B%:ID', or 'T%:TrayID'."
             )
             return
 
@@ -493,7 +493,7 @@ class ProcessTrackerGUI(tk.Tk):
             self.print_terminal(
                 f">>> PROCESS UPDATED: Now running: '{process_display_name}'"
             )
-        elif data_type == "SAMPLE" or data_type == "SAMPLE_LEGACY":
+        elif tu.is_sample_type(data_type):
             if not self.tool_process or not self.current_process:
                 self.print_terminal(
                     "[ALERT] Cannot log sample. "
@@ -507,17 +507,29 @@ class ProcessTrackerGUI(tk.Tk):
                     self.print_terminal(
                         tu.format_legacy_sample_warning(data_id)
                     )
-                self.log_scan_event(self.current_process, data_id)
+                self.log_scan_event(self.current_process, sample_id=data_id)
                 self.update_sample_block(data_id, status_type="SAMPLE")
+        elif tu.is_batch_type(data_type):
+            if not self.tool_process or not self.current_process:
+                self.print_terminal(
+                    "[ALERT] Cannot log batch. "
+                    "Please scan a PROCESS QR code first."
+                )
+                self.update_sample_block(
+                    "No tool/process set", status_type="ALERT"
+                )
+            else:
+                self.log_scan_event(self.current_process, batch_id=data_id)
+                self.update_sample_block(data_id, status_type="BATCH")
         else:
             self.print_terminal(
                 f"[ERROR] Unknown data type: '{data_type}'"
             )
             self.update_sample_block(data_type, status_type="ERROR")
 
-    def log_scan_event(self, process_name, sample_id):
+    def log_scan_event(self, process_name, sample_id="", batch_id=""):
         record = tu.create_log_record(
-            self.operator_name, process_name, sample_id
+            self.operator_name, process_name, sample_id, batch_id
         )
         self.log_records.append(record)
         self.print_terminal(tu.format_log_message(record))
@@ -607,10 +619,16 @@ class ProcessTrackerGUI(tk.Tk):
     def update_sample_block(self, sample_info, status_type="SAMPLE"):
         # Sample box stays neutral gray, only text changes
         if status_type == "SAMPLE":
-            # Display only the sample ID without "SAMPLE" prefix
+            # Display "Sample" prefix above the sample ID
             self.sample_label.config(
-                text=sample_info,
-                font=("Arial", FONT_SIZE_LARGE, "bold")
+                text=f"Sample\n{sample_info}",
+                font=("Arial", FONT_SIZE_MEDIUM, "bold")
+            )
+        elif status_type == "BATCH":
+            # Display "Batch" prefix for batch IDs
+            self.sample_label.config(
+                text=f"Batch\n{sample_info}",
+                font=("Arial", FONT_SIZE_MEDIUM, "bold")
             )
         elif status_type == "UNDO":
             self.sample_label.config(
