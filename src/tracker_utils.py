@@ -330,16 +330,6 @@ def get_unsaved_count(log_records: list) -> int:
     return len(log_records)
 
 
-# --- Runtime Environment ---
-def is_running_as_exe() -> bool:
-    """Check if the script is running as a compiled executable.
-
-    Returns:
-        True if running as .exe, False if running as .py script
-    """
-    return getattr(sys, 'frozen', False)
-
-
 def _format_data_id(record: dict) -> str:
     """Helper to format either batch or sample ID for display.
 
