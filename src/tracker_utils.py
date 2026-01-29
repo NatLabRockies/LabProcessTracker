@@ -14,6 +14,7 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 # QR Code Prefixes (compact format for easier printing)
 QR_SAMPLE_PREFIX = 'S%:'
 QR_PROCESS_PREFIX = 'P%:'
+QR_BATCH_PREFIX = 'B%:'
 EXIT_CMD = 'EXIT'
 SAVE_CMD = 'SAVE'
 UNDO_CMD = 'UNDO'
@@ -142,17 +143,17 @@ def get_default_output_dir():
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     """Parse QR code text to determine type and ID.
 
-    Supports compact QR prefixes (S%:ID, P%:ID) and legacy format
+    Supports compact QR prefixes (S%:ID, P%:ID, B%:ID) and legacy format
     (####-##).
 
     Args:
         qr_text: The QR code text in format 'TYPE:ID', where TYPE is
-                 one of 'S%' or 'P%'
+                 one of 'S%', 'P%', or 'B%'
                  OR legacy format ####-## (4 digits, dash, 2 digits)
 
     Returns:
         Tuple of ('SAMPLE', sample_id) or ('PROCESS', process_id) or
-        (None, None) if invalid
+        ('BATCH', batch_id) or (None, None) if invalid
     """
     try:
         qr_text = qr_text.strip()
@@ -166,6 +167,10 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
             data_id = qr_text[len(QR_PROCESS_PREFIX):].strip()
             if data_id:  # Ensure there's an ID after the prefix
                 return "PROCESS", data_id
+        elif qr_text.startswith(QR_BATCH_PREFIX):
+            data_id = qr_text[len(QR_BATCH_PREFIX):].strip()
+            if data_id:  # Ensure there's an ID after the prefix
+                return "BATCH", data_id
 
         # Legacy format: ####-## (4 digits, dash, 2 digits)
         # This supports old sample QR codes that don't have the S%: prefix
@@ -178,13 +183,19 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
 
 
 # --- Logging Functions ---
-def create_log_record(operator_name: str, process_name: str, sample_id: str) -> dict:
+def create_log_record(
+    operator_name: str,
+    process_name: str,
+    sample_id: str = "",
+    batch_id: str = ""
+) -> dict:
     """Create a log record dictionary with current timestamp.
 
     Args:
         operator_name: Name of the operator
         process_name: Name of the process
-        sample_id: ID of the sample
+        sample_id: ID of the sample (empty if batch)
+        batch_id: ID of the batch (empty if sample)
 
     Returns:
         Dictionary containing the log record
@@ -195,6 +206,7 @@ def create_log_record(operator_name: str, process_name: str, sample_id: str) -> 
         'Operator': operator_name,
         'ProcessName': process_name,
         'SampleID': sample_id,
+        'BatchID': batch_id,
     }
 
 
@@ -281,6 +293,21 @@ def is_running_as_exe() -> bool:
     return getattr(sys, 'frozen', False)
 
 
+def _format_data_id(record: dict) -> str:
+    """Helper to format either batch or sample ID for display.
+
+    Args:
+        record: Log record dictionary
+
+    Returns:
+        Formatted string like "Batch: 'ID'" or "Sample: 'ID'"
+    """
+    if record.get('BatchID'):
+        return f"Batch: '{record['BatchID']}'"
+    else:
+        return f"Sample: '{record['SampleID']}'"
+
+
 def format_log_message(record: dict) -> str:
     """Format a log record into a human-readable message.
 
@@ -290,12 +317,12 @@ def format_log_message(record: dict) -> str:
     Returns:
         Formatted log message string
     """
-    return (
+    base_msg = (
         f"[LOGGED] {record['Timestamp']} | "
         f"Operator: '{record['Operator']}' | "
         f"Process: '{record['ProcessName']}' | "
-        f"Sample: '{record['SampleID']}'"
     )
+    return base_msg + _format_data_id(record)
 
 
 def format_undo_message(record: dict) -> str:
@@ -307,11 +334,11 @@ def format_undo_message(record: dict) -> str:
     Returns:
         Formatted undo message string
     """
-    return (
+    base_msg = (
         f"[UNDO] Removed last scan: {record['Timestamp']} | "
         f"Process: '{record['ProcessName']}' | "
-        f"Sample: '{record['SampleID']}'"
     )
+    return base_msg + _format_data_id(record)
 
 
 def format_legacy_sample_warning(sample_id: str) -> str:
@@ -447,3 +474,39 @@ def is_command(qr_text: str) -> tuple[bool, str | None]:
         return True, RESET_OPERATOR_CMD
     else:
         return False, None
+
+
+def is_sample_type(scan_type: str) -> bool:
+    """Check if scan type is a sample (including legacy).
+
+    Args:
+        scan_type: The scan type from parse_input()
+
+    Returns:
+        True if scan type represents a sample
+    """
+    return scan_type in ("SAMPLE", "SAMPLE_LEGACY")
+
+
+def is_batch_type(scan_type: str) -> bool:
+    """Check if scan type is a batch.
+
+    Args:
+        scan_type: The scan type from parse_input()
+
+    Returns:
+        True if scan type represents a batch
+    """
+    return scan_type == "BATCH"
+
+
+def is_data_type(scan_type: str) -> bool:
+    """Check if scan type is data (sample or batch) vs process.
+
+    Args:
+        scan_type: The scan type from parse_input()
+
+    Returns:
+        True if scan type is SAMPLE, SAMPLE_LEGACY, or BATCH
+    """
+    return is_sample_type(scan_type) or is_batch_type(scan_type)
