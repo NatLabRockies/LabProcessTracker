@@ -24,6 +24,7 @@ Enhancements
 - Lint entire codebase for PEP8 compliance using flake8. Address style issues
   including line lengths, imports, and whitespace for improved code quality and
   maintainability. (:issue:`32`, :pull:`58`)
+- Remove unused is_running_as_exe() function from tracker_utils.py. (:pull:`66`)
 
 
 Maintenance
