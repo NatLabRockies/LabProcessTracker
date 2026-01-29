@@ -480,3 +480,65 @@ def is_command(qr_text: str) -> tuple[bool, str | None]:
         return True, RESET_OPERATOR_CMD
     else:
         return False, None
+
+
+# --- Tray Mode Logic ---
+def validate_tray_ready_for_process(tray_position_index: int, total_positions: int) -> tuple[bool, str]:
+    """Check if tray is ready for process assignment.
+
+    Args:
+        tray_position_index: Current position index
+        total_positions: Total number of positions in tray
+
+    Returns:
+        Tuple of (is_ready: bool, error_message: str or empty string)
+    """
+    if tray_position_index < total_positions:
+        return False, "[ERROR] Complete all tray positions or skip remaining before scanning process."
+    return True, ""
+
+
+def should_accept_scan_in_tray_mode(data_type: str, tray_position_index: int, total_positions: int) -> tuple[bool, str]:
+    """Determine if a scan should be accepted in tray mode.
+
+    Args:
+        data_type: Type of scan ("SAMPLE", "SAMPLE_LEGACY", "PROCESS", etc.)
+        tray_position_index: Current position index
+        total_positions: Total number of positions in tray
+
+    Returns:
+        Tuple of (should_accept: bool, error_message: str or empty string)
+    """
+    if data_type in ("SAMPLE", "SAMPLE_LEGACY"):
+        # Always accept samples in tray mode
+        return True, ""
+    elif data_type == "PROCESS":
+        # Only accept process if all positions are filled/skipped
+        return validate_tray_ready_for_process(tray_position_index, total_positions)
+    else:
+        return False, "[ERROR] In tray mode, only SAMPLE or PROCESS QR codes are accepted."
+
+
+def create_tray_batch_records(operator_name: str, tray_id: str, tray_samples: list, process_name: str) -> list:
+    """Create log records for all samples in a tray with the assigned process.
+
+    Args:
+        operator_name: Name of the operator
+        tray_id: ID of the tray
+        tray_samples: List of dicts with 'position' and 'sample_id' keys
+        process_name: Name of the process to assign
+
+    Returns:
+        List of log record dictionaries
+    """
+    records = []
+    for entry in tray_samples:
+        record = create_log_record_with_tray(
+            operator_name,
+            tray_id,
+            entry["position"],
+            entry["sample_id"],
+            process_name
+        )
+        records.append(record)
+    return records

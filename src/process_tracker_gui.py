@@ -364,6 +364,14 @@ class ProcessTrackerGUI(tk.Tk):
 
         # --- Tray Mode: Sequential Sample Scanning ---
         if self.tray_mode:
+            # Validate if this scan type is acceptable in tray mode
+            should_accept, error_msg = tu.should_accept_scan_in_tray_mode(
+                data_type, self.tray_position_index, len(self.tray_positions)
+            )
+            if not should_accept:
+                self.print_terminal(error_msg)
+                return
+
             if data_type == "SAMPLE" or data_type == "SAMPLE_LEGACY":
                 pos = self.tray_positions[self.tray_position_index]
                 sample_id = data_id
@@ -382,9 +390,6 @@ class ProcessTrackerGUI(tk.Tk):
                     self.update_sample_block(None, status_type="RESET")
                 return
             elif data_type == "PROCESS":
-                if self.tray_position_index < len(self.tray_positions):
-                    self.print_terminal("[ERROR] Complete all tray positions or skip remaining before scanning process.")
-                    return
                 # Assign process to all tray samples
                 is_valid, normalized_process, error_msg = tu.validate_and_normalize_process(data_id)
                 if not is_valid:
@@ -404,16 +409,15 @@ class ProcessTrackerGUI(tk.Tk):
                     self.log_file_label.config(fg="orange")
                 else:
                     self.log_file_label.config(fg="gray")
-                # Log all tray samples with process
-                for entry in self.tray_samples:
-                    record = tu.create_log_record_with_tray(
-                        self.operator_name,
-                        self.tray_id,
-                        entry["position"],
-                        entry["sample_id"],
-                        self.current_process
-                    )
-                    self.log_records.append(record)
+                # Log all tray samples with process using batch utility
+                batch_records = tu.create_tray_batch_records(
+                    self.operator_name,
+                    self.tray_id,
+                    self.tray_samples,
+                    self.current_process
+                )
+                self.log_records.extend(batch_records)
+                for record in batch_records:
                     self.print_terminal(tu.format_log_message(record))
                 self.print_terminal(f"[TRAY] Process '{tool_display_name}' assigned to {len(self.tray_samples)} sample(s).")
                 # Reset tray mode
@@ -424,9 +428,6 @@ class ProcessTrackerGUI(tk.Tk):
                 self.tray_position_index = 0
                 self.update_sample_block(None, status_type="RESET")
                 self.update_process_block(self.current_process, valid=valid)
-                return
-            else:
-                self.print_terminal(f"[ERROR] In tray mode, only SAMPLE or PROCESS QR codes are accepted.")
                 return
 
         # --- Normal Mode (no tray) ---
