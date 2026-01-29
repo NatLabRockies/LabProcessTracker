@@ -5,12 +5,7 @@ Creates a minimal set of valid and invalid QR codes to test all edge cases.
 This script generates test QR codes with labels for easy identification.
 For generating custom QR codes, see generate_custom_qr_codes.py
 """
-import sys
 from pathlib import Path
-
-# Add project root to path for src imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from src.qr_utils import generate_qr_with_label
 
 

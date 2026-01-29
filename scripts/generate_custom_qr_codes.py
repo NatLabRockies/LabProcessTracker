@@ -6,12 +6,7 @@ Simply edit the lists below and run the script to generate labeled QR code image
 
 For testing edge cases, see generate_test_qr_codes.py
 """
-import sys
 from pathlib import Path
-
-# Add project root to path for src imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from src.qr_utils import generate_qr_with_label
 
 
@@ -32,9 +27,8 @@ def main():
     # Sample format: S%:YYMM-NN where YY=year, MM=month, NN=sample number
     samples = [
         ("S%:2601-01", "Sample: 2601-01", "sample_2601-01.png"),
-        ("S%:2601-02", "Sample: 2601-02", "sample_2601-02.png"),
         # Add more samples here:
-        # ("S%:2601-03", "Sample: 2601-03", "sample_2601-03.png"),
+        # ("S%:2601-02", "Sample: 2601-02", "sample_2601-02.png"),
     ]
 
     # --- BATCHES ---
@@ -47,16 +41,8 @@ def main():
 
     # --- PROCESSES ---
     # Format: P%:process_abbreviation (must match tools_processes.json)
-    # Common processes:
-    #   - ftlb234_spinbox (Spincoating)
-    #   - c212_sonicator (Sonication)
-    #   - ftlb234_uvo (UV-Ozone Cleaning)
-    #   - c215ss_jv (JV Measurement)
-    #   - w129_evap (Evaporation)
-    #   - ftlb248_weighbox (Weighing & Solvation)
     processes = [
         ("P%:ftlb234_spinbox", "Spincoating", "process_spincoating.png"),
-        ("P%:c212_sonicator", "Sonication", "process_sonication.png"),
         # Add more processes here:
         # ("P%:c215ss_jv", "JV Measurement", "process_jv.png"),
     ]
@@ -71,8 +57,8 @@ def main():
     # --- COMMANDS ---
     # Generate command QR codes if needed
     commands = [
-        ("SAVE", "Command: SAVE", "command_SAVE.png"),
-        ("UNDO", "Command: UNDO", "command_UNDO.png"),
+        # ("SAVE", "Command: SAVE", "command_SAVE.png"),
+        # ("UNDO", "Command: UNDO", "command_UNDO.png"),
         # ("EXIT", "Command: EXIT", "command_EXIT.png"),
         # ("RESET", "Command: RESET", "command_RESET.png"),
     ]
