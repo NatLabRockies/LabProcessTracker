@@ -24,7 +24,7 @@ def generate_qr_with_label(data, label, filename, output_dir):
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=15,  # Larger QR codes
+        box_size=20,
         border=1,  # Minimal border for compact QR codes
     )
     qr.add_data(data)
@@ -103,6 +103,13 @@ def main():
     generate_qr_with_label("P%:c215ss_jv", "Process: JV Measurement", "process_jv.png", output_dir)
     print()
 
+    # === VALID TRAYS (2) ===
+    print("=== Valid Trays (2) ===")
+    # Format: T%:TRAY_ID
+    generate_qr_with_label("T%:066726-S-XXX", "Tray: 066726-S-XXX (2x2)", "tray_066726_2x2.png", output_dir)
+    generate_qr_with_label("T%:072266-XXX-A", "Tray: 072266-XXX-A (5x5)", "tray_072266_5x5.png", output_dir)
+    print()
+
     # === INVALID/BAD QR CODES (one of each type) ===
     print("=== Invalid QR Codes (edge cases) ===")
 
@@ -126,15 +133,6 @@ def main():
 
     # Bad: Random text
     generate_qr_with_label("RANDOM TEXT", "BAD: Invalid Format", "bad_random_text.png", output_dir)
-
-    print()
-
-    # === COMMAND QR CODES ===
-    print("=== Command QR Codes ===")
-    generate_qr_with_label("SAVE", "Command: SAVE", "command_SAVE.png", output_dir)
-    generate_qr_with_label("UNDO", "Command: UNDO", "command_UNDO.png", output_dir)
-    generate_qr_with_label("EXIT", "Command: EXIT", "command_EXIT.png", output_dir)
-    generate_qr_with_label("RESET", "Command: RESET", "command_RESET.png", output_dir)
 
     print()
     print(f"✓ All TEST QR codes generated successfully!\n")
