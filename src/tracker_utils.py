@@ -159,15 +159,15 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
 
         # Check for compact QR prefixes (include colon for uniqueness)
         if qr_text.startswith(QR_SAMPLE_PREFIX):
-            data_id = qr_text[len(QR_SAMPLE_PREFIX):].strip()
+            data_id = qr_text[len(QR_SAMPLE_PREFIX):]
             if data_id:  # Ensure there's an ID after the prefix
                 return "SAMPLE", data_id
         elif qr_text.startswith(QR_PROCESS_PREFIX):
-            data_id = qr_text[len(QR_PROCESS_PREFIX):].strip()
+            data_id = qr_text[len(QR_PROCESS_PREFIX):]
             if data_id:  # Ensure there's an ID after the prefix
                 return "PROCESS", data_id
         elif qr_text.startswith("T%:"):
-            data_id = qr_text[len("T%:"):].strip()
+            data_id = qr_text[len("T%:"):]
             if data_id:
                 return "TRAY", data_id
 
