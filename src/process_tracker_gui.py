@@ -62,7 +62,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.style.map('Modern.TButton',
                        background=[('active', '#2980b9')],
                        relief=[('pressed', 'flat')]
-        )
+                       )
 
         # Entry style
         self.style.configure(
