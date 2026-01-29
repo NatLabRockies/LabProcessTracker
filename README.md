@@ -68,7 +68,8 @@ No additional installations are required.
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
 - Sample QR codes must contain: `S%:SampleID` (e.g., `S%:2511-09`)
 - Batch QR codes must contain: `B%:BatchID` (e.g., `B%:BATCH2025-001`)
-- The prefixes (`P%:`, `S%:`, and `B%:`) must be uppercase and include the colon
+- Tray QR codes must contain: `T%:TrayID` (e.g., `T%:066726-S-XXX`)
+- The prefixes (`P%:`, `S%:`, `B%:`, and `T%:`) must be uppercase and include the colon
 - Process names are case-insensitive (automatically normalized to lowercase)
 - Sample IDs and Batch IDs preserve their original case
 - Legacy sample QR codes in format `####-##` (e.g., `2511-09`) are supported
@@ -79,6 +80,7 @@ No additional installations are required.
 - `P%:c215ss_jv` — Sets process to C215 Solar Simulator JV measurement
 - `S%:2511-09` — Logs sample 2511-09 under the current process
 - `B%:BATCH2025-001` — Logs batch BATCH2025-001 under the current process
+- `T%:066726-S-XXX` — Enters tray mode for tray 066726-S-XXX
 - `2511-09` — Legacy format, automatically recognized as a sample (logs with warning)
 
 **Batch vs Sample Logging:**
@@ -87,6 +89,14 @@ No additional installations are required.
   - The batch scan records that the whole batch went through this specific process
   - CSV logs contain separate `SampleID` and `BatchID` columns
   - Only one is populated per scan (mutually exclusive)
+
+**Tray/Platen Tracking:**
+- Scan a tray QR code (`T%:TrayID`) to enter tray mode
+- The app prompts you to scan samples for each position sequentially (e.g., A1, A2, B1, B2...)
+- You can skip individual positions or skip all remaining positions
+- Once all positions are filled or skipped, scan a single process QR code to associate and log all samples with that process
+- CSV logs include `TrayID` and `Position` columns for tray-tracked samples
+- Tray layouts are predefined (2x2, 5x5, 8x8 grids)
 
 **Process Validation & Quarantine Logging:**
 
@@ -121,7 +131,8 @@ The quarantine logic allows rapid deployment on new systems without blocking wor
 process_tracking/
 ├── src/                           # Main application code
 │   ├── tracker_utils.py           # Shared core utilities and business logic
-│   └── process_tracker_gui.py     # GUI application (Tkinter)
+│   ├── process_tracker_gui.py     # GUI application
+│   └── tray_layouts.py            # Tray position mappings (2x2, 5x5, 8x8)
 ├── tools_processes.json           # Central database of all tools/processes
 ├── scripts/                       # Utility and build scripts
 │   ├── create_exe.py              # Build script for creating executable
