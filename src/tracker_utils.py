@@ -152,10 +152,10 @@ def get_output_dir(process_name: str, base_outputs: str) -> str:
 
 def is_batch_operation_process(process_name: str) -> bool:
     """Check if a process is a batch operation (applies to multiple trays).
-    
+
     Args:
         process_name: The abbreviated process name
-    
+
     Returns:
         True if process is marked as batch operation
     """
@@ -165,7 +165,7 @@ def is_batch_operation_process(process_name: str) -> bool:
 
 def generate_session_id() -> str:
     """Generate a unique session ID for batch operations.
-    
+
     Returns:
         Session ID string in format YYYYMMDD_HHMMSS
     """
@@ -330,10 +330,10 @@ def save_log_to_csv(
     # Standard fields first, optional fields (TrayID, Position, SessionID) at end
     has_tray = any(('TrayID' in r) for r in log_records)
     has_session = any(('SessionID' in r) for r in log_records)
-    
+
     # Base fieldnames (always present)
     fieldnames = ['Timestamp', 'Operator', 'SampleID', 'ProcessName']
-    
+
     # Add optional fields at the end
     if has_tray:
         fieldnames.extend(['TrayID', 'Position'])
@@ -422,11 +422,11 @@ def format_log_message(record: dict) -> str:
 
     # Add batch or sample, then process
     msg += f" | {_format_data_id(record)} | Process: '{record['ProcessName']}'"
-    
+
     # Add session ID if present
     if 'SessionID' in record:
         msg += f" | Session: {record['SessionID']}"
-    
+
     return msg
 
 
