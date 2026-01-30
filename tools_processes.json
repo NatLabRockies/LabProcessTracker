@@ -279,6 +279,15 @@
       "abbreviated": "pae_evap",
       "notes": "Evaporation system",
       "color": "#fe27ba"
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "Load",
+      "abbreviated": "pae_load",
+      "notes": "Loading trays into the Angstrom Evaporator",
+      "color": "#e67e22",
+      "is_batch_operation": true
     }
   ]
 }
