@@ -55,16 +55,6 @@ class TrayPositionDialog(tk.Toplevel):
              - (self.winfo_height() // 2))
         self.geometry(f"+{x}+{y}")
 
-        # Tray counter label (for multi-tray sessions)
-        self.tray_counter_label = tk.Label(
-            self,
-            text="Tray 1 of 1",
-            bg="#eaf6ff",
-            fg="#1a5276",
-            font=("Arial", 12, "bold")
-        )
-        self.tray_counter_label.pack(pady=(10, 5))
-
         # Message label
         self.message_label = tk.Label(
             self,
@@ -74,7 +64,7 @@ class TrayPositionDialog(tk.Toplevel):
             font=("Arial", 14, "bold"),
             wraplength=dialog_width - 40
         )
-        self.message_label.pack(pady=(5, 10))
+        self.message_label.pack(pady=(10, 10))
 
         # Grid frame
         self.grid_frame = tk.Frame(self, bg="#ffffff", relief=tk.RIDGE, borderwidth=2)
@@ -197,10 +187,6 @@ class TrayPositionDialog(tk.Toplevel):
             cell_data = self.grid_cells[position]
             cell_data['sample_label'].config(text=sample_id)
             cell_data['frame'].config(bg="#d5f4e6")  # Light green
-
-    def update_tray_counter(self, current_tray_num, total_trays):
-        """Update the tray counter display."""
-        self.tray_counter_label.config(text=f"Tray {current_tray_num} of {total_trays}")
 
     def skip_current(self):
         """Call the skip current callback."""
@@ -406,11 +392,6 @@ class ProcessTrackerGUI(tk.Tk):
         else:
             self.tray_dialog.update_position(position)
             self.tray_dialog.lift()
-
-        # Update tray counter
-        current_tray_num = len(self.all_trays_in_session) + 1
-        total_trays = current_tray_num  # Will update as more trays added
-        self.tray_dialog.update_tray_counter(current_tray_num, total_trays)
 
         # Always refocus QR entry after showing/updating dialog
         self.qr_entry.focus_set()
