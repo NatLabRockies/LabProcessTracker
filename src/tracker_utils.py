@@ -252,7 +252,8 @@ def create_log_record_with_tray(
     tray_id: str,
     position: str,
     sample_id: str,
-    process_name: str
+    process_name: str,
+    session_id: str = ""
 ) -> dict:
     """Create a log record with tray and position info.
 
@@ -262,19 +263,23 @@ def create_log_record_with_tray(
         position: Position in the tray (e.g., 'A1', 'B2')
         sample_id: ID of the sample
         process_name: Name of the process
+        session_id: Optional session ID for batch operations
 
     Returns:
         Dictionary containing the log record with tray info
     """
     scan_time = datetime.datetime.now().strftime(DATE_FORMAT)
-    return {
+    record = {
         'Timestamp': scan_time,
         'Operator': operator_name,
-        'TrayID': tray_id,
-        'Position': position,
         'SampleID': sample_id,
         'ProcessName': process_name,
+        'TrayID': tray_id,
+        'Position': position,
     }
+    if session_id:
+        record['SessionID'] = session_id
+    return record
 
 
 def save_log_to_csv(
@@ -299,23 +304,23 @@ def save_log_to_csv(
     # Check if file exists to decide whether to write headers
     file_exists = os.path.exists(log_file)
 
-    # Always include TrayID and Position columns for consistency
-    has_tray = any(
-        ('TrayID' in r and 'Position' in r) for r in log_records
-    )
+    # Determine fieldnames based on what's present in records
+    # Standard fields first, optional fields (TrayID, Position, SessionID) at end
+    has_tray = any(('TrayID' in r) for r in log_records)
+    has_session = any(('SessionID' in r) for r in log_records)
+    
+    # Base fieldnames (always present)
+    fieldnames = ['Timestamp', 'Operator', 'SampleID', 'ProcessName']
+    
+    # Add optional fields at the end
     if has_tray:
-        fieldnames = [
-            'Timestamp', 'Operator', 'TrayID', 'Position',
-            'SampleID', 'ProcessName'
-        ]
-    else:
-        fieldnames = [
-            'Timestamp', 'Operator', 'SampleID', 'ProcessName'
-        ]
+        fieldnames.extend(['TrayID', 'Position'])
+    if has_session:
+        fieldnames.append('SessionID')
 
     try:
         with open(log_file, 'a', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
 
             if not file_exists:
                 writer.writeheader()
@@ -395,6 +400,11 @@ def format_log_message(record: dict) -> str:
 
     # Add batch or sample, then process
     msg += f" | {_format_data_id(record)} | Process: '{record['ProcessName']}'"
+    
+    # Add session ID if present
+    if 'SessionID' in record:
+        msg += f" | Session: {record['SessionID']}"
+    
     return msg
 
 
