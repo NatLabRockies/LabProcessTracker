@@ -150,6 +150,28 @@ def get_output_dir(process_name: str, base_outputs: str) -> str:
         return get_unapproved_output_dir(base_outputs)
 
 
+def is_batch_operation_process(process_name: str) -> bool:
+    """Check if a process is a batch operation (applies to multiple trays).
+    
+    Args:
+        process_name: The abbreviated process name
+    
+    Returns:
+        True if process is marked as batch operation
+    """
+    info = PROCESS_INFO.get(process_name, {})
+    return info.get('is_batch_operation', False)
+
+
+def generate_session_id() -> str:
+    """Generate a unique session ID for batch operations.
+    
+    Returns:
+        Session ID string in format YYYYMMDD_HHMMSS
+    """
+    return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
 # --- Output Directory Logic ---
 def get_default_output_dir():
     """Determine the appropriate output directory for log files."""
@@ -673,4 +695,36 @@ def create_tray_batch_records(
             process_name
         )
         records.append(record)
+    return records
+
+
+def create_batch_operation_records(
+    operator_name: str,
+    all_tray_data: dict,
+    process_name: str,
+    session_id: str
+) -> list:
+    """Create log records for all samples across multiple trays for batch operations.
+
+    Args:
+        operator_name: Name of the operator
+        all_tray_data: Dict mapping {tray_id: [{"position": pos, "sample_id": id}, ...]}
+        process_name: Name of the batch operation process
+        session_id: Session ID linking all trays together
+
+    Returns:
+        List of log record dictionaries with session ID
+    """
+    records = []
+    for tray_id, samples_list in all_tray_data.items():
+        for entry in samples_list:
+            record = create_log_record_with_tray(
+                operator_name,
+                tray_id,
+                entry["position"],
+                entry["sample_id"],
+                process_name,
+                session_id
+            )
+            records.append(record)
     return records
