@@ -10,6 +10,12 @@ Breaking Changes
 
 Enhancements
 ~~~~~~~~~~~~
+- Add QR code generation scripts:
+  - ``generate_test_qr_codes.py`` - Creates a minimal test set for validation
+  - ``generate_custom_qr_codes.py`` - Template for generating custom QR codes
+- Add ``qr_utils.py`` module with shared QR code generation utilities
+- Test QR codes are now included in the repository for quick testing
+  (:issue:`68`, :pull:`69`)
 
 
 Maintenance
