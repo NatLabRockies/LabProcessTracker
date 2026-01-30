@@ -9,20 +9,39 @@ FONT_SIZE_LARGE = 26
 FONT_SIZE_MEDIUM = 22
 
 
-# --- Tray Position Prompt Dialog ---
+# --- Tray Position Prompt Dialog with Visual Grid ---
 class TrayPositionDialog(tk.Toplevel):
-    """Popup dialog for prompting user to scan samples for tray positions."""
+    """Popup dialog for prompting user to scan samples for tray positions with visual grid."""
 
-    def __init__(self, parent, position, on_skip_callback, on_skip_all_callback):
+    def __init__(self, parent, tray_id, positions, on_skip_callback, on_skip_all_callback):
         super().__init__(parent)
-        self.title("Tray Mode")
-        self.geometry("450x180")
+        self.title(f"Tray Mode - {tray_id}")
         self.configure(bg="#eaf6ff")
         self.resizable(False, False)
 
         self.parent = parent
+        self.tray_id = tray_id
+        self.positions = positions
         self.on_skip_callback = on_skip_callback
         self.on_skip_all_callback = on_skip_all_callback
+        
+        # Calculate grid dimensions from positions
+        self.rows, self.cols = self._calculate_grid_dimensions(positions)
+        
+        # Cell size based on grid size (smaller cells for larger grids)
+        if self.rows <= 2:
+            self.cell_size = 80
+        elif self.rows <= 5:
+            self.cell_size = 60
+        else:
+            self.cell_size = 50
+        
+        # Calculate dialog size based on grid
+        grid_width = self.cols * self.cell_size + 40
+        grid_height = self.rows * self.cell_size + 40
+        dialog_width = max(600, grid_width + 40)
+        dialog_height = grid_height + 200  # Extra space for message and buttons
+        self.geometry(f"{dialog_width}x{dialog_height}")
 
         # Make dialog stay on top but NOT modal (so QR entry stays accessible)
         self.transient(parent)
@@ -36,21 +55,38 @@ class TrayPositionDialog(tk.Toplevel):
              - (self.winfo_height() // 2))
         self.geometry(f"+{x}+{y}")
 
-        # Message label
-        prompt_text = f"Scan sample for position: {position}"
-        self.message_label = tk.Label(
+        # Tray counter label (for multi-tray sessions)
+        self.tray_counter_label = tk.Label(
             self,
-            text=prompt_text,
+            text="Tray 1 of 1",
             bg="#eaf6ff",
             fg="#1a5276",
-            font=("Arial", 16, "bold"),
-            wraplength=400
+            font=("Arial", 12, "bold")
         )
-        self.message_label.pack(pady=(20, 15), padx=20)
+        self.tray_counter_label.pack(pady=(10, 5))
+
+        # Message label
+        self.message_label = tk.Label(
+            self,
+            text="Initializing...",
+            bg="#eaf6ff",
+            fg="#1a5276",
+            font=("Arial", 14, "bold"),
+            wraplength=dialog_width - 40
+        )
+        self.message_label.pack(pady=(5, 10))
+
+        # Grid frame
+        self.grid_frame = tk.Frame(self, bg="#ffffff", relief=tk.RIDGE, borderwidth=2)
+        self.grid_frame.pack(pady=10, padx=20)
+
+        # Create grid cells
+        self.grid_cells = {}
+        self._create_grid()
 
         # Buttons frame
         btn_frame = tk.Frame(self, bg="#eaf6ff")
-        btn_frame.pack(pady=(0, 20))
+        btn_frame.pack(pady=(10, 20))
 
         # Skip current button
         self.skip_btn = tk.Button(
@@ -85,10 +121,86 @@ class TrayPositionDialog(tk.Toplevel):
         # Handle window close (X button) - treat as skip all
         self.protocol("WM_DELETE_WINDOW", self.skip_all_remaining)
 
+    def _calculate_grid_dimensions(self, positions):
+        """Calculate grid dimensions from position strings (e.g., A1, B2, H8)."""
+        if not positions:
+            return 1, 1
+        
+        max_row = 0
+        max_col = 0
+        for pos in positions:
+            # Parse position like "A1", "B2", "H8"
+            row_letter = pos[0]
+            col_num = int(pos[1:])
+            row_index = ord(row_letter.upper()) - ord('A')
+            max_row = max(max_row, row_index)
+            max_col = max(max_col, col_num)
+        
+        return max_row + 1, max_col
+
+    def _create_grid(self):
+        """Create the visual grid of tray positions."""
+        for pos in self.positions:
+            # Parse position
+            row_letter = pos[0]
+            col_num = int(pos[1:])
+            row_index = ord(row_letter.upper()) - ord('A')
+            col_index = col_num - 1
+            
+            # Create cell frame
+            cell = tk.Frame(
+                self.grid_frame,
+                width=self.cell_size,
+                height=self.cell_size,
+                bg="#ffffff",
+                relief=tk.RAISED,
+                borderwidth=1
+            )
+            cell.grid(row=row_index, column=col_index, padx=2, pady=2)
+            cell.grid_propagate(False)
+            
+            # Position label
+            pos_label = tk.Label(
+                cell,
+                text=pos,
+                bg="#ffffff",
+                fg="#2c3e50",
+                font=("Arial", 10, "bold")
+            )
+            pos_label.pack(pady=(5, 0))
+            
+            # Sample label (initially empty)
+            sample_label = tk.Label(
+                cell,
+                text="",
+                bg="#ffffff",
+                fg="#27ae60",
+                font=("Arial", 8),
+                wraplength=self.cell_size - 10
+            )
+            sample_label.pack(pady=(2, 0), expand=True)
+            
+            # Store references
+            self.grid_cells[pos] = {
+                'frame': cell,
+                'sample_label': sample_label
+            }
+
     def update_position(self, position):
         """Update the position being prompted for."""
         prompt_text = f"Scan sample for position: {position}"
         self.message_label.config(text=prompt_text)
+
+    def update_grid(self, position, sample_id):
+        """Update a grid cell with the scanned sample ID."""
+        if position in self.grid_cells:
+            cell_data = self.grid_cells[position]
+            cell_data['sample_label'].config(text=sample_id)
+            cell_data['frame'].config(bg="#d5f4e6")  # Light green
+
+    def update_tray_counter(self, current_tray_num, total_trays):
+        """Update the tray counter display."""
+        self.tray_counter_label.config(text=f"Tray {current_tray_num} of {total_trays}")
 
     def skip_current(self):
         """Call the skip current callback."""
