@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/badge/version-v0.2.1-blue.svg)](https://github.com/rdaxini/process_tracking)
+<img src="https://img.shields.io/badge/version-v0.3.0-blue.svg" alt="Version">
 
 <div align="left">
   <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
@@ -211,3 +211,17 @@ loop and GUI are validated through manual testing and usage.
 
 Test coverage reports are generated in `htmlcov/` after running tests.
 See the terminal output for summary and open `htmlcov/index.html` for details.
+
+## Generating QR Codes
+
+Two scripts are provided for QR code generation:
+
+- **`scripts/generate_test_qr_codes.py`** - Creates a minimal test set with valid/invalid examples
+- **`scripts/generate_custom_qr_codes.py`** - Template for generating your own QR codes
+
+Run either script to generate labeled QR code images:
+```bash
+python scripts/generate_test_qr_codes.py
+```
+
+QR codes are saved to `test_qr_codes/` or `custom_qr_codes/` folders.
