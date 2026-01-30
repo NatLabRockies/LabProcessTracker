@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import scrolledtext, messagebox
 import os
 import tracker_utils as tu
-import tray_layouts
 
 OUTPUTS_FOLDER = tu.get_default_output_dir()
 
@@ -362,7 +361,7 @@ class ProcessTrackerGUI(tk.Tk):
         # --- Tray Mode Entry ---
         if not self.tray_mode and data_type == "TRAY":
             tray_id = data_id
-            layout = tray_layouts.TRAY_LAYOUTS.get(tray_id)
+            layout = tu.TRAY_LAYOUTS.get(tray_id)
             if not layout:
                 self.print_terminal(f"[ERROR] Unknown tray ID: {tray_id}")
                 return
