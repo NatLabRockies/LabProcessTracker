@@ -413,10 +413,24 @@ class ProcessTrackerGUI(tk.Tk):
                 next_pos = self.tray_positions[self.tray_position_index]
                 self.show_tray_dialog(self.current_tray_id, self.tray_positions, next_pos)
             else:
+                # Mark tray as complete
+                self.all_trays_in_session.append(self.current_tray_id)
                 self.close_tray_dialog()
+                
+                # Calculate counts for display
+                sample_count = len(self.tray_samples[self.current_tray_id])
+                tray_count = len(self.all_trays_in_session)
+                total_samples = sum(
+                    len(self.tray_samples[tray_id])
+                    for tray_id in self.all_trays_in_session
+                )
+                
                 self.print_terminal(
-                    "[TRAY] All positions complete. "
-                    "Please scan PROCESS QR code."
+                    f"[TRAY] Tray {self.current_tray_id} complete with {sample_count} sample(s). "
+                    f"Total: {tray_count} tray(s), {total_samples} sample(s) in session."
+                )
+                self.print_terminal(
+                    "[TRAY] Scan another TRAY to add to session, or scan PROCESS QR code."
                 )
 
     def skip_all_remaining_positions(self):
@@ -426,8 +440,26 @@ class ProcessTrackerGUI(tk.Tk):
             skipped = len(self.tray_positions) - self.tray_position_index
             self.print_terminal(f"[TRAY] Skipped {skipped} remaining position(s).")
             self.tray_position_index = len(self.tray_positions)
+            
+            # Mark tray as complete
+            self.all_trays_in_session.append(self.current_tray_id)
             self.close_tray_dialog()
-            self.print_terminal("[TRAY] Ready for PROCESS scan.")
+            
+            # Calculate counts for display
+            sample_count = len(self.tray_samples[self.current_tray_id])
+            tray_count = len(self.all_trays_in_session)
+            total_samples = sum(
+                len(self.tray_samples[tray_id])
+                for tray_id in self.all_trays_in_session
+            )
+            
+            self.print_terminal(
+                f"[TRAY] Tray {self.current_tray_id} complete with {sample_count} sample(s). "
+                f"Total: {tray_count} tray(s), {total_samples} sample(s) in session."
+            )
+            self.print_terminal(
+                "[TRAY] Scan another TRAY to add to session, or scan PROCESS QR code."
+            )
 
     def handle_scan(self):
         if not self.operator_name:
