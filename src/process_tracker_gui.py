@@ -11,9 +11,13 @@ FONT_SIZE_MEDIUM = 22
 
 # --- Tray Position Prompt Dialog with Visual Grid ---
 class TrayPositionDialog(tk.Toplevel):
-    """Popup dialog for prompting user to scan samples for tray positions with visual grid."""
+    """Popup dialog for prompting user to scan samples for tray
+    positions with visual grid."""
 
-    def __init__(self, parent, tray_id, positions, on_skip_callback, on_skip_all_callback):
+    def __init__(
+        self, parent, tray_id, positions, on_skip_callback,
+        on_skip_all_callback
+    ):
         super().__init__(parent)
         self.title(f"Tray Mode - {tray_id}")
         self.configure(bg="#eaf6ff")
@@ -411,12 +415,14 @@ class ProcessTrackerGUI(tk.Tk):
             self.tray_position_index += 1
             if self.tray_position_index < len(self.tray_positions):
                 next_pos = self.tray_positions[self.tray_position_index]
-                self.show_tray_dialog(self.current_tray_id, self.tray_positions, next_pos)
+                self.show_tray_dialog(
+                    self.current_tray_id, self.tray_positions, next_pos
+                )
             else:
                 # Mark tray as complete
                 self.all_trays_in_session.append(self.current_tray_id)
                 self.close_tray_dialog()
-                
+
                 # Calculate counts for display
                 sample_count = len(self.tray_samples[self.current_tray_id])
                 tray_count = len(self.all_trays_in_session)
@@ -424,13 +430,16 @@ class ProcessTrackerGUI(tk.Tk):
                     len(self.tray_samples[tray_id])
                     for tray_id in self.all_trays_in_session
                 )
-                
+
                 self.print_terminal(
-                    f"[TRAY] Tray {self.current_tray_id} complete with {sample_count} sample(s). "
-                    f"Total: {tray_count} tray(s), {total_samples} sample(s) in session."
+                    f"[TRAY] Tray {self.current_tray_id} complete with "
+                    f"{sample_count} sample(s). "
+                    f"Total: {tray_count} tray(s), "
+                    f"{total_samples} sample(s) in session."
                 )
                 self.print_terminal(
-                    "[TRAY] Scan another TRAY to add to session, or scan PROCESS QR code."
+                    "[TRAY] Scan another TRAY to add to session, "
+                    "or scan PROCESS QR code."
                 )
 
     def skip_all_remaining_positions(self):
@@ -440,11 +449,11 @@ class ProcessTrackerGUI(tk.Tk):
             skipped = len(self.tray_positions) - self.tray_position_index
             self.print_terminal(f"[TRAY] Skipped {skipped} remaining position(s).")
             self.tray_position_index = len(self.tray_positions)
-            
+
             # Mark tray as complete
             self.all_trays_in_session.append(self.current_tray_id)
             self.close_tray_dialog()
-            
+
             # Calculate counts for display
             sample_count = len(self.tray_samples[self.current_tray_id])
             tray_count = len(self.all_trays_in_session)
@@ -452,13 +461,16 @@ class ProcessTrackerGUI(tk.Tk):
                 len(self.tray_samples[tray_id])
                 for tray_id in self.all_trays_in_session
             )
-            
+
             self.print_terminal(
-                f"[TRAY] Tray {self.current_tray_id} complete with {sample_count} sample(s). "
-                f"Total: {tray_count} tray(s), {total_samples} sample(s) in session."
+                f"[TRAY] Tray {self.current_tray_id} complete with "
+                f"{sample_count} sample(s). "
+                f"Total: {tray_count} tray(s), "
+                f"{total_samples} sample(s) in session."
             )
             self.print_terminal(
-                "[TRAY] Scan another TRAY to add to session, or scan PROCESS QR code."
+                "[TRAY] Scan another TRAY to add to session, "
+                "or scan PROCESS QR code."
             )
 
     def handle_scan(self):
@@ -515,7 +527,10 @@ class ProcessTrackerGUI(tk.Tk):
             # Initialize session on first tray
             if not self.tray_mode or len(self.all_trays_in_session) == 0:
                 self.session_id = tu.generate_session_id()
-                self.print_terminal(f"[SESSION] Started new multi-tray session: {self.session_id}")
+                self.print_terminal(
+                    f"[SESSION] Started new multi-tray session: "
+                    f"{self.session_id}"
+                )
 
             # Set up new tray
             self.tray_mode = True
@@ -579,14 +594,19 @@ class ProcessTrackerGUI(tk.Tk):
 
                     sample_count = len(self.tray_samples[self.current_tray_id])
                     tray_count = len(self.all_trays_in_session)
-                    total_samples = sum(len(samples) for samples in self.tray_samples.values())
+                    total_samples = sum(
+                        len(samples) for samples in self.tray_samples.values()
+                    )
 
                     self.print_terminal(
-                        f"[TRAY] Tray {self.current_tray_id} complete ({sample_count} samples). "
-                        f"{tray_count} tray(s) in session ({total_samples} total samples)."
+                        f"[TRAY] Tray {self.current_tray_id} complete "
+                        f"({sample_count} samples). "
+                        f"{tray_count} tray(s) in session "
+                        f"({total_samples} total samples)."
                     )
                     self.print_terminal(
-                        "[TRAY] Scan PROCESS for this tray, BATCH OPERATION to apply to all trays, "
+                        "[TRAY] Scan PROCESS for this tray, "
+                        "BATCH OPERATION to apply to all trays, "
                         "or scan next TRAY ID."
                     )
                     self.update_sample_block(None, status_type="RESET")
@@ -621,8 +641,12 @@ class ProcessTrackerGUI(tk.Tk):
                         self.outputs_folder,
                         tu.get_log_filename(self.tool_process, valid=valid)
                     )
-                    tool_display_name = tu.get_tool_display_name(self.tool_process)
-                    process_display_name = tu.get_process_display_name(self.current_process)
+                    tool_display_name = tu.get_tool_display_name(
+                        self.tool_process
+                    )
+                    process_display_name = tu.get_process_display_name(
+                        self.current_process
+                    )
 
                     # Create batch operation records for all trays
                     batch_records = tu.create_batch_operation_records(
@@ -641,7 +665,8 @@ class ProcessTrackerGUI(tk.Tk):
                     sample_count = len(batch_records)
                     self.print_terminal(
                         f"[BATCH OPERATION] '{process_display_name}' applied to "
-                        f"{tray_count} tray(s) ({sample_count} samples) - Session: {self.session_id}"
+                        f"{tray_count} tray(s) ({sample_count} samples) - "
+                        f"Session: {self.session_id}"
                     )
 
                     # End multi-tray session
@@ -695,7 +720,8 @@ class ProcessTrackerGUI(tk.Tk):
 
                     self.print_terminal(
                         f"[TRAY] Process '{tool_display_name}' assigned to "
-                        f"{len(current_tray_samples)} sample(s) in tray {self.current_tray_id}."
+                        f"{len(current_tray_samples)} sample(s) in tray "
+                        f"{self.current_tray_id}."
                     )
                     self.print_terminal(
                         "[TRAY] Ready to scan next TRAY or BATCH OPERATION process."
@@ -825,13 +851,17 @@ class ProcessTrackerGUI(tk.Tk):
 
                 # Update grid to clear the cell
                 if self.tray_dialog and self.tray_dialog.winfo_exists():
-                    cell_data = self.tray_dialog.grid_cells.get(removed_sample['position'])
+                    cell_data = self.tray_dialog.grid_cells.get(
+                        removed_sample['position']
+                    )
                     if cell_data:
                         cell_data['sample_label'].config(text="")
                         cell_data['frame'].config(bg="#ffffff")
                     self.tray_dialog.update_position(prev_pos)
                 else:
-                    self.show_tray_dialog(self.current_tray_id, self.tray_positions, prev_pos)
+                    self.show_tray_dialog(
+                        self.current_tray_id, self.tray_positions, prev_pos
+                    )
 
                 self.print_terminal(
                     f"[UNDO] Removed sample '{removed_sample['sample_id']}' "

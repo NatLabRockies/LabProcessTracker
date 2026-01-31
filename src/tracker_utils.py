@@ -342,7 +342,9 @@ def save_log_to_csv(
 
     try:
         with open(log_file, 'a', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
+            writer = csv.DictWriter(
+                csvfile, fieldnames=fieldnames, extrasaction='ignore'
+            )
 
             if not file_exists:
                 writer.writeheader()
