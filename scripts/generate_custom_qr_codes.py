@@ -9,6 +9,7 @@ For testing edge cases, see generate_test_qr_codes.py
 from pathlib import Path
 from src.qr_utils import generate_qr_with_label
 
+
 def main():
     # Create output directory
     project_root = Path(__file__).parent.parent
