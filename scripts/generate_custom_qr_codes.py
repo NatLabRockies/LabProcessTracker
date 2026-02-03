@@ -7,8 +7,10 @@ Simply edit the lists below and run the script to generate labeled QR code image
 For testing edge cases, see generate_test_qr_codes.py
 """
 from pathlib import Path
-from src.qr_utils import generate_qr_with_label
+import sys
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from src.qr_utils import generate_qr_with_label
 
 def main():
     # Create output directory
