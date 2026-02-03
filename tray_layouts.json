@@ -1,12 +1,12 @@
 {
   "trays": [
     {
-      "tray_id": "066726-S-XXX",
+      "tray_id": "066726-S-001",
       "name": "2x2 Tray",
       "positions": ["A1", "A2", "B1", "B2"]
     },
     {
-      "tray_id": "072266-XXX-A",
+      "tray_id": "072266-S-001",
       "name": "5x5 Tray",
       "positions": [
         "A1", "A2", "A3", "A4", "A5",
@@ -17,7 +17,7 @@
       ]
     },
     {
-      "tray_id": "070503-XXX-A",
+      "tray_id": "070503-S-001",
       "name": "8x8 Tray",
       "positions": [
         "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8",

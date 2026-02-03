@@ -273,8 +273,8 @@
       "color": "#fdca24"
     },
     {
-      "tool": "PAE Evaporator",
-      "location": "PAE",
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
       "process": "Evaporation",
       "abbreviated": "pae_evap",
       "notes": "Evaporation system",
@@ -288,6 +288,79 @@
       "notes": "Loading trays into the Angstrom Evaporator",
       "color": "#e67e22",
       "is_batch_operation": true
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "C60 evaporation",
+      "abbreviated": "c60_evap",
+      "notes": "Evaporation using C60",
+      "color": "#e67e22",
+      "is_batch_operation": true
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "C60/BCP evaporation",
+      "abbreviated": "c60_bcp_evap",
+      "notes": "Evaporation using C60 and BCP",
+      "color": "#8e44ad"
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "C60/BCP/Ag evaporation",
+      "abbreviated": "c60_bcp_ag_evap",
+      "notes": "Evaporation using C60, BCP, and Ag",
+      "color": "#3498db"
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "C60/BCP/Cu evaporation",
+      "abbreviated": "c60_bcp_cu_evap",
+      "notes": "Evaporation using C60, BCP, and Cu",
+      "color": "#1abc9c"
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "BCP evaporation",
+      "abbreviated": "bcp_evap",
+      "notes": "Evaporation using BCP source material",
+      "color": "#f39c12"
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "BCP/Ag evaporation",
+      "abbreviated": "bcp_ag_evap",
+      "notes": "Evaporation using BCP and Ag",
+      "color": "#e74c3c"
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "BCP/Cu evaporation",
+      "abbreviated": "bcp_cu_evap",
+      "notes": "Evaporation using BCP and Cu",
+      "color": "#c0392b"
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "Ag evaporation",
+      "abbreviated": "ag_evap",
+      "notes": "Evaporation using Ag source material",
+      "color": "#f1c40f"
+    },
+    {
+      "tool": "PDIL Angstrom Evaporator",
+      "location": "PDIL",
+      "process": "Cu evaporation",
+      "abbreviated": "cu_evap",
+      "notes": "Evaporation using Cu source material",
+      "color": "#7f8c8d"
     }
   ]
 }
