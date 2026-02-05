@@ -133,12 +133,16 @@ class TrayPositionDialog(tk.Toplevel):
         return max_row + 1, max_col
 
     def _create_grid(self):
-        """Create the visual grid of tray positions."""
+        """Create the visual grid of tray positions with A row at the bottom."""
+        row_letters = sorted({pos[0] for pos in self.positions})
+        col_numbers = sorted({int(pos[1:]) for pos in self.positions})
+
+        row_letter_to_index = {letter: idx for idx, letter in enumerate(row_letters)}
+        num_rows = len(row_letters)
         for pos in self.positions:
-            # Parse position
             row_letter = pos[0]
             col_num = int(pos[1:])
-            row_index = ord(row_letter.upper()) - ord('A')
+            row_index = num_rows - 1 - row_letter_to_index[row_letter]
             col_index = col_num - 1
 
             # Create cell frame
