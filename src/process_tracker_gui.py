@@ -561,6 +561,14 @@ class ProcessTrackerGUI(tk.Tk):
                 return
 
             if data_type == "SAMPLE" or data_type == "SAMPLE_LEGACY":
+                # Check if we're trying to scan more samples than positions
+                if self.tray_position_index >= len(self.tray_positions):
+                    self.print_terminal(
+                        "[ERROR] All tray positions filled. "
+                        "Scan PROCESS to assign, or scan new TRAY ID."
+                    )
+                    return
+
                 pos = self.tray_positions[self.tray_position_index]
                 sample_id = data_id
                 if data_type == "SAMPLE_LEGACY":
@@ -688,9 +696,16 @@ class ProcessTrackerGUI(tk.Tk):
 
                 else:
                     # Regular process - apply to current tray only
-                    if self.current_tray_id not in self.all_trays_in_session:
+                    # Mark current tray as complete if it has samples
+                    if (self.current_tray_id and
+                        self.current_tray_id not in self.all_trays_in_session and
+                        self.tray_samples.get(self.current_tray_id)):
+                        self.all_trays_in_session.append(self.current_tray_id)
+                        self.close_tray_dialog()
+
+                    if not self.all_trays_in_session:
                         self.print_terminal(
-                            "[ERROR] Complete current tray before assigning process."
+                            "[ERROR] No samples in current tray to assign process."
                         )
                         return
 
