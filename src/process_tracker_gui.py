@@ -697,9 +697,11 @@ class ProcessTrackerGUI(tk.Tk):
                 else:
                     # Regular process - apply to current tray only
                     # Mark current tray as complete if it has samples
-                    if (self.current_tray_id and
+                    if (
+                        self.current_tray_id and
                         self.current_tray_id not in self.all_trays_in_session and
-                        self.tray_samples.get(self.current_tray_id)):
+                        self.tray_samples.get(self.current_tray_id)
+                    ):
                         self.all_trays_in_session.append(self.current_tray_id)
                         self.close_tray_dialog()
 
