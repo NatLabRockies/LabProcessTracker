@@ -914,11 +914,18 @@ class ProcessTrackerGUI(tk.Tk):
                     self.destroy()
                 else:
                     if messagebox.askyesno(
-                        "Confirm Exit",
-                        "Exit without saving? "
-                        "All unsaved data will be lost."
+                        "Save Failed",
+                        "Failed to save. Exit anyway?"
                     ):
                         self.destroy()
+            else:
+                # Second prompt: Confirm exit without saving
+                if messagebox.askyesno(
+                    "Confirm Exit",
+                    "Exit without saving? "
+                    "All unsaved data will be lost."
+                ):
+                    self.destroy()
         else:
             self.destroy()
 
