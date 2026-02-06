@@ -133,19 +133,22 @@ class TrayPositionDialog(tk.Toplevel):
         return max_row + 1, max_col
 
     def _create_grid(self):
-        """Create the visual grid of tray positions with A row at the bottom."""
-        row_letters = sorted({pos[0] for pos in self.positions})
-        col_numbers = sorted({int(pos[1:]) for pos in self.positions})
+        """Create the visual grid of tray positions. Letters are x-axis, numbers are
+        y-axis. Scan order: left->right, bottom->top."""
+        row_numbers = sorted({int(pos[1:]) for pos in self.positions})
+        col_letters = sorted({pos[0] for pos in self.positions})
 
-        row_letter_to_index = {letter: idx for idx, letter in enumerate(row_letters)}
-        num_rows = len(row_letters)
+        letter_to_x = {letter: idx for idx, letter in enumerate(col_letters)}
+        number_to_y = {num: idx for idx, num in enumerate(row_numbers)}
+        num_rows = len(row_numbers)
+
         for pos in self.positions:
-            row_letter = pos[0]
-            col_num = int(pos[1:])
-            row_index = num_rows - 1 - row_letter_to_index[row_letter]
-            col_index = col_num - 1
+            col_letter = pos[0]
+            row_number = int(pos[1:])
+            x_index = letter_to_x[col_letter]
+            # y_index: 0 is bottom (lowest number), so flip so 0 is bottom
+            y_index = num_rows - 1 - number_to_y[row_number]
 
-            # Create cell frame
             cell = tk.Frame(
                 self.grid_frame,
                 width=self.cell_size,
@@ -154,10 +157,9 @@ class TrayPositionDialog(tk.Toplevel):
                 relief=tk.RAISED,
                 borderwidth=1
             )
-            cell.grid(row=row_index, column=col_index, padx=2, pady=2)
+            cell.grid(row=y_index, column=x_index, padx=2, pady=2)
             cell.grid_propagate(False)
 
-            # Position label
             pos_label = tk.Label(
                 cell,
                 text=pos,
@@ -167,7 +169,6 @@ class TrayPositionDialog(tk.Toplevel):
             )
             pos_label.pack(pady=(5, 0))
 
-            # Sample label (initially empty)
             sample_label = tk.Label(
                 cell,
                 text="",
@@ -178,7 +179,6 @@ class TrayPositionDialog(tk.Toplevel):
             )
             sample_label.pack(pady=(2, 0), expand=True)
 
-            # Store references
             self.grid_cells[pos] = {
                 'frame': cell,
                 'sample_label': sample_label
@@ -186,7 +186,9 @@ class TrayPositionDialog(tk.Toplevel):
 
     def update_position(self, position):
         """Update the position being prompted for."""
-        prompt_text = f"Scan sample for position: {position}"
+        prompt_text = (
+            f"Scan sample for position: {position}\n"
+        )
         self.message_label.config(text=prompt_text)
 
     def update_grid(self, position, sample_id):
