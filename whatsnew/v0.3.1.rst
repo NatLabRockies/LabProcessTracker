@@ -3,11 +3,6 @@
 v0.3.1 (March 2026)
 ------------------------
 
-
-Breaking Changes
-~~~~~~~~~~~~~~~~
-
-
 Enhancements
 ~~~~~~~~~~~~
 - Add support for tracking tray IDs and sample positions within trays
@@ -32,6 +27,7 @@ Testing
 
 Documentation
 ~~~~~~~~~~~~~
+- Simplify file organization documentation in ``readme.md`` (:pull:`72`)
 
 
 Contributors

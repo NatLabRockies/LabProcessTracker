@@ -195,8 +195,8 @@ pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
 
 **Note:** You need to install the test dependencies first: `pip install .[test]`
 
-The test suite focuses on the testable core logic in `tracker_utils.py`. The CLI main
-loop and GUI are validated through manual testing and usage.
+The test suite focuses on the testable core logic in `tracker_utils.py`. The GUI is
+validated through manual testing and usage.
 
 ## Test Coverage
 
