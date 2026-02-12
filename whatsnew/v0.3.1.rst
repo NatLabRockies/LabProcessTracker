@@ -3,11 +3,6 @@
 v0.3.1 (March 2026)
 ------------------------
 
-
-Breaking Changes
-~~~~~~~~~~~~~~~~
-
-
 Enhancements
 ~~~~~~~~~~~~
 - Add support for tracking tray IDs and sample positions within trays
@@ -22,6 +17,8 @@ Enhancements
 
 Maintenance
 ~~~~~~~~~~~
+- Refactor GUI code for better organization by extracting ``TrayPositionDialog`` class
+  to ``gui_components.py``, reducing clutter in the main GUI file (:issue:`72`)
 
 
 Testing
@@ -30,8 +27,10 @@ Testing
 
 Documentation
 ~~~~~~~~~~~~~
+- Simplify file organization documentation in ``readme.md`` (:pull:`72`)
 
 
 Contributors
 ~~~~~~~~~~~~
+- Rajiv Daxini (:ghuser:`RDaxini`)
 
