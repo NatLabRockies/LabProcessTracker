@@ -1,6 +1,6 @@
 .. _whatsnew0310:
 
-v0.3.1 (March 2026)
+v0.3.1 (February 2026)
 ------------------------
 
 Enhancements
