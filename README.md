@@ -125,35 +125,15 @@ The quarantine logic allows rapid deployment on new systems without blocking wor
   - **Running as executable:** `~/Documents/process_tracking_outputs/`
 - If a log file already exists, new session outputs will be appended
 
-## Folder Structure
+## Key Files and Folders
 
-```
-process_tracking/
-├── src/                           # Main application code
-│   ├── tracker_utils.py           # Shared core utilities and business logic
-│   └── process_tracker_gui.py     # GUI application
-├── tools_processes.json           # Central database of all tools/processes
-├── tray_layouts.json              # Tray position mappings (2x2, 5x5, 8x8)
-├── scripts/                       # Utility and build scripts
-│   ├── create_exe.py              # Build script for creating executable
-│   └── run_tests.py               # Test runner script
-├── tests/                         # Test suite
-│   ├── __init__.py
-│   └── test_tracker_utils.py      # Core functionality tests
-├── outputs/                       # Default output location (auto-created)
-│   ├── scan_log_c215ss_jv.csv     # Example: c215ss_jv tool log
-│   ├── scan_log_bd8_xrd.csv       # Example: bd8_xrd tool log
-│   └── ...                        # One CSV per tool/process
-├── exe/                           # Compiled executable
-│   └── dist/
-│       └── process_tracker_gui_v<version>.exe
-├── .github/                       # CI/CD workflows
-│   └── workflows/
-│       └── pytest.yml             # Automated testing workflow
-├── pyproject.toml                 # Project metadata and dependencies
-├── README.md
-└── ...
-```
+- **`src/`** - Main application code
+- **`exe/dist/`** - Standalone executable
+- **`outputs/`** - Default output location for CSV logs (auto-created)
+- **`tools_processes.json`** - Central database of all tools/processes
+- **`tray_layouts.json`** - Tray position mappings
+- **`scripts/`** - QR code generation and build utilities
+- **`tests/`** - Test suite
 
 ## Requirements
 
