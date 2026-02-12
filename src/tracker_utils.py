@@ -39,7 +39,7 @@ def load_process_data():
     # Determine base path - handles both script and PyInstaller .exe
     if getattr(sys, 'frozen', False):
         # Running as compiled executable
-        base_path = sys._MEIPASS
+        base_path = sys._MEIPASS  # type: ignore[attr-defined]
     else:
         # Running as script
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -75,7 +75,7 @@ def load_tray_data():
     # Determine base path - handles both script and PyInstaller .exe
     if getattr(sys, 'frozen', False):
         # Running as compiled executable
-        base_path = sys._MEIPASS
+        base_path = sys._MEIPASS  # type: ignore[attr-defined]
     else:
         # Running as script
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

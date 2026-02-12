@@ -278,6 +278,8 @@ class ProcessTrackerGUI(tk.Tk):
         if not self.operator_name:
             self.print_terminal("[ERROR] Please enter operator name first.")
             return
+        # Type assertion: operator_name is not None after check
+        assert self.operator_name is not None
         qr_text = self.qr_entry.get().strip()
         self.qr_entry.delete(0, tk.END)
         if not qr_text:
@@ -308,6 +310,9 @@ class ProcessTrackerGUI(tk.Tk):
                 "Use 'P%:Name', 'S%:ID', 'B%:ID', or 'T%:TrayID'."
             )
             return
+
+        # Type assertion: if data_type is not None, data_id is also not None
+        assert data_id is not None
 
         # --- Tray Mode Entry ---
         if data_type == "TRAY":
@@ -438,7 +443,8 @@ class ProcessTrackerGUI(tk.Tk):
                             "[ERROR] No completed trays in session for batch operation."
                         )
                         return
-
+                    # Type assertion: session_id is set when tray mode is active
+                    assert self.session_id is not None
                     # Set process info
                     self.current_process = normalized_process
                     self.tool_process = normalized_process
@@ -524,6 +530,9 @@ class ProcessTrackerGUI(tk.Tk):
                     )
                     tool_display_name = tu.get_tool_display_name(self.tool_process)
 
+                    # Type assertion: current_tray_id is set in tray mode
+                    assert self.current_tray_id is not None
+
                     # Log samples from current tray only
                     current_tray_samples = self.tray_samples[self.current_tray_id]
                     batch_records = tu.create_tray_batch_records(
@@ -561,11 +570,15 @@ class ProcessTrackerGUI(tk.Tk):
             )
 
             # Auto-save if switching processes
-            if tu.should_auto_save_on_process_switch(
+            # Type check: ensure tool_process is not None
+            if self.tool_process is not None and tu.should_auto_save_on_process_switch(
                 self.tool_process,
                 normalized_process,
                 len(self.log_records) > 0
             ):
+                # Type assertion: log_file set when tool_process is set
+                assert self.log_file is not None
+
                 record_count = len(self.log_records)
                 old_log_file = os.path.basename(self.log_file)
                 success, _ = tu.save_log_to_csv(
@@ -652,6 +665,8 @@ class ProcessTrackerGUI(tk.Tk):
             self.update_sample_block(data_type, status_type="ERROR")
 
     def log_scan_event(self, process_name, sample_id="", batch_id=""):
+        # Type assertion: operator_name checked at start of handle_scan
+        assert self.operator_name is not None
         record = tu.create_log_record(
             self.operator_name, process_name, sample_id, batch_id
         )
