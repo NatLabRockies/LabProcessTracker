@@ -9,6 +9,213 @@ FONT_SIZE_LARGE = 26
 FONT_SIZE_MEDIUM = 22
 
 
+# --- Tray Position Prompt Dialog with Visual Grid ---
+class TrayPositionDialog(tk.Toplevel):
+    """Popup dialog for prompting user to scan samples for tray
+    positions with visual grid."""
+
+    def __init__(
+        self, parent, tray_id, positions, on_skip_callback,
+        on_skip_all_callback
+    ):
+        super().__init__(parent)
+        self.title(f"Tray Mode - {tray_id}")
+        self.configure(bg="#eaf6ff")
+        self.resizable(False, False)
+
+        self.parent = parent
+        self.tray_id = tray_id
+        self.positions = positions
+        self.on_skip_callback = on_skip_callback
+        self.on_skip_all_callback = on_skip_all_callback
+
+        # Calculate grid dimensions from positions
+        self.rows, self.cols = self._calculate_grid_dimensions(positions)
+
+        # Cell size based on grid size (smaller cells for larger grids)
+        if self.rows <= 2:
+            self.cell_size = 80
+        elif self.rows <= 5:
+            self.cell_size = 60
+        else:
+            self.cell_size = 50
+
+        # Calculate dialog size based on grid
+        grid_width = self.cols * self.cell_size + 40
+        grid_height = self.rows * self.cell_size + 40
+        dialog_width = max(600, grid_width + 40)
+        dialog_height = grid_height + 200  # Extra space for message and buttons
+        self.geometry(f"{dialog_width}x{dialog_height}")
+
+        # Make dialog stay on top but NOT modal (so QR entry stays accessible)
+        self.transient(parent)
+        self.attributes('-topmost', True)
+
+        # Center the dialog on parent
+        self.update_idletasks()
+        x = (parent.winfo_x() + (parent.winfo_width() // 2)
+             - (self.winfo_width() // 2))
+        y = (parent.winfo_y() + (parent.winfo_height() // 2)
+             - (self.winfo_height() // 2))
+        self.geometry(f"+{x}+{y}")
+
+        # Message label
+        self.message_label = tk.Label(
+            self,
+            text="Initializing...",
+            bg="#eaf6ff",
+            fg="#1a5276",
+            font=("Arial", 14, "bold"),
+            wraplength=dialog_width - 40
+        )
+        self.message_label.pack(pady=(10, 10))
+
+        # Grid frame
+        self.grid_frame = tk.Frame(self, bg="#ffffff", relief=tk.RIDGE, borderwidth=2)
+        self.grid_frame.pack(pady=10, padx=20)
+
+        # Create grid cells
+        self.grid_cells = {}
+        self._create_grid()
+
+        # Buttons frame
+        btn_frame = tk.Frame(self, bg="#eaf6ff")
+        btn_frame.pack(pady=(10, 20))
+
+        # Skip current button
+        self.skip_btn = tk.Button(
+            btn_frame,
+            text="Skip Current",
+            command=self.skip_current,
+            bg="#f39c12",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            relief=tk.RAISED,
+            padx=15,
+            pady=8,
+            width=15
+        )
+        self.skip_btn.grid(row=0, column=0, padx=5)
+
+        # Skip all button
+        self.skip_all_btn = tk.Button(
+            btn_frame,
+            text="Skip All Remaining",
+            command=self.skip_all_remaining,
+            bg="#e74c3c",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            relief=tk.RAISED,
+            padx=15,
+            pady=8,
+            width=15
+        )
+        self.skip_all_btn.grid(row=0, column=1, padx=5)
+
+        # Handle window close (X button) - treat as skip all
+        self.protocol("WM_DELETE_WINDOW", self.skip_all_remaining)
+
+    def _calculate_grid_dimensions(self, positions):
+        """Calculate grid dimensions from position strings (e.g., A1, B2, H8)."""
+        if not positions:
+            return 1, 1
+
+        max_row = 0
+        max_col = 0
+        for pos in positions:
+            # Parse position like "A1", "B2", "H8"
+            row_letter = pos[0]
+            col_num = int(pos[1:])
+            row_index = ord(row_letter.upper()) - ord('A')
+            max_row = max(max_row, row_index)
+            max_col = max(max_col, col_num)
+
+        return max_row + 1, max_col
+
+    def _create_grid(self):
+        """Create the visual grid of tray positions. Letters are x-axis, numbers are
+        y-axis. Scan order: left->right, bottom->top."""
+        row_numbers = sorted({int(pos[1:]) for pos in self.positions})
+        col_letters = sorted({pos[0] for pos in self.positions})
+
+        letter_to_x = {letter: idx for idx, letter in enumerate(col_letters)}
+        number_to_y = {num: idx for idx, num in enumerate(row_numbers)}
+        num_rows = len(row_numbers)
+
+        for pos in self.positions:
+            col_letter = pos[0]
+            row_number = int(pos[1:])
+            x_index = letter_to_x[col_letter]
+            # y_index: 0 is bottom (lowest number), so flip so 0 is bottom
+            y_index = num_rows - 1 - number_to_y[row_number]
+
+            cell = tk.Frame(
+                self.grid_frame,
+                width=self.cell_size,
+                height=self.cell_size,
+                bg="#ffffff",
+                relief=tk.RAISED,
+                borderwidth=1
+            )
+            cell.grid(row=y_index, column=x_index, padx=2, pady=2)
+            cell.grid_propagate(False)
+
+            pos_label = tk.Label(
+                cell,
+                text=pos,
+                bg="#ffffff",
+                fg="#2c3e50",
+                font=("Arial", 10, "bold")
+            )
+            pos_label.pack(pady=(5, 0))
+
+            sample_label = tk.Label(
+                cell,
+                text="",
+                bg="#ffffff",
+                fg="#27ae60",
+                font=("Arial", 8),
+                wraplength=self.cell_size - 10
+            )
+            sample_label.pack(pady=(2, 0), expand=True)
+
+            self.grid_cells[pos] = {
+                'frame': cell,
+                'sample_label': sample_label
+            }
+
+    def update_position(self, position):
+        """Update the position being prompted for."""
+        prompt_text = (
+            f"Scan sample for position: {position}\n"
+        )
+        self.message_label.config(text=prompt_text)
+
+    def update_grid(self, position, sample_id):
+        """Update a grid cell with the scanned sample ID."""
+        if position in self.grid_cells:
+            cell_data = self.grid_cells[position]
+            cell_data['sample_label'].config(text=sample_id)
+            cell_data['frame'].config(bg="#d5f4e6")  # Light green
+
+    def skip_current(self):
+        """Call the skip current callback."""
+        self.on_skip_callback()
+        # Refocus QR entry in parent window
+        self.parent.qr_entry.focus_set()
+
+    def skip_all_remaining(self):
+        """Call the skip all callback and close dialog."""
+        # Refocus QR entry before closing
+        self.parent.qr_entry.focus_set()
+        self.on_skip_all_callback()
+        self.destroy()
+
+    def close(self):
+        """Close the dialog."""
+        self.destroy()
+
+
 # --- GUI Class ---
 class ProcessTrackerGUI(tk.Tk):
     def __init__(self):
@@ -21,6 +228,19 @@ class ProcessTrackerGUI(tk.Tk):
         self.log_file = None
         self.operator_name = None
         self.log_records = []
+
+        # Tray mode state - updated for multi-tray support
+        self.tray_mode = False
+        self.current_tray_id = None  # Currently active tray
+        self.tray_positions = []  # Positions for current tray
+        # Dict of {tray_id: [{"position": pos, "sample_id": id}, ...]}
+        self.tray_samples = {}
+        self.tray_position_index = 0  # Index for current tray
+        self.tray_dialog = None
+        # Multi-tray session state
+        self.all_trays_in_session = []  # List of completed tray IDs
+        self.session_id = None  # Session ID for batch operations
+
         self.create_widgets()
 
         # Handle window close event (X button)
@@ -167,6 +387,98 @@ class ProcessTrackerGUI(tk.Tk):
         self.print_terminal("Please enter a new NREL username to continue.")
         self.operator_entry.focus_set()
 
+    def show_tray_dialog(self, tray_id, positions, position):
+        """Show or update the tray position dialog."""
+        if (self.tray_dialog is None or
+                not self.tray_dialog.winfo_exists()):
+            self.tray_dialog = TrayPositionDialog(
+                self,
+                tray_id,
+                positions,
+                self.skip_current_position,
+                self.skip_all_remaining_positions
+            )
+            self.tray_dialog.update_position(position)
+        else:
+            self.tray_dialog.update_position(position)
+            self.tray_dialog.lift()
+
+        # Always refocus QR entry after showing/updating dialog
+        self.qr_entry.focus_set()
+
+    def close_tray_dialog(self):
+        """Close the tray position dialog if it exists."""
+        if self.tray_dialog and self.tray_dialog.winfo_exists():
+            self.tray_dialog.close()
+            self.tray_dialog = None
+
+    def skip_current_position(self):
+        """Skip the current position and move to next."""
+        if (self.tray_mode and
+                self.tray_position_index < len(self.tray_positions)):
+            skipped_pos = self.tray_positions[self.tray_position_index]
+            self.print_terminal(f"[TRAY] Skipped position {skipped_pos}.")
+            self.tray_position_index += 1
+            if self.tray_position_index < len(self.tray_positions):
+                next_pos = self.tray_positions[self.tray_position_index]
+                self.show_tray_dialog(
+                    self.current_tray_id, self.tray_positions, next_pos
+                )
+            else:
+                # Mark tray as complete
+                self.all_trays_in_session.append(self.current_tray_id)
+                self.close_tray_dialog()
+
+                # Calculate counts for display
+                sample_count = len(self.tray_samples[self.current_tray_id])
+                tray_count = len(self.all_trays_in_session)
+                total_samples = sum(
+                    len(self.tray_samples[tray_id])
+                    for tray_id in self.all_trays_in_session
+                )
+
+                self.print_terminal(
+                    f"[TRAY] Tray {self.current_tray_id} complete with "
+                    f"{sample_count} sample(s). "
+                    f"Total: {tray_count} tray(s), "
+                    f"{total_samples} sample(s) in session."
+                )
+                self.print_terminal(
+                    "[TRAY] Scan another TRAY to add to session, "
+                    "or scan PROCESS QR code."
+                )
+
+    def skip_all_remaining_positions(self):
+        """Skip all remaining tray positions and allow process scanning."""
+        if (self.tray_mode and
+                self.tray_position_index < len(self.tray_positions)):
+            skipped = len(self.tray_positions) - self.tray_position_index
+            self.print_terminal(f"[TRAY] Skipped {skipped} remaining position(s).")
+            self.tray_position_index = len(self.tray_positions)
+
+            # Mark tray as complete
+            self.all_trays_in_session.append(self.current_tray_id)
+            self.close_tray_dialog()
+
+            # Calculate counts for display
+            sample_count = len(self.tray_samples[self.current_tray_id])
+            tray_count = len(self.all_trays_in_session)
+            total_samples = sum(
+                len(self.tray_samples[tray_id])
+                for tray_id in self.all_trays_in_session
+            )
+
+            self.print_terminal(
+                f"[TRAY] Tray {self.current_tray_id} complete with "
+                f"{sample_count} sample(s). "
+                f"Total: {tray_count} tray(s), "
+                f"{total_samples} sample(s) in session."
+            )
+            self.print_terminal(
+                "[TRAY] Scan another TRAY to add to session, "
+                "or scan PROCESS QR code."
+            )
+
     def handle_scan(self):
         if not self.operator_name:
             self.print_terminal("[ERROR] Please enter operator name first.")
@@ -198,9 +510,256 @@ class ProcessTrackerGUI(tk.Tk):
         if not data_type:
             self.print_terminal(
                 f"[ERROR] Invalid format: '{qr_text}'. "
-                "Use 'P%:Name', 'S%:ID', or 'B%:ID'"
+                "Use 'P%:Name', 'S%:ID', 'B%:ID', or 'T%:TrayID'."
             )
             return
+
+        # --- Tray Mode Entry ---
+        if data_type == "TRAY":
+            tray_id = data_id
+            layout = tu.TRAY_LAYOUTS.get(tray_id)
+            if not layout:
+                self.print_terminal(f"[ERROR] Unknown tray ID: {tray_id}")
+                return
+
+            # Check if starting new tray while current tray incomplete
+            if self.tray_mode and self.tray_position_index < len(self.tray_positions):
+                self.print_terminal(
+                    "[ERROR] Complete or skip all positions in current tray "
+                    "before scanning a new tray."
+                )
+                return
+
+            # Initialize session on first tray
+            if not self.tray_mode or len(self.all_trays_in_session) == 0:
+                self.session_id = tu.generate_session_id()
+                self.print_terminal(
+                    f"[SESSION] Started new multi-tray session: "
+                    f"{self.session_id}"
+                )
+
+            # Set up new tray
+            self.tray_mode = True
+            self.current_tray_id = tray_id
+            self.tray_positions = layout
+            self.tray_samples[tray_id] = []  # Initialize list for this tray
+            self.tray_position_index = 0
+
+            # Show dialog with grid
+            self.show_tray_dialog(tray_id, layout, self.tray_positions[0])
+
+            tray_num = len(self.all_trays_in_session) + 1
+            self.print_terminal(
+                f"[TRAY MODE] Tray {tray_num}: {tray_id} loaded "
+                f"({len(layout)} positions)."
+            )
+            self.update_sample_block(None, status_type="RESET")
+            return
+
+        # --- Tray Mode: Sequential Sample Scanning ---
+        if self.tray_mode:
+            # Validate if this scan type is acceptable in tray mode
+            should_accept, error_msg = tu.should_accept_scan_in_tray_mode(
+                data_type, self.tray_position_index, len(self.tray_positions)
+            )
+            if not should_accept:
+                self.print_terminal(error_msg)
+                return
+
+            if data_type == "SAMPLE" or data_type == "SAMPLE_LEGACY":
+                # Check if we're trying to scan more samples than positions
+                if self.tray_position_index >= len(self.tray_positions):
+                    self.print_terminal(
+                        "[ERROR] All tray positions filled. "
+                        "Scan PROCESS to assign, or scan new TRAY ID."
+                    )
+                    return
+
+                pos = self.tray_positions[self.tray_position_index]
+                sample_id = data_id
+                if data_type == "SAMPLE_LEGACY":
+                    self.print_terminal(
+                        tu.format_legacy_sample_warning(sample_id)
+                    )
+
+                # Add to current tray's sample list
+                self.tray_samples[self.current_tray_id].append(
+                    {"position": pos, "sample_id": sample_id}
+                )
+
+                # Update grid display
+                if self.tray_dialog and self.tray_dialog.winfo_exists():
+                    self.tray_dialog.update_grid(pos, sample_id)
+
+                self.print_terminal(
+                    f"[TRAY] Sample '{sample_id}' → position {pos}."
+                )
+                self.tray_position_index += 1
+
+                if self.tray_position_index < len(self.tray_positions):
+                    next_pos = self.tray_positions[self.tray_position_index]
+                    if self.tray_dialog and self.tray_dialog.winfo_exists():
+                        self.tray_dialog.update_position(next_pos)
+                    self.update_sample_block(sample_id, status_type="SAMPLE")
+                else:
+                    # Current tray complete
+                    self.all_trays_in_session.append(self.current_tray_id)
+                    self.close_tray_dialog()
+
+                    sample_count = len(self.tray_samples[self.current_tray_id])
+                    tray_count = len(self.all_trays_in_session)
+                    total_samples = sum(
+                        len(samples) for samples in self.tray_samples.values()
+                    )
+
+                    self.print_terminal(
+                        f"[TRAY] Tray {self.current_tray_id} complete "
+                        f"({sample_count} samples). "
+                        f"{tray_count} tray(s) in session "
+                        f"({total_samples} total samples)."
+                    )
+                    self.print_terminal(
+                        "[TRAY] Scan PROCESS for this tray, "
+                        "BATCH OPERATION to apply to all trays, "
+                        "or scan next TRAY ID."
+                    )
+                    self.update_sample_block(None, status_type="RESET")
+                return
+
+            elif data_type == "PROCESS":
+                # Check if this is a batch operation process
+                is_valid, normalized_process, error_msg = (
+                    tu.validate_and_normalize_process(data_id)
+                )
+                if not is_valid:
+                    self.print_terminal(error_msg)
+
+                is_batch_op = tu.is_batch_operation_process(normalized_process)
+
+                if is_batch_op:
+                    # Batch operation - apply to ALL trays in session
+                    if not self.all_trays_in_session:
+                        self.print_terminal(
+                            "[ERROR] No completed trays in session for batch operation."
+                        )
+                        return
+
+                    # Set process info
+                    self.current_process = normalized_process
+                    self.tool_process = normalized_process
+                    self.outputs_folder = tu.get_output_dir(
+                        normalized_process, OUTPUTS_FOLDER
+                    )
+                    valid = tu.is_process_valid(normalized_process)
+                    self.log_file = os.path.join(
+                        self.outputs_folder,
+                        tu.get_log_filename(self.tool_process, valid=valid)
+                    )
+                    tool_display_name = tu.get_tool_display_name(
+                        self.tool_process
+                    )
+                    process_display_name = tu.get_process_display_name(
+                        self.current_process
+                    )
+
+                    # Create batch operation records for all trays
+                    batch_records = tu.create_batch_operation_records(
+                        self.operator_name,
+                        self.tray_samples,
+                        self.current_process,
+                        self.session_id
+                    )
+                    self.log_records.extend(batch_records)
+
+                    # Log each record
+                    for record in batch_records:
+                        self.print_terminal(tu.format_log_message(record))
+
+                    tray_count = len(self.all_trays_in_session)
+                    sample_count = len(batch_records)
+                    self.print_terminal(
+                        f"[BATCH OPERATION] '{process_display_name}' applied to "
+                        f"{tray_count} tray(s) ({sample_count} samples) - "
+                        f"Session: {self.session_id}"
+                    )
+
+                    # End multi-tray session
+                    self.tray_mode = False
+                    self.current_tray_id = None
+                    self.tray_positions = []
+                    self.tray_samples = {}
+                    self.tray_position_index = 0
+                    self.all_trays_in_session = []
+                    self.session_id = None
+
+                    self.title(f"Lab Process Tracker GUI - {tool_display_name}")
+                    self.log_file_label.config(
+                        text=f"Log will be saved to: {self.log_file}",
+                        fg="orange" if not valid else "gray"
+                    )
+                    self.update_sample_block(None, status_type="RESET")
+                    self.update_process_block(self.current_process, valid=valid)
+
+                else:
+                    # Regular process - apply to current tray only
+                    # Mark current tray as complete if it has samples
+                    if (
+                        self.current_tray_id and
+                        self.current_tray_id not in self.all_trays_in_session and
+                        self.tray_samples.get(self.current_tray_id)
+                    ):
+                        self.all_trays_in_session.append(self.current_tray_id)
+                        self.close_tray_dialog()
+
+                    if not self.all_trays_in_session:
+                        self.print_terminal(
+                            "[ERROR] No samples in current tray to assign process."
+                        )
+                        return
+
+                    self.current_process = normalized_process
+                    self.tool_process = normalized_process
+                    self.outputs_folder = tu.get_output_dir(
+                        normalized_process, OUTPUTS_FOLDER
+                    )
+                    valid = tu.is_process_valid(normalized_process)
+                    self.log_file = os.path.join(
+                        self.outputs_folder,
+                        tu.get_log_filename(self.tool_process, valid=valid)
+                    )
+                    tool_display_name = tu.get_tool_display_name(self.tool_process)
+
+                    # Log samples from current tray only
+                    current_tray_samples = self.tray_samples[self.current_tray_id]
+                    batch_records = tu.create_tray_batch_records(
+                        self.operator_name,
+                        self.current_tray_id,
+                        current_tray_samples,
+                        self.current_process
+                    )
+                    self.log_records.extend(batch_records)
+                    for record in batch_records:
+                        self.print_terminal(tu.format_log_message(record))
+
+                    self.print_terminal(
+                        f"[TRAY] Process '{tool_display_name}' assigned to "
+                        f"{len(current_tray_samples)} sample(s) in tray "
+                        f"{self.current_tray_id}."
+                    )
+                    self.print_terminal(
+                        "[TRAY] Ready to scan next TRAY or BATCH OPERATION process."
+                    )
+
+                    self.title(f"Lab Process Tracker GUI - {tool_display_name}")
+                    self.log_file_label.config(
+                        text=f"Log will be saved to: {self.log_file}",
+                        fg="orange" if not valid else "gray"
+                    )
+                    self.update_process_block(self.current_process, valid=valid)
+                    # Stay in tray mode for next tray
+                return
+
+        # --- Normal Mode (no tray) ---
         if data_type == "PROCESS":
             is_valid, normalized_process, error_msg = (
                 tu.validate_and_normalize_process(data_id)
@@ -305,12 +864,43 @@ class ProcessTrackerGUI(tk.Tk):
         self.print_terminal(tu.format_log_message(record))
 
     def undo_last_scan(self):
-        if not self.log_records:
-            self.print_terminal("[INFO] No scans to undo.")
-            return
-        removed_record = self.log_records.pop()
-        self.print_terminal(tu.format_undo_message(removed_record))
-        self.update_sample_block("Last scan undone", status_type="UNDO")
+        if self.tray_mode and self.current_tray_id:
+            # Undo in tray mode: remove last tray sample
+            current_tray_samples = self.tray_samples.get(self.current_tray_id, [])
+            if current_tray_samples and self.tray_position_index > 0:
+                removed_sample = current_tray_samples.pop()
+                self.tray_position_index -= 1
+                prev_pos = self.tray_positions[self.tray_position_index]
+
+                # Update grid to clear the cell
+                if self.tray_dialog and self.tray_dialog.winfo_exists():
+                    cell_data = self.tray_dialog.grid_cells.get(
+                        removed_sample['position']
+                    )
+                    if cell_data:
+                        cell_data['sample_label'].config(text="")
+                        cell_data['frame'].config(bg="#ffffff")
+                    self.tray_dialog.update_position(prev_pos)
+                else:
+                    self.show_tray_dialog(
+                        self.current_tray_id, self.tray_positions, prev_pos
+                    )
+
+                self.print_terminal(
+                    f"[UNDO] Removed sample '{removed_sample['sample_id']}' "
+                    f"from position {removed_sample['position']}."
+                )
+                self.update_sample_block("Last scan undone", status_type="UNDO")
+            else:
+                self.print_terminal("[INFO] No tray samples to undo.")
+        else:
+            # Normal mode undo (existing functionality)
+            if not self.log_records:
+                self.print_terminal("[INFO] No scans to undo.")
+                return
+            removed_record = self.log_records.pop()
+            self.print_terminal(tu.format_undo_message(removed_record))
+            self.update_sample_block("Last scan undone", status_type="UNDO")
 
     def save_log(self):
         if not self.log_file:
@@ -332,6 +922,9 @@ class ProcessTrackerGUI(tk.Tk):
 
     def exit_app(self):
         """Exit the application with prompt to save unsaved data."""
+        # Close tray dialog if open
+        self.close_tray_dialog()
+
         if self.log_records:
             count = len(self.log_records)
             if messagebox.askyesno(
@@ -344,11 +937,18 @@ class ProcessTrackerGUI(tk.Tk):
                     self.destroy()
                 else:
                     if messagebox.askyesno(
-                        "Confirm Exit",
-                        "Exit without saving? "
-                        "All unsaved data will be lost."
+                        "Save Failed",
+                        "Failed to save. Exit anyway?"
                     ):
                         self.destroy()
+            else:
+                # Second prompt: Confirm exit without saving
+                if messagebox.askyesno(
+                    "Confirm Exit",
+                    "Exit without saving? "
+                    "All unsaved data will be lost."
+                ):
+                    self.destroy()
         else:
             self.destroy()
 

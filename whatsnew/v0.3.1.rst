@@ -10,6 +10,8 @@ Breaking Changes
 
 Enhancements
 ~~~~~~~~~~~~
+- Add support for tracking tray IDs and sample positions within trays
+  (:issue:`3`, :pull:`64`)
 - Add QR code generation scripts:
   - ``generate_test_qr_codes.py`` - Creates a minimal test set for validation
   - ``generate_custom_qr_codes.py`` - Template for generating custom QR codes

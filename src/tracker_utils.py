@@ -27,6 +27,7 @@ DEFAULT_PROCESS_COLOR = "#95a5a6"  # Grey
 # Map process names to colors (hex codes for GUI) - loaded from JSON
 PROCESS_COLORS = {}
 PROCESS_INFO = {}  # Full process information
+TRAY_LAYOUTS = {}  # Tray position mappings - loaded from JSON
 
 UNAPPROVED_FOLDER_NAME = "unapproved"
 
@@ -56,7 +57,8 @@ def load_process_data():
                 PROCESS_INFO[abbreviated] = {
                     'tool': tool.get('tool', ''),
                     'process': tool.get('process', ''),
-                    'color': tool.get('color', DEFAULT_PROCESS_COLOR)
+                    'color': tool.get('color', DEFAULT_PROCESS_COLOR),
+                    'is_batch_operation': tool.get('is_batch_operation', False)
                 }
     except FileNotFoundError:
         print(f"Warning: tools_processes.json not found at {json_path}")
@@ -66,8 +68,39 @@ def load_process_data():
         print("Using default/empty process configuration.")
 
 
-# Load process data at module import
+def load_tray_data():
+    """Load tray layout data from JSON file."""
+    global TRAY_LAYOUTS
+
+    # Determine base path - handles both script and PyInstaller .exe
+    if getattr(sys, 'frozen', False):
+        # Running as compiled executable
+        base_path = sys._MEIPASS
+    else:
+        # Running as script
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    json_path = os.path.join(base_path, "tray_layouts.json")
+
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        for tray in data.get('trays', []):
+            tray_id = tray.get('tray_id', '')
+            if tray_id:
+                TRAY_LAYOUTS[tray_id] = tray.get('positions', [])
+    except FileNotFoundError:
+        print(f"Warning: tray_layouts.json not found at {json_path}")
+        print("Tray tracking will not be available.")
+    except json.JSONDecodeError as e:
+        print(f"Warning: Error parsing tray_layouts.json: {e}")
+        print("Tray tracking will not be available.")
+
+
+# Load process and tray data at module import
 load_process_data()
+load_tray_data()
 
 
 def get_unapproved_log_filename(process_name: str) -> str:
@@ -117,6 +150,28 @@ def get_output_dir(process_name: str, base_outputs: str) -> str:
         return get_unapproved_output_dir(base_outputs)
 
 
+def is_batch_operation_process(process_name: str) -> bool:
+    """Check if a process is a batch operation (applies to multiple trays).
+
+    Args:
+        process_name: The abbreviated process name
+
+    Returns:
+        True if process is marked as batch operation
+    """
+    info = PROCESS_INFO.get(process_name, {})
+    return info.get('is_batch_operation', False)
+
+
+def generate_session_id() -> str:
+    """Generate a unique session ID for batch operations.
+
+    Returns:
+        Session ID string in format YYYYMMDD_HHMMSS
+    """
+    return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
 # --- Output Directory Logic ---
 def get_default_output_dir():
     """Determine the appropriate output directory for log files."""
@@ -160,17 +215,21 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
 
         # Check for compact QR prefixes (include colon for uniqueness)
         if qr_text.startswith(QR_SAMPLE_PREFIX):
-            data_id = qr_text[len(QR_SAMPLE_PREFIX):].strip()
+            data_id = qr_text[len(QR_SAMPLE_PREFIX):]
             if data_id:  # Ensure there's an ID after the prefix
                 return "SAMPLE", data_id
         elif qr_text.startswith(QR_PROCESS_PREFIX):
-            data_id = qr_text[len(QR_PROCESS_PREFIX):].strip()
+            data_id = qr_text[len(QR_PROCESS_PREFIX):]
             if data_id:  # Ensure there's an ID after the prefix
                 return "PROCESS", data_id
         elif qr_text.startswith(QR_BATCH_PREFIX):
             data_id = qr_text[len(QR_BATCH_PREFIX):].strip()
             if data_id:  # Ensure there's an ID after the prefix
                 return "BATCH", data_id
+        elif qr_text.startswith("T%:"):
+            data_id = qr_text[len("T%:"):]
+            if data_id:
+                return "TRAY", data_id
 
         # Legacy format: ####-## (4 digits, dash, 2 digits)
         # This supports old sample QR codes that don't have the S%: prefix
@@ -210,6 +269,41 @@ def create_log_record(
     }
 
 
+def create_log_record_with_tray(
+    operator_name: str,
+    tray_id: str,
+    position: str,
+    sample_id: str,
+    process_name: str,
+    session_id: str = ""
+) -> dict:
+    """Create a log record with tray and position info.
+
+    Args:
+        operator_name: Name of the operator
+        tray_id: ID of the tray
+        position: Position in the tray (e.g., 'A1', 'B2')
+        sample_id: ID of the sample
+        process_name: Name of the process
+        session_id: Optional session ID for batch operations
+
+    Returns:
+        Dictionary containing the log record with tray info
+    """
+    scan_time = datetime.datetime.now().strftime(DATE_FORMAT)
+    record = {
+        'Timestamp': scan_time,
+        'Operator': operator_name,
+        'SampleID': sample_id,
+        'ProcessName': process_name,
+        'TrayID': tray_id,
+        'Position': position,
+    }
+    if session_id:
+        record['SessionID'] = session_id
+    return record
+
+
 def save_log_to_csv(
     log_records: list, log_file: str, outputs_folder: str
 ) -> tuple[bool, str]:
@@ -231,11 +325,26 @@ def save_log_to_csv(
 
     # Check if file exists to decide whether to write headers
     file_exists = os.path.exists(log_file)
-    fieldnames = list(log_records[0].keys())
+
+    # Determine fieldnames based on what's present in records
+    # Standard fields first, optional fields (TrayID, Position, SessionID) at end
+    has_tray = any(('TrayID' in r) for r in log_records)
+    has_session = any(('SessionID' in r) for r in log_records)
+
+    # Base fieldnames (always present)
+    fieldnames = ['Timestamp', 'Operator', 'SampleID', 'ProcessName']
+
+    # Add optional fields at the end
+    if has_tray:
+        fieldnames.extend(['TrayID', 'Position'])
+    if has_session:
+        fieldnames.append('SessionID')
 
     try:
         with open(log_file, 'a', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer = csv.DictWriter(
+                csvfile, fieldnames=fieldnames, extrasaction='ignore'
+            )
 
             if not file_exists:
                 writer.writeheader()
@@ -307,12 +416,20 @@ def format_log_message(record: dict) -> str:
     Returns:
         Formatted log message string
     """
-    base_msg = (
-        f"[LOGGED] {record['Timestamp']} | "
-        f"Operator: '{record['Operator']}' | "
-        f"Process: '{record['ProcessName']}' | "
-    )
-    return base_msg + _format_data_id(record)
+    msg = f"[LOGGED] {record['Timestamp']} | Operator: '{record['Operator']}'"
+
+    # Add tray info if present
+    if 'TrayID' in record and 'Position' in record:
+        msg += f" | Tray: '{record['TrayID']}' | Pos: '{record['Position']}'"
+
+    # Add batch or sample, then process
+    msg += f" | {_format_data_id(record)} | Process: '{record['ProcessName']}'"
+
+    # Add session ID if present
+    if 'SessionID' in record:
+        msg += f" | Session: {record['SessionID']}"
+
+    return msg
 
 
 def format_undo_message(record: dict) -> str:
@@ -500,3 +617,116 @@ def is_data_type(scan_type: str) -> bool:
         True if scan type is SAMPLE, SAMPLE_LEGACY, or BATCH
     """
     return is_sample_type(scan_type) or is_batch_type(scan_type)
+
+
+# --- Tray Mode Logic ---
+def validate_tray_ready_for_process(
+    tray_position_index: int, total_positions: int
+) -> tuple[bool, str]:
+    """Check if tray is ready for process assignment.
+
+    Args:
+        tray_position_index: Current position index
+        total_positions: Total number of positions in tray
+
+    Returns:
+        Tuple of (is_ready: bool, error_message: str or empty string)
+    """
+    if tray_position_index < total_positions:
+        return (
+            False,
+            "[ERROR] Complete all tray positions or skip remaining "
+            "before scanning process."
+        )
+    return True, ""
+
+
+def should_accept_scan_in_tray_mode(
+    data_type: str, tray_position_index: int, total_positions: int
+) -> tuple[bool, str]:
+    """Determine if a scan should be accepted in tray mode.
+
+    Args:
+        data_type: Type of scan ("SAMPLE", "SAMPLE_LEGACY", "PROCESS", etc.)
+        tray_position_index: Current position index
+        total_positions: Total number of positions in tray
+
+    Returns:
+        Tuple of (should_accept: bool, error_message: str or empty string)
+    """
+    if data_type in ("SAMPLE", "SAMPLE_LEGACY"):
+        # Always accept samples in tray mode
+        return True, ""
+    elif data_type == "PROCESS":
+        # Only accept process if all positions are filled/skipped
+        return validate_tray_ready_for_process(
+            tray_position_index, total_positions
+        )
+    else:
+        return (
+            False,
+            "[ERROR] In tray mode, only SAMPLE or PROCESS QR codes "
+            "are accepted."
+        )
+
+
+def create_tray_batch_records(
+    operator_name: str,
+    tray_id: str,
+    tray_samples: list,
+    process_name: str
+) -> list:
+    """Create log records for all samples in a tray with the assigned process.
+
+    Args:
+        operator_name: Name of the operator
+        tray_id: ID of the tray
+        tray_samples: List of dicts with 'position' and 'sample_id' keys
+        process_name: Name of the process to assign
+
+    Returns:
+        List of log record dictionaries
+    """
+    records = []
+    for entry in tray_samples:
+        record = create_log_record_with_tray(
+            operator_name,
+            tray_id,
+            entry["position"],
+            entry["sample_id"],
+            process_name
+        )
+        records.append(record)
+    return records
+
+
+def create_batch_operation_records(
+    operator_name: str,
+    all_tray_data: dict,
+    process_name: str,
+    session_id: str
+) -> list:
+    """Create log records for all samples across multiple trays for batch operations.
+
+    Args:
+        operator_name: Name of the operator
+        all_tray_data: Dict mapping {tray_id: [{"position": pos, "sample_id": id}, ...]}
+        process_name: Name of the batch operation process
+        session_id: Session ID linking all trays together
+
+    Returns:
+        List of log record dictionaries with session ID
+    """
+    records = []
+    for tray_id, samples_list in all_tray_data.items():
+        for entry in samples_list:
+            record = create_log_record_with_tray(
+                operator_name,
+                tray_id,
+                entry["position"],
+                entry["sample_id"],
+                process_name,
+                session_id
+            )
+            records.append(record)
+    return records
