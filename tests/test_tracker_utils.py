@@ -526,3 +526,254 @@ class TestQuarantineLogic:
         output_dir = tu.get_output_dir("invalid_proc", base)
         assert "unapproved" in output_dir
         assert output_dir == os.path.join(base, "unapproved")
+
+
+class TestTrayParsing:
+    """Test cases for tray QR code parsing."""
+
+    def test_parse_tray_valid(self):
+        """Test parsing valid TRAY input."""
+        data_type, data_id = tu.parse_input("T%:066726-S-XXX")
+        assert data_type == "TRAY"
+        assert data_id == "066726-S-XXX"
+
+    def test_parse_tray_various_ids(self):
+        """Test parsing various tray IDs."""
+        test_cases = [
+            ("T%:066726-S-XXX", "066726-S-XXX"),
+            ("T%:072266-XXX-A", "072266-XXX-A"),
+            ("T%:070503-XXX-A", "070503-XXX-A"),
+        ]
+        for input_str, expected_id in test_cases:
+            data_type, data_id = tu.parse_input(input_str)
+            assert data_type == "TRAY"
+            assert data_id == expected_id
+
+    def test_parse_tray_case_sensitive(self):
+        """Test that tray prefix is case-sensitive."""
+        # Lowercase should not work
+        data_type, data_id = tu.parse_input("t%:066726-S-XXX")
+        assert data_type is None
+        assert data_id is None
+
+    def test_parse_tray_empty_id(self):
+        """Test that tray prefix without ID is invalid."""
+        data_type, data_id = tu.parse_input("T%:")
+        assert data_type is None
+        assert data_id is None
+
+
+class TestTrayLayoutLoading:
+    """Test cases for tray layout JSON loading."""
+
+    def test_tray_layouts_loaded(self):
+        """Test that TRAY_LAYOUTS dictionary is populated from JSON."""
+        # Verify the dictionary exists and was loaded
+        assert isinstance(tu.TRAY_LAYOUTS, dict), (
+            "TRAY_LAYOUTS should be a dictionary"
+        )
+
+    def test_tray_layout_structure(self):
+        """Test that tray layouts have expected structure (list of position strings)."""
+
+        for tray_id, positions in tu.TRAY_LAYOUTS.items():
+            # Should be a list
+            assert isinstance(positions, list), (
+                f"Tray layout for '{tray_id}' is not a list"
+            )
+
+            # Should contain position strings
+            assert len(positions) > 0, (
+                f"Tray '{tray_id}' has no positions"
+            )
+
+            for pos in positions:
+                assert isinstance(pos, str) and len(pos) >= 2, (
+                    f"Invalid position format '{pos}' in tray '{tray_id}'"
+                )
+
+
+class TestTrayValidation:
+    """Test cases for tray mode validation logic."""
+
+    def test_validate_tray_ready_positions_complete(self):
+        """Test that tray is ready when all positions filled."""
+        is_ready, error = tu.validate_tray_ready_for_process(4, 4)
+        assert is_ready
+        assert error == ""
+
+    def test_validate_tray_ready_positions_incomplete(self):
+        """Test that tray is not ready when positions remain."""
+        is_ready, error = tu.validate_tray_ready_for_process(2, 4)
+        assert not is_ready
+        assert "[ERROR]" in error
+        assert "Complete all tray positions" in error
+
+    def test_validate_tray_ready_no_positions_filled(self):
+        """Test that tray is not ready when no positions filled."""
+        is_ready, error = tu.validate_tray_ready_for_process(0, 8)
+        assert not is_ready
+        assert "[ERROR]" in error
+
+    def test_validate_tray_ready_exact_completion(self):
+        """Test tray ready at exact completion point."""
+        is_ready, error = tu.validate_tray_ready_for_process(8, 8)
+        assert is_ready
+        assert error == ""
+
+
+class TestTrayScanAcceptance:
+    """Test cases for determining if scans are accepted in tray mode."""
+
+    def test_accept_sample_in_tray_mode(self):
+        """Test that SAMPLE scans are accepted in tray mode."""
+        should_accept, error = tu.should_accept_scan_in_tray_mode("SAMPLE", 0, 4)
+        assert should_accept
+        assert error == ""
+
+    def test_accept_legacy_sample_in_tray_mode(self):
+        """Test that SAMPLE_LEGACY scans are accepted in tray mode."""
+        should_accept, error = tu.should_accept_scan_in_tray_mode("SAMPLE_LEGACY", 2, 4)
+        assert should_accept
+        assert error == ""
+
+    def test_accept_process_when_complete(self):
+        """Test that PROCESS is accepted when all positions filled."""
+        should_accept, error = tu.should_accept_scan_in_tray_mode("PROCESS", 4, 4)
+        assert should_accept
+        assert error == ""
+
+    def test_reject_process_when_incomplete(self):
+        """Test that PROCESS is rejected when positions remain."""
+        should_accept, error = tu.should_accept_scan_in_tray_mode("PROCESS", 2, 4)
+        assert not should_accept
+        assert "[ERROR]" in error
+        assert "Complete all tray positions" in error
+
+    def test_reject_tray_in_tray_mode(self):
+        """Test that TRAY scans are rejected in tray mode."""
+        should_accept, error = tu.should_accept_scan_in_tray_mode("TRAY", 1, 4)
+        assert not should_accept
+        assert "[ERROR]" in error
+        assert "SAMPLE or PROCESS" in error
+
+    def test_reject_invalid_type_in_tray_mode(self):
+        """Test that invalid scan types are rejected."""
+        should_accept, error = tu.should_accept_scan_in_tray_mode("UNKNOWN", 1, 4)
+        assert not should_accept
+        assert "[ERROR]" in error
+
+
+class TestTrayBatchRecordCreation:
+    """Test cases for batch log record creation for tray samples."""
+
+    def test_create_tray_batch_records_single_sample(self):
+        """Test creating batch records for single sample."""
+        tray_samples = [{"position": "A1", "sample_id": "SAMPLE001"}]
+        records = tu.create_tray_batch_records(
+            "TestOperator", "066726-S-XXX", tray_samples, "test_process"
+        )
+
+        assert len(records) == 1
+        assert records[0]["Operator"] == "TestOperator"
+        assert records[0]["TrayID"] == "066726-S-XXX"
+        assert records[0]["Position"] == "A1"
+        assert records[0]["SampleID"] == "SAMPLE001"
+        assert records[0]["ProcessName"] == "test_process"
+        assert "Timestamp" in records[0]
+
+    def test_create_tray_batch_records_multiple_samples(self):
+        """Test creating batch records for multiple samples."""
+        tray_samples = [
+            {"position": "A1", "sample_id": "SAMPLE001"},
+            {"position": "A2", "sample_id": "SAMPLE002"},
+            {"position": "B1", "sample_id": "SAMPLE003"},
+            {"position": "B2", "sample_id": "SAMPLE004"},
+        ]
+        records = tu.create_tray_batch_records(
+            "TestOp", "066726-S-XXX", tray_samples, "c215ss_jv"
+        )
+
+        assert len(records) == 4
+        for i, record in enumerate(records):
+            assert record["TrayID"] == "066726-S-XXX"
+            assert record["Position"] == tray_samples[i]["position"]
+            assert record["SampleID"] == tray_samples[i]["sample_id"]
+            assert record["ProcessName"] == "c215ss_jv"
+            assert record["Operator"] == "TestOp"
+
+    def test_create_tray_batch_records_empty_list(self):
+        """Test creating batch records with empty sample list."""
+        records = tu.create_tray_batch_records(
+            "TestOp", "066726-S-XXX", [], "test_process"
+        )
+        assert len(records) == 0
+        assert isinstance(records, list)
+
+    def test_create_tray_batch_records_positions_ordered(self):
+        """Test that record order matches sample order."""
+        tray_samples = [
+            {"position": "C3", "sample_id": "SAMPLE_C3"},
+            {"position": "A1", "sample_id": "SAMPLE_A1"},
+            {"position": "B2", "sample_id": "SAMPLE_B2"},
+        ]
+        records = tu.create_tray_batch_records(
+            "TestOp", "072266-XXX-A", tray_samples, "bd8_xrd"
+        )
+
+        # Order should be preserved
+        assert records[0]["Position"] == "C3"
+        assert records[1]["Position"] == "A1"
+        assert records[2]["Position"] == "B2"
+
+
+class TestTrayLogRecordFormat:
+    """Test cases for tray log record formatting."""
+
+    def test_create_log_record_with_tray(self):
+        """Test creating a single tray log record."""
+        record = tu.create_log_record_with_tray(
+            "TestOp", "066726-S-XXX", "A1", "SAMPLE001", "test_process"
+        )
+
+        assert record["Operator"] == "TestOp"
+        assert record["TrayID"] == "066726-S-XXX"
+        assert record["Position"] == "A1"
+        assert record["SampleID"] == "SAMPLE001"
+        assert record["ProcessName"] == "test_process"
+        assert "Timestamp" in record
+
+    def test_format_log_message_with_tray(self):
+        """Test formatting log message with tray info."""
+        record = {
+            "Timestamp": "2026-01-29 12:00:00",
+            "Operator": "TestOp",
+            "TrayID": "066726-S-XXX",
+            "Position": "A1",
+            "SampleID": "SAMPLE001",
+            "ProcessName": "test_process"
+        }
+        msg = tu.format_log_message(record)
+
+        assert "[LOGGED]" in msg
+        assert "TestOp" in msg
+        assert "Tray: '066726-S-XXX'" in msg
+        assert "Pos: 'A1'" in msg
+        assert "SAMPLE001" in msg
+        assert "test_process" in msg
+
+    def test_format_log_message_without_tray(self):
+        """Test formatting log message without tray info still works."""
+        record = {
+            "Timestamp": "2026-01-29 12:00:00",
+            "Operator": "TestOp",
+            "SampleID": "SAMPLE001",
+            "ProcessName": "test_process"
+        }
+        msg = tu.format_log_message(record)
+
+        assert "[LOGGED]" in msg
+        assert "TestOp" in msg
+        assert "SAMPLE001" in msg
+        assert "test_process" in msg
+        assert "Tray:" not in msg  # Should not include tray info

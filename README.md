@@ -64,11 +64,18 @@ No additional installations are required.
   - `RESET` — Change the user by clicking "Reset" button
    - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
 
+6. **Note on TRAY mode**: If scanning tray IDs and sample positions, first enter your
+   NREL username, then scan a TRAY ID, scan each SAMPLE in the tray, and finally scan
+   a PROCESS to be associated with that tray. You can repeat this process for as many
+   trays as necessary, and then scan the LOAD QR code once you load all trays. See
+   **Tray/Platen tracking** section below for more details.
+
 **QR Code Format:**
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
 - Sample QR codes must contain: `S%:SampleID` (e.g., `S%:2511-09`)
 - Batch QR codes must contain: `B%:BatchID` (e.g., `B%:BATCH2025-001`)
-- The prefixes (`P%:`, `S%:`, and `B%:`) must be uppercase and include the colon
+- Tray QR codes must contain: `T%:TrayID` (e.g., `T%:066726-S-XXX`)
+- The prefixes (`P%:`, `S%:`, `B%:`, and `T%:`) must be uppercase and include the colon
 - Process names are case-insensitive (automatically normalized to lowercase)
 - Sample IDs and Batch IDs preserve their original case
 - Legacy sample QR codes in format `####-##` (e.g., `2511-09`) are supported
@@ -79,6 +86,7 @@ No additional installations are required.
 - `P%:c215ss_jv` — Sets process to C215 Solar Simulator JV measurement
 - `S%:2511-09` — Logs sample 2511-09 under the current process
 - `B%:BATCH2025-001` — Logs batch BATCH2025-001 under the current process
+- `T%:066726-S-XXX` — Enters tray mode for tray 066726-S-XXX
 - `2511-09` — Legacy format, automatically recognized as a sample (logs with warning)
 
 **Batch vs Sample Logging:**
@@ -87,6 +95,14 @@ No additional installations are required.
   - The batch scan records that the whole batch went through this specific process
   - CSV logs contain separate `SampleID` and `BatchID` columns
   - Only one is populated per scan (mutually exclusive)
+
+**Tray/Platen Tracking:**
+- Scan a tray QR code (`T%:TrayID`) to enter tray mode
+- The app prompts you to scan samples for each position sequentially (e.g., A1, A2, B1, B2...)
+- You can skip individual positions or skip all remaining positions
+- Once all positions are filled or skipped, scan a single process QR code to associate and log all samples with that process
+- CSV logs include `TrayID` and `Position` columns for tray-tracked samples
+- Tray layouts are predefined (2x2, 5x5, 8x8 grids)
 
 **Process Validation & Quarantine Logging:**
 
@@ -115,34 +131,15 @@ The quarantine logic allows rapid deployment on new systems without blocking wor
   - **Running as executable:** `~/Documents/process_tracking_outputs/`
 - If a log file already exists, new session outputs will be appended
 
-## Folder Structure
+## Key Files and Folders
 
-```
-process_tracking/
-├── src/                           # Main application code
-│   ├── tracker_utils.py           # Shared core utilities and business logic
-│   └── process_tracker_gui.py     # GUI application (Tkinter)
-├── tools_processes.json           # Central database of all tools/processes
-├── scripts/                       # Utility and build scripts
-│   ├── create_exe.py              # Build script for creating executable
-│   └── run_tests.py               # Test runner script
-├── tests/                         # Test suite
-│   ├── __init__.py
-│   └── test_tracker_utils.py      # Core functionality tests
-├── outputs/                       # Default output location (auto-created)
-│   ├── scan_log_c215ss_jv.csv     # Example: c215ss_jv tool log
-│   ├── scan_log_bd8_xrd.csv       # Example: bd8_xrd tool log
-│   └── ...                        # One CSV per tool/process
-├── exe/                           # Compiled executable
-│   └── dist/
-│       └── process_tracker_gui_v<version>.exe
-├── .github/                       # CI/CD workflows
-│   └── workflows/
-│       └── pytest.yml             # Automated testing workflow
-├── pyproject.toml                 # Project metadata and dependencies
-├── README.md
-└── ...
-```
+- **`src/`** - Main application code
+- **`exe/dist/`** - Standalone executable
+- **`outputs/`** - Default output location for CSV logs (auto-created)
+- **`tools_processes.json`** - Central database of all tools/processes
+- **`tray_layouts.json`** - Tray position mappings
+- **`scripts/`** - QR code generation and build utilities
+- **`tests/`** - Test suite
 
 ## Requirements
 
@@ -204,8 +201,8 @@ pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
 
 **Note:** You need to install the test dependencies first: `pip install .[test]`
 
-The test suite focuses on the testable core logic in `tracker_utils.py`. The CLI main
-loop and GUI are validated through manual testing and usage.
+The test suite focuses on the testable core logic in `tracker_utils.py`. The GUI is
+validated through manual testing and usage.
 
 ## Test Coverage
 
