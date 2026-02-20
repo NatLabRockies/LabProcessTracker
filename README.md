@@ -64,6 +64,12 @@ No additional installations are required.
   - `RESET` — Change the user by clicking "Reset" button
    - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
 
+6. **Note on TRAY mode**: If scanning tray IDs and sample positions, first enter your
+   NREL username, then scan a TRAY ID, scan each SAMPLE in the tray, and finally scan
+   a PROCESS to be associated with that tray. You can repeat this process for as many
+   trays as necessary, and then scan the LOAD QR code once you load all trays. See
+   **Tray/Platen tracking** section below for more details.
+
 **QR Code Format:**
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
 - Sample QR codes must contain: `S%:SampleID` (e.g., `S%:2511-09`)
