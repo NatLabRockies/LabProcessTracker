@@ -51,6 +51,8 @@ def build_exe():
         '--clean',
         '--add-data',
         f'{os.path.join(project_root, "tools_processes.json")}{os.pathsep}.',
+        '--add-data',
+        f'{os.path.join(project_root, "tray_layouts.json")}{os.pathsep}.',
         '--windowed',
         '--noconsole',
     ]
