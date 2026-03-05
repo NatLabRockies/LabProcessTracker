@@ -118,7 +118,7 @@
       "process": "Spincoating",
       "abbreviated": "c221_niox_spin",
       "notes": "used for NiOx NP HTL",
-      "color": ""
+      "color": "#2980b9"
     },
     {
       "tool": "C215 evaporator",
