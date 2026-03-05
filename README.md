@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.3.1-blue.svg" alt="Version">
+<img src="https://img.shields.io/badge/version-v0.3.2-blue.svg" alt="Version">
 
 <div align="left">
   <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
