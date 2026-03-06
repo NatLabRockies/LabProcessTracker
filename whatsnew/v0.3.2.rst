@@ -3,6 +3,11 @@
 v0.3.2 (March 2026)
 ------------------------
 
+Enhancements
+~~~~~~~~~~~~~
+- Add new processes to tools_processes.json and update several existing processes
+  for clarity. (:pull:`78`)
+
 
 Bug fixes
 ~~~~~~~~~
