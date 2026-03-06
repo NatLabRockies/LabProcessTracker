@@ -7,7 +7,7 @@ Simply edit the lists below and run the script to generate labeled QR code image
 For testing edge cases, see generate_test_qr_codes.py
 """
 from pathlib import Path
-from src.qr_utils import generate_qr_with_label
+from qr_utils import generate_qr_with_label
 
 
 def main():
@@ -23,7 +23,6 @@ def main():
     # ========================================================================
 
     # --- SAMPLES ---
-    # Format: ("QR_DATA", "LABEL_TEXT", "filename.png")
     # Sample format: S%:YYMM-NN where YY=year, MM=month, NN=sample number
     samples = [
         ("S%:2601-01", "Sample: 2601-01", "sample_2601-01.png"),

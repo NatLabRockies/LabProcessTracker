@@ -113,6 +113,14 @@
       "color": "#d35400"
     },
     {
+      "tool": "C221 fumehood spin coater",
+      "location": "C221",
+      "process": "Spincoating",
+      "abbreviated": "c221_niox_spin",
+      "notes": "used for NiOx NP HTL",
+      "color": "#2980b9"
+    },
+    {
       "tool": "C215 evaporator",
       "location": "C215",
       "process": "Evaporation",
@@ -131,8 +139,24 @@
     {
       "tool": "PDIL laminar flow box",
       "location": "PDIL",
-      "process": "Blade Coating/Imaging",
-      "abbreviated": "pdil_lfb",
+      "process": "Blade Coating HTL",
+      "abbreviated": "pdil_lfb_htl_blade",
+      "notes": "N2 or condensed air atmosphere with controllable temperature and Rh, blade coater with heating platen and hot plate and PL imaging and thickness-measurement optical probe and PL probe; used for SAMs, perovskites, surface treatment, and imaging.",
+      "color": "#9b59b6"
+    },
+    {
+      "tool": "PDIL laminar flow box",
+      "location": "PDIL",
+      "process": "PL Imaging",
+      "abbreviated": "pdil_lfb_pl",
+      "notes": "imaging with in situ PL camera",
+      "color": "#9b59b6"
+    },
+    {
+      "tool": "PDIL laminar flow box",
+      "location": "PDIL",
+      "process": "Blade Coating Perovskite",
+      "abbreviated": "pdil_lfb_pk_blade",
       "notes": "N2 or condensed air atmosphere with controllable temperature and Rh, blade coater with heating platen and hot plate and PL imaging and thickness-measurement optical probe and PL probe; used for SAMs, perovskites, surface treatment, and imaging.",
       "color": "#9b59b6"
     },
