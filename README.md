@@ -27,7 +27,7 @@ python src/process_tracker_gui.py
 No additional installations are required.
 
 ## How to use
-
+**Sample/Process Tracking:**
 1. **Enter your username**
   - Type your NLR username and click "Set" or press Enter
   - Use "Reset" button to change users
@@ -40,7 +40,7 @@ No additional installations are required.
 
 3. **Scan SAMPLE QR codes** to log samples under the current process
 
-4. **Switch between processes:** \
+4. **Switch between processes:**
    - When you scan a new process QR, your current records are saved automatically
    - You will see a notification showing how many records were saved
    - The new process is logged and you can start scanning more samples
@@ -55,7 +55,7 @@ No additional installations are required.
   and log all samples with that process
 - Repeat for as many trays you have, logging sample positions and associating a process
   with each tray of samples
-- CSV logs include `TrayID` and `Position` columns for tray-tracked samples
+- Scan the load QR code to log time time all trays are loaded
 
  **Command buttons:**
    - `UNDO` — Remove the last scan from the session
