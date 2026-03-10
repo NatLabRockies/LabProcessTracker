@@ -195,7 +195,7 @@ See the terminal output for summary and open `htmlcov/index.html` for details.
 
 Two scripts are provided for QR code generation:
 
-- **`scripts/generate_test_qr_codes.py`** - Creates a minimal test set with valid/invalid examples
+- **`scripts/generate_test_qr_codes.py`** - Create test set with valid/invalid examples
 - **`scripts/generate_custom_qr_codes.py`** - Template for generating your own QR codes
 
 Run either script to generate labeled QR code images:
