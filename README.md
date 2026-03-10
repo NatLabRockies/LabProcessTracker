@@ -26,7 +26,7 @@ python src/process_tracker_gui.py
 
 No additional installations are required.
 
-## How to use (Basic: process-sample scanning)
+## How to use
 
 1. **Enter your username**
   - Type your NLR username and click "Set" or press Enter
@@ -45,13 +45,7 @@ No additional installations are required.
    - You will see a notification showing how many records were saved
    - The new process is logged and you can start scanning more samples
 
-5. **Use commands:**
-   - `UNDO` — Remove the last scan from the session
-   - `SAVE` — Save current session scans
-   - `RESET` — Change the user
-   - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
-
-**How to use (Tray/Platen Tracking):**
+**Tray/Platen Tracking:**
 - Enter your NLR username as before
 - Scan a tray QR code to enter tray mode
 - Scan samples according to their position indicated in the tray mode window
@@ -62,6 +56,12 @@ No additional installations are required.
 - Repeat for as many trays you have, logging sample positions and associating a process
   with each tray of samples
 - CSV logs include `TrayID` and `Position` columns for tray-tracked samples
+
+ **Command buttons:**
+   - `UNDO` — Remove the last scan from the session
+   - `SAVE` — Save current session scans
+   - `RESET` — Change the user
+   - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
 
 **QR Code Format:**
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
@@ -74,13 +74,6 @@ No additional installations are required.
 - Legacy sample QR codes in format `####-##` (e.g., `2511-09`) are supported
   - A warning will be displayed when legacy format is detected
   - No `S%:` prefix required for legacy samples
-
-**Examples:**
-- `P%:c215ss_jv` — Sets process to C215 Solar Simulator JV measurement
-- `S%:2511-09` — Logs sample 2511-09 under the current process
-- `B%:BATCH2025-001` — Logs batch BATCH2025-001 under the current process
-- `T%:072266-S-002` — Enters tray mode for tray 072266-S-002
-- `2511-09` — Legacy format, automatically recognized as a sample (logs with warning)
 
 **Batch vs Sample Logging:**
 - **Sample scanning:** Used to log individual samples processed through a tool
