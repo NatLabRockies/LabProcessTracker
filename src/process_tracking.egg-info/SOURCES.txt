@@ -1,9 +1,0 @@
-README.md
-pyproject.toml
-src/process_tracking.egg-info/PKG-INFO
-src/process_tracking.egg-info/SOURCES.txt
-src/process_tracking.egg-info/dependency_links.txt
-src/process_tracking.egg-info/requires.txt
-src/process_tracking.egg-info/top_level.txt
-tests/test_process_tracker.py
-tests/test_tracker_utils.py

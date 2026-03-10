@@ -1,0 +1,20 @@
+.. _whatsnew032:
+
+v0.3.2 (March 2026)
+------------------------
+
+Enhancements
+~~~~~~~~~~~~~
+- Add new processes to tools_processes.json and update several existing processes
+  for clarity. (:pull:`78`)
+
+
+Bug fixes
+~~~~~~~~~
+- Ensure tray layouts are correctly bundled with the
+  .exe distribution *(:issue:`76`, :pull:`77`)*
+
+
+Contributors
+~~~~~~~~~~~~
+- Rajiv Daxini (:ghuser:`RDaxini`)
