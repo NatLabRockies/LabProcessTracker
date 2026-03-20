@@ -64,11 +64,11 @@ def main():
     print("=== Valid Trays (2) ===")
     # Format: T%:TRAY_ID
     generate_qr_with_label(
-        "T%:066726-S-XXX", "Tray: 066726-S-XXX (2x2)",
+        "T%:066726-S-001", "Tray: 066726-S-001 (2x2)",
         "tray_066726_2x2.png", output_dir
     )
     generate_qr_with_label(
-        "T%:072266-XXX-A", "Tray: 072266-XXX-A (5x5)",
+        "T%:072266-S-001", "Tray: 072266-S-001 (5x5)",
         "tray_072266_5x5.png", output_dir
     )
     print()
