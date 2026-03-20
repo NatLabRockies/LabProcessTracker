@@ -6,7 +6,7 @@ This script generates test QR codes with labels for easy identification.
 For generating custom QR codes, see generate_custom_qr_codes.py
 """
 from pathlib import Path
-from src.qr_utils import generate_qr_with_label
+from qr_utils import generate_qr_with_label
 
 
 def main():
