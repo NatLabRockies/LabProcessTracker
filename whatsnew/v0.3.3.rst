@@ -10,6 +10,8 @@ Breaking Changes
 
 Enhancements
 ~~~~~~~~~~~~
+* Support undo functionality for sample position changes within trays, including
+  after saving tray through "skip all" option (:issue:`801`, :pull:`82`)
 
 
 Maintenance
