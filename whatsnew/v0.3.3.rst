@@ -1,0 +1,31 @@
+.. _whatsnew033:
+
+v0.3.3 (Month Year)
+------------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+
+
+Maintenance
+~~~~~~~~~~~
+
+
+Testing
+~~~~~~~
+* Update test QR codes for tray layouts (:pull:`81`)
+
+
+Documentation
+~~~~~~~~~~~~~
+* Clean up readme (:pull:`79`)
+
+
+Contributors
+~~~~~~~~~~~~
+* Rajiv Daxini (:ghuser:`RDaxini`)
