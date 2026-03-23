@@ -864,8 +864,14 @@ class ProcessTrackerGUI(tk.Tk):
             current_tray_samples = self.tray_samples.get(self.current_tray_id, [])
             if current_tray_samples and self.tray_position_index > 0:
                 removed_sample = current_tray_samples.pop()
-                self.tray_position_index -= 1
+                self.tray_position_index = self.tray_positions.index(
+                    removed_sample['position']
+                )
                 prev_pos = self.tray_positions[self.tray_position_index]
+
+                # If tray was marked complete, un-complete it
+                if self.current_tray_id in self.all_trays_in_session:
+                    self.all_trays_in_session.remove(self.current_tray_id)
 
                 # Update grid to clear the cell
                 if self.tray_dialog and self.tray_dialog.winfo_exists():
@@ -880,6 +886,10 @@ class ProcessTrackerGUI(tk.Tk):
                     self.show_tray_dialog(
                         self.current_tray_id, self.tray_positions, prev_pos
                     )
+                    for entry in current_tray_samples:
+                        self.tray_dialog.update_grid(
+                            entry['position'], entry['sample_id']
+                        )
 
                 self.print_terminal(
                     f"[UNDO] Removed sample '{removed_sample['sample_id']}' "

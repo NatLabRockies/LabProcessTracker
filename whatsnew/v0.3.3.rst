@@ -1,0 +1,33 @@
+.. _whatsnew033:
+
+v0.3.3 (Month Year)
+------------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+* Support undo functionality for sample position changes within trays, including
+  after saving tray through "skip all" option (:issue:`801`, :pull:`82`)
+
+
+Maintenance
+~~~~~~~~~~~
+
+
+Testing
+~~~~~~~
+* Update test QR codes for tray layouts (:pull:`81`)
+
+
+Documentation
+~~~~~~~~~~~~~
+* Clean up readme (:pull:`79`)
+
+
+Contributors
+~~~~~~~~~~~~
+* Rajiv Daxini (:ghuser:`RDaxini`)
