@@ -544,7 +544,7 @@ class TestIntegration:
             "--map", str(pmap),
             "--output-dir", str(tmp_path),
         ])
-        with pytest.warns(UserWarning, match="not found in UWL"):
+        with pytest.warns(UserWarning, match="not in UWL"):
             with pytest.raises(SystemExit):
                 main()
 
