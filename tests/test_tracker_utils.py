@@ -44,7 +44,7 @@ class TestProcessValidation:
         assert normalized == "invalid_proc"
         assert "not implemented" in error
         assert "quarantined" in error
-        assert "Rajiv.Daxini@nrel.gov" in error
+        assert "Rajiv.Daxini@nlr.gov" in error
 
     def test_validate_and_normalize_case_insensitive(self):
         """Test that validation is case-insensitive."""
