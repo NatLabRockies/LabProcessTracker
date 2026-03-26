@@ -46,12 +46,16 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["src", "scripts"]
 omit = [
     "*/tests/*",
     "*/test_*.py",
     "src/process_tracker_gui.py",
     "src/process_tracker.py",
+    "scripts/create_exe.py",
+    "scripts/generate_custom_qr_codes.py",
+    "scripts/generate_test_qr_codes.py",
+    "scripts/run_tests.py",
 ]
 
 [tool.coverage.report]
