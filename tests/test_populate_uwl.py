@@ -45,7 +45,7 @@ def _read_time_and_place(uwl_path: Path, section_name: str) -> dict:
                 if item.get("Name") == "Time & Place":
                     return dict(zip(item["Parameters"], item["Values"]))
     raise KeyError(
-        f"Section '{section_name}' or 'Time & Place' not found in {uwl_path}"
+        f"Section '{section_name}' or 'Time & Place' missing from {uwl_path}"
     )
 
 
@@ -58,7 +58,7 @@ def _read_action_values(uwl_path: Path, section_name: str, action_name: str) -> 
                 if item.get("Type") == "Action" and item.get("Name") == action_name:
                     return item.get("Values", [])
     raise KeyError(
-        f"Action '{action_name}' not found in section '{section_name}' of {uwl_path}"
+        f"Action '{action_name}' missing in section '{section_name}' ({uwl_path})"
     )
 
 
