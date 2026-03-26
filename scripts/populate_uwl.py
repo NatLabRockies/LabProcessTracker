@@ -426,7 +426,7 @@ def main():
 
     if not_found:
         warnings.warn(
-            f"Section(s) not found in UWL: {not_found}. "
+            f"Section(s) not in UWL: {not_found}. "
             "Check that process_map.json maps to the correct UWL section names.",
             stacklevel=1,
         )
