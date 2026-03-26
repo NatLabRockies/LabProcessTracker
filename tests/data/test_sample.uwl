@@ -1,0 +1,95 @@
+{
+  "Name": "test_sample",
+  "language": "en",
+  "Type": "root",
+  "File": "",
+  "Description": "Minimal UWL fixture for unit tests.",
+  "Objects": {
+    "0": {
+      "ID": "0",
+      "Type": "Item",
+      "Subtype": "Abstract",
+      "Name": "Sample",
+      "Notes": "",
+      "Parameters": ["Experiment Name", "Sample ID"],
+      "Values": ["Test Experiment", "test_sample"],
+      "position": [0, 0],
+      "Link": false
+    },
+    "1": {
+      "Type": "Section",
+      "ID": "1",
+      "Name": "TestProcess",
+      "Description": "",
+      "Objects": {
+        "2": {
+          "ID": "2",
+          "Type": "Item",
+          "Subtype": "Abstract",
+          "Name": "Time & Place",
+          "Notes": "",
+          "Parameters": ["Time", "Date", "Location"],
+          "Values": ["", "", "TESTLAB"],
+          "position": [90, 90],
+          "Link": false
+        },
+        "7": {
+          "ID": "7",
+          "Type": "Action",
+          "Subtype": "Modify",
+          "Name": "Spin",
+          "Notes": "fixture action node",
+          "A In": [],
+          "B In": [],
+          "C In": [],
+          "Parameters": ["RPM", "Time (s)"],
+          "Values": ["3000", "30"],
+          "position": [180, 90]
+        }
+      },
+      "position": [90, 0]
+    },
+    "3": {
+      "Type": "Section",
+      "ID": "3",
+      "Name": "Beta_Process",
+      "Description": "",
+      "Objects": {
+        "4": {
+          "ID": "4",
+          "Type": "Item",
+          "Subtype": "Abstract",
+          "Name": "Time & Place",
+          "Notes": "",
+          "Parameters": ["Time", "Date", "Location"],
+          "Values": ["", "", "OTHERLAB"],
+          "position": [90, 90],
+          "Link": false
+        }
+      },
+      "position": [200, 0]
+    },
+    "5": {
+      "Type": "Section",
+      "ID": "5",
+      "Name": "NoTimePlace_Section",
+      "Description": "",
+      "Objects": {
+        "6": {
+          "ID": "6",
+          "Type": "Item",
+          "Subtype": "Abstract",
+          "Name": "Researcher",
+          "Notes": "",
+          "Parameters": ["Worker ID", "Name"],
+          "Values": ["", ""],
+          "position": [90, 90],
+          "Link": false
+        }
+      },
+      "position": [310, 0]
+    }
+  },
+  "Format": "uwl",
+  "UWL Version": "1.1.0"
+}
