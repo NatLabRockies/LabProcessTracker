@@ -1,0 +1,31 @@
+.. _whatsnewXYZ:
+
+v0.3.4 (April 2026)
+------------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+
+
+Maintenance
+~~~~~~~~~~~
+
+
+Testing
+~~~~~~~
+
+
+Documentation
+~~~~~~~~~~~~~
+* Replace all instances of NREL with NLR (:issue:`86`, :issue`84`, :pull:`88`)
+
+
+Contributors
+~~~~~~~~~~~~
+* Rajiv Daxini (:ghuser:`rdaxini`)
+
