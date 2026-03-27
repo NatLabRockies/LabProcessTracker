@@ -14,6 +14,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 from populate_uwl import (  # noqa: E402
     _parse_timestamp,
+    _next_uwl_id,
+    _make_time_and_place_item,
     load_matching_records,
     load_process_map,
     resolve_section_names,
@@ -370,6 +372,39 @@ class TestCSVLoading:
 
 
 # ---------------------------------------------------------------------------
+# TestNextUwlId
+# ---------------------------------------------------------------------------
+
+class TestNextUwlId:
+    """Tests for _next_uwl_id() and _make_time_and_place_item()."""
+
+    def test_returns_string_int(self):
+        data = {"Objects": {"0": {}, "1": {}, "2": {}}}
+        assert _next_uwl_id(data) == "3"
+
+    def test_scans_nested_objects(self):
+        data = {
+            "Objects": {
+                "0": {
+                    "Objects": {"5": {}}
+                }
+            }
+        }
+        assert _next_uwl_id(data) == "6"
+
+    def test_empty_uwl_starts_at_zero(self):
+        assert _next_uwl_id({"Objects": {}}) == "0"
+
+    def test_make_item_structure(self):
+        item = _make_time_and_place_item("99")
+        assert item["ID"] == "99"
+        assert item["Type"] == "Item"
+        assert item["Name"] == "Time & Place"
+        assert item["Parameters"] == ["Time", "Date", "Location"]
+        assert item["Values"] == ["", "", ""]
+
+
+# ---------------------------------------------------------------------------
 # TestFieldPopulatorsDict
 # ---------------------------------------------------------------------------
 
@@ -604,3 +639,21 @@ class TestIntegration:
         main()
         output = tmp_path / "test_sample_populated.uwl"
         assert _read_action_values(output, "TestProcess", "Spin") == ["3000", "30"]
+
+    def test_auto_creates_time_and_place_when_missing(self, tmp_path, monkeypatch):
+        """If a section has no 'Time & Place' item, the script creates it."""
+        monkeypatch.setattr(sys, "argv", [
+            "populate_uwl",
+            "--uwl", str(FIXTURE_UWL),
+            "--csv", str(FIXTURE_CSV),
+            "--sample-id", "test-sample",
+            "--process", "NoTimePlace_Section",
+            "--skip-sample-id-check",
+            "--output-dir", str(tmp_path),
+        ])
+        main()
+        output = tmp_path / "test_sample_populated.uwl"
+        assert output.exists()
+        tp = _read_time_and_place(output, "NoTimePlace_Section")
+        assert tp["Time"] == "16:50"
+        assert tp["Date"] == "3/6/2026"
