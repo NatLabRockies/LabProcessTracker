@@ -148,6 +148,40 @@ def find_item_by_name(section_objects: dict, item_name: str) -> Optional[dict]:
     return None
 
 
+def _next_uwl_id(uwl_data: dict) -> str:
+    """Return the next unused integer ID (as a string) across the whole UWL. Required
+       to add new Items (eg Time & Date) without ID conflicts."""
+    max_id = -1
+
+    def _scan(objects: dict) -> None:
+        nonlocal max_id
+        for k, v in objects.items():
+            try:
+                max_id = max(max_id, int(k))
+            except (ValueError, TypeError):
+                pass
+            if isinstance(v, dict) and "Objects" in v:
+                _scan(v["Objects"])
+
+    _scan(uwl_data.get("Objects", {}))
+    return str(max_id + 1)
+
+
+def _make_time_and_place_item(item_id: str) -> dict:
+    """Return a blank 'Time & Place' Item node ready for insertion."""
+    return {
+        "ID": item_id,
+        "Type": "Item",
+        "Subtype": "Abstract",
+        "Name": "Time & Place",
+        "Notes": "",
+        "Parameters": ["Time", "Date", "Location"],
+        "Values": ["", "", ""],
+        "position": [90, 90],
+        "Link": False,
+    }
+
+
 def _normalize_sample_id(value: str) -> str:
     """Normalize sample IDs for tolerant comparison.
 
@@ -412,13 +446,13 @@ def main():
             not_found.append(section_name)
             continue
 
-        tp_item = find_item_by_name(section.get("Objects", {}), "Time & Place")
+        section.setdefault("Objects", {})
+        tp_item = find_item_by_name(section["Objects"], "Time & Place")
         if tp_item is None:
-            warnings.warn(
-                f"No 'Time & Place' item found in section '{section_name}'. Skipping.",
-                stacklevel=1,
-            )
-            continue
+            new_id = _next_uwl_id(uwl_data)
+            tp_item = _make_time_and_place_item(new_id)
+            section["Objects"][new_id] = tp_item
+            print(f"  Created 'Time & Place' in section '{section_name}'")
 
         apply_populators(tp_item, record, context)
         modified.append(section_name)
