@@ -39,7 +39,7 @@ FIXTURE_CSV = DATA_DIR / "test_scan_log.csv"
 # ---------------------------------------------------------------------------
 
 def _read_time_and_place(uwl_path: Path, section_name: str) -> dict:
-    """Return the Time & Place parameter→value dict for a given section."""
+    """Return the Time & Place parameter-value dict for a given section."""
     data = json.loads(uwl_path.read_text(encoding="utf-8"))
     for obj in data["Objects"].values():
         if obj.get("Type") == "Section" and obj.get("Name") == section_name:
@@ -557,7 +557,7 @@ class TestIntegration:
             "populate_uwl",
             "--uwl-dir", str(uwl_dir),
             "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",  # hyphen → finds test_sample.uwl
+            "--sample-id", "test-sample",
             "--process", "TestProcess",
             "--output-dir", str(out),
         ])
