@@ -24,7 +24,7 @@ Testing
 
 Documentation
 ~~~~~~~~~~~~~
-* Replace all instances of NREL with NLR (:issue:`86`, :issue`84`, :pull:`88`)
+* Replace all instances of NREL with NLR (:issue:`86`, :issue:`84`, :pull:`88`)
 
 
 Contributors
