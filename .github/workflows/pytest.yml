@@ -34,7 +34,8 @@ jobs:
 
       - name: Run pytest with coverage
         run: |
-          pytest tests/ -v --tb=short --cov=src --cov-report=term-missing --cov-report=xml
+          pytest tests/ -v --tb=short \
+            --cov --cov-report=term-missing --cov-report=xml
 
       - name: Report results
         if: always()

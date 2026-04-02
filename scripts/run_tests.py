@@ -26,7 +26,7 @@ def main():
         tests_dir,
         '-v',
         '--tb=short',
-        '--cov=src',
+        '--cov',
         '--cov-report=term-missing',
         '--cov-report=html',
     ])
