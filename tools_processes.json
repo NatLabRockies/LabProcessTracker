@@ -1,390 +1,156 @@
 {
   "tools": [
     {
-      "tool": "FTLB 248 weighing glovebox",
-      "location": "FTLB 248",
-      "process": "Weighing & Solvation",
-      "abbreviated": "ftlb248_weighbox",
-      "notes": "vortex mixer and atomic scale and precursors and solvent bottles; used to weigh and solvate perovskite inks, 2ME and acetonitrile not allowed. (glovebox needs temperature logger)",
-      "color": "#e74c3c"
-    },
-    {
-      "tool": "FTLB 234 spincoating glovebox",
-      "location": "FTLB 234",
-      "process": "Spincoating",
-      "abbreviated": "ftlb234_spinbox",
-      "notes": "spincoating glovebox: N2 atmosphere, spin coater and two hot plates and a spin plate; used for HTL, perovskite, and surface treatments. (glovebox needs temperature logger)",
-      "color": "#f39c12"
-    },
-    {
-      "tool": "FTLB 234 blade coating glovebox",
-      "location": "FTLB 234",
-      "process": "Blade Coating",
-      "abbreviated": "ftlb234_bladebox",
-      "notes": "N2 atmosphere, blade coater and two hot plates; used for UV epoxy and perovskite blade coating. (glovebox needs temperature logger)",
-      "color": "#9b59b6"
-    },
-    {
-      "tool": "FTLB 233 fume hood spin coater",
-      "location": "FTLB 233",
-      "process": "Spincoating",
-      "abbreviated": "ftlb233_fumehoodspin",
-      "notes": "used for NiOx NP HTL, PEDOT:PSS HTL, and P3CT-Cs HTL",
-      "color": "#3498db"
-    },
-    {
-      "tool": "FTLB 233 sonicating bath",
-      "location": "FTLB 233",
-      "process": "Sonication",
-      "abbreviated": "ftlb233_sonicator",
-      "notes": "Cleaning glass and mixing SAMs",
-      "color": "#1abc9c"
-    },
-    {
-      "tool": "FTLB 234 UV-ozone cleaner",
-      "location": "FTLB 234",
-      "process": "UV-Ozone Cleaning",
-      "abbreviated": "ftlb234_uvo",
-      "notes": "UV-ozone cleaning substrates",
-      "color": "#2ecc71"
-    },
-    {
-      "tool": "C212 sonicating bath",
-      "location": "C212",
-      "process": "Sonication",
-      "abbreviated": "c212_sonicator",
-      "notes": "Cleaning glass and mixing SAMs",
-      "color": "#fdca24"
-    },
-    {
-      "tool": "C212 spincoating glovebox",
-      "location": "C212",
-      "process": "Spincoating",
-      "abbreviated": "c212_spinbox",
-      "notes": "N2 atmosphere, spincoater and 1 hot plate; used for SAMs HTL and perovskite and surface treatment",
-      "color": "#fe27ba"
-    },
-    {
-      "tool": "C212 dry glovebox",
-      "location": "C212",
-      "process": "Weighing",
-      "abbreviated": "c212_drybox",
-      "notes": "N2 atmosphere, atomic scale and precursors, no solvents allowed; used to weight salts",
-      "color": "#e67e22"
-    },
-    {
-      "tool": "C212 wet glovebox",
-      "location": "C212",
-      "process": "Solvation",
-      "abbreviated": "c212_wetbox",
-      "notes": "N2 atmosphere, pipetters, plate spinner, vortex mixer, and vial agitator; used to solvate inks",
-      "color": "#16a085"
-    },
-    {
-      "tool": "C212 Optigon glovebox",
-      "location": "C212",
-      "process": "Optigon",
-      "abbreviated": "c212_optigon",
-      "notes": "N2 atmosphere",
-      "color": "#8e44ad"
-    },
-    {
-      "tool": "W129 SnPb spincoater glovebox",
-      "location": "W129",
-      "process": "Spincoating",
-      "abbreviated": "w129_snpbspinbox",
-      "notes": "N2 atmosphere, spincoater and 2 hot plates; used for Sn-containing perovskite only",
-      "color": "#c0392b"
-    },
-    {
-      "tool": "W129 spincoater purge glovebox",
-      "location": "W129",
-      "process": "Spincoating",
-      "abbreviated": "w129_purgespinbox",
-      "notes": "N2 purge but no purifier, spincoater and hot plates; used for perovskites, HTL, surface treatments, etc. [check] used for perovskites?",
-      "color": "#27ae60"
-    },
-    {
-      "tool": "W129 evaporator",
-      "location": "W129",
-      "process": "Evaporation",
-      "abbreviated": "w129_evap",
-      "notes": "N2 atmosphere, evaporator loading and HEPA vacuum; used for scraping films, loading samples into evaporator, evaporating C60, BCP, LiF, Au, Ag, Cu, and other materials.",
-      "color": "#d35400"
-    },
-    {
-      "tool": "C221 fumehood spin coater",
-      "location": "C221",
-      "process": "Spincoating",
-      "abbreviated": "c221_niox_spin",
-      "notes": "used for NiOx NP HTL",
-      "color": "#2980b9"
-    },
-    {
-      "tool": "C215 evaporator",
-      "location": "C215",
-      "process": "Evaporation",
-      "abbreviated": "c215_evap",
-      "notes": "N2 atmosphere, evaporator loading and HEPA vacuum; used for scraping films, loading samples into evaporator, evaporating C60, BCP, LiF, Au, Ag, Cu and other materials",
-      "color": "#e74c3c"
-    },
-    {
-      "tool": "PDIL blade coater fume hood",
+      "tool": "Laminar Flow Box",
       "location": "PDIL",
-      "process": "Blade Coating",
-      "abbreviated": "pdil_blade",
-      "notes": "used for NiOx NP blade coating, HTL blade coating, OPVperovskite blade coating(?)",
-      "color": "#f39c12"
+      "abbreviated": "1p8_mhp_bc",
+      "notes": "Bladecoat 1.8eV perovskite",
+      "color": "#3498db",
+      "device_maker": "Jin Wen, Amy Louks"
     },
     {
-      "tool": "PDIL laminar flow box",
+      "tool": "Laminar Flow Box",
       "location": "PDIL",
-      "process": "Blade Coating HTL",
-      "abbreviated": "pdil_lfb_htl_blade",
-      "notes": "N2 or condensed air atmosphere with controllable temperature and Rh, blade coater with heating platen and hot plate and PL imaging and thickness-measurement optical probe and PL probe; used for SAMs, perovskites, surface treatment, and imaging.",
-      "color": "#9b59b6"
+      "abbreviated": "1p68_mhp_bc",
+      "notes": "Bladecoat 1.68eV perovskite",
+      "color": "#1abc9c",
+      "device_maker": "Marc Migliozzi"
     },
     {
-      "tool": "PDIL laminar flow box",
+      "tool": "Laminar Flow Box",
       "location": "PDIL",
-      "process": "PL Imaging",
-      "abbreviated": "pdil_lfb_pl",
-      "notes": "imaging with in situ PL camera",
-      "color": "#9b59b6"
+      "abbreviated": "1p25_mhp_bc",
+      "notes": "Bladecoat 1.25eV perovskite",
+      "color": "#8e44ad",
+      "device_maker": "Rosemary Bramante"
     },
     {
-      "tool": "PDIL laminar flow box",
+      "tool": "Laminar Flow Box",
       "location": "PDIL",
-      "process": "Blade Coating Perovskite",
-      "abbreviated": "pdil_lfb_pk_blade",
-      "notes": "N2 or condensed air atmosphere with controllable temperature and Rh, blade coater with heating platen and hot plate and PL imaging and thickness-measurement optical probe and PL probe; used for SAMs, perovskites, surface treatment, and imaging.",
-      "color": "#9b59b6"
+      "abbreviated": "me4_bc",
+      "notes": "Bladecoating Me-4PACz",
+      "color": "#a528eb",
+      "device_maker": "Marc Migliozzi"
     },
     {
-      "tool": "PDIL Perovskite Cluster Tool (PCT)",
+      "tool": "Laminar Flow Box",
       "location": "PDIL",
-      "process": "Vapor Deposition",
-      "abbreviated": "pdil_pct",
-      "notes": "Perovskite Cluster Tool (PCT): vapor deposition tool with multi-plate cassette for automatic operation overnight, three separate sputtering chambers, loaded from air; used for IZO, ITO, NiOx, and others under development.",
-      "color": "#3498db"
+      "abbreviated": "pdai2_bc",
+      "notes": "Bladecoating PDAI2",
+      "color": "#9b59b6",
+      "device_maker": "Marc Migliozzi"
     },
     {
-      "tool": "PDIL Perovskite large evaporator tool",
+      "tool": "Laminar Flow Box",
       "location": "PDIL",
-      "process": "Evaporation",
-      "abbreviated": "pdil_largeevap",
-      "notes": "SAN to fill out",
-      "color": "#1abc9c"
+      "abbreviated": "pl_img",
+      "notes": "Image with in situ PL camera",
+      "color": "#9b59b6",
+      "device_maker": "Amy Louks"
     },
     {
-      "tool": "PDIL APP cluster tool",
+      "tool": "Laminar Flow Box",
       "location": "PDIL",
-      "process": "Vapor Deposition",
-      "abbreviated": "pdil_app",
-      "notes": "vapor deposition connected to loading glovebox, one sputtering chamber and one thermal evaporation chamber; used for IZO, ITO, Calcium, Ag, and other materials. Controlled VERY manually.",
-      "color": "#fdca24"
+      "abbreviated": "pl_spec",
+      "notes": "spectrometry with in situ probe",
+      "color": "#e74c3c",
+      "device_maker": "Amy Louks"
     },
     {
-      "tool": "PDIL APP nanosecond Talon laser scriber",
+      "tool": "Laminar Flow Box",
       "location": "PDIL",
-      "process": "Laser Scribing",
-      "abbreviated": "pdil_nanolaser",
-      "notes": "N2 or Argon switchable glovebox and UV (355nm) fixed beam laser with XY stage, 100mm focal length lens, and optical microscopes; used for scribing perovskites, TCOs, and Cadmium Telluride films and taking high-magnification images of scribes.",
-      "color": "#fdca24"
+      "abbreviated": "imaging",
+      "notes": "Sample photography",
+      "color": "#f39c12",
+      "device_maker": "Ross Kerner"
     },
     {
-      "tool": "PDIL APP picosecond laser scriber",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "Laser Scribing",
-      "abbreviated": "pdil_picolaser",
-      "notes": "-",
-      "color": "#fe27ba"
-    },
-    {
-      "tool": "RMI laser scriber",
-      "location": "RMI",
-      "process": "Laser Scribing",
-      "abbreviated": "rmi_laser",
-      "notes": "open-air IR laser with galvo and scribing image software; used for scribing Si and TCOs (and maybe metal annealing in future...?)",
-      "color": "#e67e22"
-    },
-    {
-      "tool": "CO2 laser scriber",
-      "location": "-",
-      "process": "Laser Scribing",
-      "abbreviated": "co2_laser",
-      "notes": "JAMES to fill out",
-      "color": "#16a085"
-    },
-    {
-      "tool": "Beneq1 ALD system",
-      "location": "-",
-      "process": "ALD",
-      "abbreviated": "beneq1_ald",
-      "notes": "CHRISTIAN/AXEL to fill out",
-      "color": "#8e44ad"
-    },
-    {
-      "tool": "Beneq2 ALD system",
-      "location": "-",
-      "process": "ALD",
-      "abbreviated": "beneq2_ald",
-      "notes": "N2 glovebox loadable, used most often by PET for SnOx and Al2O3 depositions",
-      "color": "#c0392b"
-    },
-    {
-      "tool": "Beneq2 glovebox",
-      "location": "-",
-      "process": "Aging/Illumination",
-      "abbreviated": "beneq2_box",
-      "notes": "N2 atmosphere with hot plate and LED solar simulator lamp; used to age films under heat and illumination while in OC or constant-load conditions",
-      "color": "#27ae60"
-    },
-    {
-      "tool": "C215 Solar Simulator",
-      "location": "C215",
-      "process": "JV",
-      "abbreviated": "c215ss_jv",
-      "notes": "Solar simulator for current-voltage measurements",
-      "color": "#e74c3c"
-    },
-    {
-      "tool": "BD8 X-Ray Diffractometer",
-      "location": "BD8",
-      "process": "XRD",
-      "abbreviated": "bd8_xrd",
-      "notes": "X-ray diffraction measurements",
-      "color": "#f39c12"
-    },
-    {
-      "tool": "HSEM Scanning Electron Microscope",
-      "location": "HSEM",
-      "process": "SEM Imaging",
-      "abbreviated": "hsem_sem",
-      "notes": "Scanning electron microscopy",
-      "color": "#9b59b6"
-    },
-    {
-      "tool": "OEQE EQE System",
-      "location": "OEQE",
-      "process": "EQE",
-      "abbreviated": "oeqe_eqe",
-      "notes": "External quantum efficiency measurements",
-      "color": "#3498db"
-    },
-    {
-      "tool": "SUPSS Solar Simulator",
-      "location": "SUPSS",
-      "process": "JV",
-      "abbreviated": "supss_jv",
-      "notes": "Solar simulator for current-voltage measurements",
-      "color": "#1abc9c"
-    },
-    {
-      "tool": "PXT10 Solar Simulator",
-      "location": "PXT10",
-      "process": "JV",
-      "abbreviated": "pxt10_jv",
-      "notes": "Solar simulator for current-voltage measurements",
-      "color": "#2ecc71"
-    },
-    {
-      "tool": "OpProf Optical Profilometer",
-      "location": "OpProf",
-      "process": "Profile",
-      "abbreviated": "opprof_profil",
-      "notes": "Optical profilometry for surface measurements",
-      "color": "#fdca24"
-    },
-    {
-      "tool": "PDIL Angstrom Evaporator",
-      "location": "PDIL",
-      "process": "Evaporation",
       "abbreviated": "pae_evap",
       "notes": "Evaporation system",
-      "color": "#fe27ba"
+      "color": "#fe27ba",
+      "device_maker": "San Theingi"
     },
     {
-      "tool": "PDIL Angstrom Evaporator",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "Load",
-      "abbreviated": "pae_load",
-      "notes": "Loading trays into the Angstrom Evaporator",
-      "color": "#e67e22",
-      "is_batch_operation": true
-    },
-    {
-      "tool": "PDIL Angstrom Evaporator",
-      "location": "PDIL",
-      "process": "C60 evaporation",
       "abbreviated": "c60_evap",
-      "notes": "Evaporation using C60",
+      "notes": "C60 evaporation",
       "color": "#e67e22",
-      "is_batch_operation": true
+      "device_maker": "San Theingi"
     },
     {
-      "tool": "PDIL Angstrom Evaporator",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "C60/BCP evaporation",
       "abbreviated": "c60_bcp_evap",
-      "notes": "Evaporation using C60 and BCP",
-      "color": "#8e44ad"
+      "notes": "C60/BCP evaporation",
+      "color": "#8e44ad",
+      "device_maker": "San Theingi"
     },
     {
-      "tool": "PDIL Angstrom Evaporator",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "C60/BCP/Ag evaporation",
       "abbreviated": "c60_bcp_ag_evap",
-      "notes": "Evaporation using C60, BCP, and Ag",
-      "color": "#3498db"
+      "notes": "C60/BCP/Ag evaporation",
+      "color": "#3498db",
+      "device_maker": "San Theingi"
     },
     {
-      "tool": "PDIL Angstrom Evaporator",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "C60/BCP/Cu evaporation",
       "abbreviated": "c60_bcp_cu_evap",
-      "notes": "Evaporation using C60, BCP, and Cu",
-      "color": "#1abc9c"
+      "notes": "C60/BCP/Cu evaporation",
+      "color": "#1abc9c",
+      "device_maker": "San Theingi"
     },
     {
-      "tool": "PDIL Angstrom Evaporator",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "BCP evaporation",
       "abbreviated": "bcp_evap",
-      "notes": "Evaporation using BCP source material",
-      "color": "#f39c12"
+      "notes": "BCP evaporation",
+      "color": "#f39c12",
+      "device_maker": "San Theingi"
     },
     {
-      "tool": "PDIL Angstrom Evaporator",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "BCP/Ag evaporation",
       "abbreviated": "bcp_ag_evap",
-      "notes": "Evaporation using BCP and Ag",
-      "color": "#e74c3c"
+      "notes": "BCP/Ag evaporation",
+      "color": "#e74c3c",
+      "device_maker": "San Theingi"
     },
     {
-      "tool": "PDIL Angstrom Evaporator",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "BCP/Cu evaporation",
       "abbreviated": "bcp_cu_evap",
-      "notes": "Evaporation using BCP and Cu",
-      "color": "#c0392b"
+      "notes": "BCP/Cu evaporation",
+      "color": "#c0392b",
+      "device_maker": "San Theingi"
     },
     {
-      "tool": "PDIL Angstrom Evaporator",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "Ag evaporation",
       "abbreviated": "ag_evap",
-      "notes": "Evaporation using Ag source material",
-      "color": "#f1c40f"
+      "notes": "Ag evaporation",
+      "color": "#f1c40f",
+      "device_maker": "San Theingi"
     },
     {
-      "tool": "PDIL Angstrom Evaporator",
+      "tool": "Angstrom Evaporator",
       "location": "PDIL",
-      "process": "Cu evaporation",
       "abbreviated": "cu_evap",
-      "notes": "Evaporation using Cu source material",
-      "color": "#7f8c8d"
+      "notes": "Cu evaporation",
+      "color": "#7f8c8d",
+      "device_maker": "San Theingi"
+    },
+    {
+      "tool": "Angstrom Evaporator",
+      "location": "PDIL",
+      "abbreviated": "pae_load",
+      "notes": "Load all populated trays into PAE",
+      "color": "#27ae60",
+      "device_maker": "San Theingi"
     }
   ]
 }

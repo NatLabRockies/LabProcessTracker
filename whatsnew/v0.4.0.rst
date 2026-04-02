@@ -6,6 +6,8 @@ v0.3.4 (April 2026)
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
+* Update tools_processes.json database with standardized process names that match the
+  the process names in the UWL files. (:issue:`89`, :pull:`87`)
 
 
 Enhancements

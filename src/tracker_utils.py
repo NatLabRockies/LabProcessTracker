@@ -56,7 +56,7 @@ def load_process_data():
                 PROCESS_COLORS[abbreviated] = tool.get('color', DEFAULT_PROCESS_COLOR)
                 PROCESS_INFO[abbreviated] = {
                     'tool': tool.get('tool', ''),
-                    'process': tool.get('process', ''),
+                    'process': tool.get('notes', ''),
                     'color': tool.get('color', DEFAULT_PROCESS_COLOR),
                     'is_batch_operation': tool.get('is_batch_operation', False)
                 }
