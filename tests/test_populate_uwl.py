@@ -17,8 +17,6 @@ from populate_uwl import (  # noqa: E402
     _next_uwl_id,
     _make_time_and_place_item,
     load_matching_records,
-    load_process_map,
-    resolve_section_names,
     locate_uwl,
     find_section,
     find_item_by_name,
@@ -94,64 +92,6 @@ class TestTimestampParsing:
     def test_invalid_format_raises(self):
         with pytest.raises(ValueError, match="Cannot parse timestamp"):
             _parse_timestamp("not-a-date")
-
-
-# ---------------------------------------------------------------------------
-# TestProcessMapLoading
-# ---------------------------------------------------------------------------
-
-class TestProcessMapLoading:
-    """Tests for load_process_map()."""
-
-    def test_loads_valid_map(self, tmp_path):
-        map_file = tmp_path / "process_map.json"
-        data = {"proc_a": "SectionA", "proc_b": ["SectionB1", "SectionB2"]}
-        map_file.write_text(json.dumps(data), encoding="utf-8")
-        result = load_process_map(map_file)
-        assert result == data
-
-    def test_strips_comment_keys(self, tmp_path):
-        map_file = tmp_path / "process_map.json"
-        data = {"_comment": "ignored", "_note": "also ignored", "proc_a": "SectionA"}
-        map_file.write_text(json.dumps(data), encoding="utf-8")
-        result = load_process_map(map_file)
-        assert "_comment" not in result
-        assert "_note" not in result
-        assert "proc_a" in result
-
-
-# ---------------------------------------------------------------------------
-# TestResolveSectionNames
-# ---------------------------------------------------------------------------
-
-class TestResolveSectionNames:
-    """Tests for resolve_section_names()."""
-
-    def test_single_string_mapping(self):
-        mapping = {"bcp_ag_evap": "Ag_deposition_PDIL"}
-        assert resolve_section_names("bcp_ag_evap", mapping) == ["Ag_deposition_PDIL"]
-
-    def test_multi_list_mapping(self):
-        mapping = {
-            "c60_bcp_ag_evap": [
-                "C60_deposition_PDIL",
-                "BCP_deposition_PDIL",
-                "Ag_deposition_PDIL",
-            ]
-        }
-        result = resolve_section_names("c60_bcp_ag_evap", mapping)
-        assert result == [
-            "C60_deposition_PDIL",
-            "BCP_deposition_PDIL",
-            "Ag_deposition_PDIL",
-        ]
-
-    def test_fallback_to_process_name_when_missing(self):
-        assert resolve_section_names("TestProcess", {}) == ["TestProcess"]
-
-    def test_fallback_to_process_name_with_nonempty_map(self):
-        mapping = {"other_process": "OtherSection"}
-        assert resolve_section_names("TestProcess", mapping) == ["TestProcess"]
 
 
 # ---------------------------------------------------------------------------
@@ -447,31 +387,6 @@ class TestIntegration:
         assert tp["Time"] == "16:50"
         assert tp["Date"] == "3/6/2026"
 
-    def test_multi_section_populated(self, tmp_path, monkeypatch):
-        """A process_map entry mapping one CSV name to multiple UWL sections."""
-        pmap = tmp_path / "process_map.json"
-        pmap.write_text(
-            json.dumps({"multi_process": ["TestProcess", "Beta_Process"]}),
-            encoding="utf-8",
-        )
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "multi_process",
-            "--map", str(pmap),
-            "--output-dir", str(tmp_path),
-        ])
-        main()
-        output = tmp_path / "test_sample_populated.uwl"
-        assert output.exists()
-        tp1 = _read_time_and_place(output, "TestProcess")
-        tp2 = _read_time_and_place(output, "Beta_Process")
-        assert tp1["Time"] == "16:50"
-        assert tp2["Time"] == "16:50"
-        assert tp1["Date"] == "3/6/2026"
-
     def test_unrelated_sections_unchanged(self, tmp_path, monkeypatch):
         """Sections not targeted should have their Time & Place left empty."""
         monkeypatch.setattr(sys, "argv", [
@@ -565,18 +480,13 @@ class TestIntegration:
         assert (out / "test_sample_populated.uwl").exists()
 
     def test_missing_section_warns_and_exits(self, tmp_path, monkeypatch):
-        """A process_map pointing to a nonexistent section warns and exits."""
-        pmap = tmp_path / "process_map.json"
-        pmap.write_text(
-            json.dumps({"TestProcess": "NonexistentSection"}), encoding="utf-8"
-        )
+        """A process name with no matching UWL section warns and exits."""
         monkeypatch.setattr(sys, "argv", [
             "populate_uwl",
             "--uwl", str(FIXTURE_UWL),
             "--csv", str(FIXTURE_CSV),
             "--sample-id", "test-sample",
-            "--process", "TestProcess",
-            "--map", str(pmap),
+            "--process", "unknown_process",  # in CSV, no matching section in UWL
             "--output-dir", str(tmp_path),
         ])
         with pytest.warns(UserWarning, match="not in UWL"):

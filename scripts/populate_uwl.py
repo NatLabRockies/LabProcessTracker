@@ -246,28 +246,6 @@ def apply_populators(item: dict, record: dict, context: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Process map / section name resolution
-# ---------------------------------------------------------------------------
-
-def load_process_map(map_path: Path) -> dict:
-    """Load process_map.json, stripping keys that start with '_'."""
-    with map_path.open(encoding="utf-8") as f:
-        raw = json.load(f)
-    return {k: v for k, v in raw.items() if not k.startswith("_")}
-
-
-def resolve_section_names(process_name: str, process_map: dict) -> list:
-    """Return a list of UWL section names for a given scan log process name.
-
-    Falls back to [process_name] if no mapping exists (i.e. names already match).
-    """
-    if process_name in process_map:
-        val = process_map[process_name]
-        return [val] if isinstance(val, str) else list(val)
-    return [process_name]
-
-
-# ---------------------------------------------------------------------------
 # UWL file location helper
 # ---------------------------------------------------------------------------
 
@@ -334,13 +312,6 @@ def main():
         help="Process name as it appears in the scan log (e.g. 'bcp_ag_evap').",
     )
     parser.add_argument(
-        "--map", type=Path, default=None, metavar="PATH",
-        help=(
-            "Path to process_map.json. "
-            "Defaults to process_map.json in the same directory as this script."
-        ),
-    )
-    parser.add_argument(
         "--output-dir", type=Path, default=None, metavar="DIR",
         help=(
             "Directory to write the output .uwl file. "
@@ -377,18 +348,6 @@ def main():
 
     print(f"UWL file:  {uwl_path}")
 
-    # --- Load process map ---
-    map_path = args.map or Path(__file__).parent / "process_map.json"
-    if map_path.exists():
-        process_map = load_process_map(map_path)
-    else:
-        warnings.warn(
-            f"process_map.json not found at {map_path}. "
-            "Using raw process name as UWL section name.",
-            stacklevel=1,
-        )
-        process_map = {}
-
     # --- Load and filter scan log ---
     records = load_matching_records(args.scan_log, args.sample_id, args.process)
 
@@ -424,12 +383,7 @@ def main():
             sys.exit(f"Error: {exc}")
 
     # --- Resolve target section names ---
-    section_names = resolve_section_names(args.process, process_map)
-    if len(section_names) > 1:
-        print(
-            f"Process '{args.process}' maps to {len(section_names)} sections: "
-            f"{section_names}"
-        )
+    section_names = [args.process]
 
     # Build context dict (extensible for future FIELD_POPULATORS)
     context = {
@@ -461,14 +415,14 @@ def main():
     if not_found:
         warnings.warn(
             f"Section(s) not in UWL: {not_found}. "
-            "Check that process_map.json maps to the correct UWL section names.",
+            "Check that the process name matches a section name in the UWL file exactly.",
             stacklevel=1,
         )
 
     if not modified:
         sys.exit(
             "Error: No sections were modified. Nothing written. "
-            "Check --process name and process_map.json."
+            "Check that --process name matches a section in the UWL file."
         )
 
     # --- Write output ---
