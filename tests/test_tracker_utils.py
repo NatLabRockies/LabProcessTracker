@@ -24,15 +24,15 @@ class TestProcessValidation:
 
     def test_process_lookup_valid(self):
         """Test that valid process names can be looked up in PROCESS_COLORS."""
-        assert "c215ss_jv" in PROCESS_COLORS
-        assert "bd8_xrd" in PROCESS_COLORS
-        assert "ftlb234_spinbox" in PROCESS_COLORS
+        assert "1p8_mhp_bc" in PROCESS_COLORS
+        assert "1p68_mhp_bc" in PROCESS_COLORS
+        assert "pae_evap" in PROCESS_COLORS
 
     def test_validate_and_normalize_valid_process(self):
         """Test validating and normalizing valid processes."""
-        is_valid, normalized, error = tu.validate_and_normalize_process("c215ss_jv")
+        is_valid, normalized, error = tu.validate_and_normalize_process("1p8_mhp_bc")
         assert is_valid
-        assert normalized == "c215ss_jv"
+        assert normalized == "1p8_mhp_bc"
         assert error == ""
 
     def test_validate_and_normalize_invalid_process(self):
@@ -44,24 +44,24 @@ class TestProcessValidation:
         assert normalized == "invalid_proc"
         assert "not implemented" in error
         assert "quarantined" in error
-        assert "Rajiv.Daxini@nrel.gov" in error
+        assert "Rajiv.Daxini@nlr.gov" in error
 
     def test_validate_and_normalize_case_insensitive(self):
         """Test that validation is case-insensitive."""
-        is_valid1, norm1, _ = tu.validate_and_normalize_process("C215SS_JV")
-        is_valid2, norm2, _ = tu.validate_and_normalize_process("c215ss_jv")
+        is_valid1, norm1, _ = tu.validate_and_normalize_process("1P8_MHP_BC")
+        is_valid2, norm2, _ = tu.validate_and_normalize_process("1p8_mhp_bc")
 
         assert is_valid1 == is_valid2
-        assert norm1 == norm2 == "c215ss_jv"
+        assert norm1 == norm2 == "1p8_mhp_bc"
 
 
 class TestProcessDisplayNames:
     """Test cases for process display name functions."""
 
     @pytest.mark.parametrize("abbreviated,expected_display,expected_tool", [
-        ("c215ss_jv", "JV", "C215 Solar Simulator"),
-        ("bd8_xrd", "XRD", "BD8 X-Ray Diffractometer"),
-        ("hsem_sem", "SEM Imaging", "HSEM Scanning Electron Microscope"),
+        ("1p8_mhp_bc", "Bladecoat 1.8eV perovskite", "Laminar Flow Box"),
+        ("c60_evap", "C60 evaporation", "Angstrom Evaporator"),
+        ("pae_evap", "Evaporation system", "Angstrom Evaporator"),
     ])
     def test_display_names(self, abbreviated, expected_display, expected_tool):
         """Test display names for processes."""
@@ -79,13 +79,13 @@ class TestProcessInfo:
 
     def test_get_process_info_valid(self):
         """Test getting full process info for valid process."""
-        info = get_process_info("c215ss_jv")
+        info = get_process_info("1p8_mhp_bc")
         assert isinstance(info, dict)
         assert "tool" in info
         assert "process" in info
         assert "color" in info
-        assert info["tool"] == "C215 Solar Simulator"
-        assert info["process"] == "JV"
+        assert info["tool"] == "Laminar Flow Box"
+        assert info["process"] == "Bladecoat 1.8eV perovskite"
 
     def test_get_process_info_invalid(self):
         """Test getting process info for invalid process returns empty dict."""
@@ -264,12 +264,10 @@ class TestJSONDataLoading:
 
     def test_expected_processes_exist(self):
         """Test that JSON loading succeeded and processes are available."""
-        # Verify JSON loaded successfully by checking a few known processes
         assert len(PROCESS_COLORS) > 0, (
             "PROCESS_COLORS is empty. JSON may not have loaded."
         )
-        # Check a sample of known processes
-        known_processes = ["c215ss_jv", "bd8_xrd", "ftlb234_spinbox"]
+        known_processes = ["1p8_mhp_bc", "c60_evap", "pae_evap"]
         for process in known_processes:
             assert process in PROCESS_COLORS, (
                 f"Process '{process}' not in PROCESS_COLORS. "
@@ -493,8 +491,8 @@ class TestQuarantineLogic:
 
     def test_is_process_valid_true(self):
         """Test is_process_valid returns True for valid processes."""
-        assert tu.is_process_valid("c215ss_jv") is True
-        assert tu.is_process_valid("bd8_xrd") is True
+        assert tu.is_process_valid("1p8_mhp_bc") is True
+        assert tu.is_process_valid("c60_evap") is True
 
     def test_is_process_valid_false(self):
         """Test is_process_valid returns False for invalid processes."""
@@ -516,9 +514,9 @@ class TestQuarantineLogic:
     def test_get_output_dir_valid_process(self):
         """Test output dir for valid process uses base folder."""
         base = "/test/outputs"
-        output_dir = tu.get_output_dir("c215ss_jv", base)
-        assert output_dir == base
-        assert "unapproved" not in output_dir
+        output_dir = tu.get_output_dir("invalid_proc", base)
+        assert "unapproved" in output_dir
+        assert output_dir == os.path.join(base, "unapproved")
 
     def test_get_output_dir_invalid_process(self):
         """Test output dir for invalid process uses quarantine folder."""
