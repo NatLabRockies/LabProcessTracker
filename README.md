@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.3.3-blue.svg" alt="Version">
+<img src="https://img.shields.io/badge/version-v0.4.3-blue.svg" alt="Version">
 
 <div align="left">
   <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
@@ -51,7 +51,7 @@ No additional installations are required.
 - Scan samples according to their position indicated in the tray mode window
   (A1, A2, B1, B2...)
 - You can skip individual positions or skip all remaining positions
-- Once all positions are filled or skipped, scan a single process QR code to associate
+- Once all positions are filled or skipped, scan a s0ingle process QR code to associate
   and log all samples with that process
 - Repeat for as many trays you have, logging sample positions and associating a process
   with each tray of samples
