@@ -120,7 +120,7 @@ while ensuring unapproved processes are tracked and not mixed with approved logs
 - **`outputs/`** - Default output location for CSV logs (auto-created)
 - **`tools_processes.json`** - Central database of all tools/processes
 - **`tray_layouts.json`** - Tray position mappings
-- **`scripts/`** - QR code generation and build utilities
+- **`scripts/`** - QR code generation, UWL population, and build utilities
 - **`tests/`** - Test suite
 
 ## Requirements
@@ -178,12 +178,12 @@ python scripts/run_tests.py
 pytest tests/ -v
 
 # With coverage report (requires pytest-cov)
-pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
+pytest tests/ -v --cov --cov-report=term-missing --cov-report=html
 ```
 
 **Note:** You need to install the test dependencies first: `pip install .[test]`
 
-The test suite focuses on the testable core logic in `tracker_utils.py`. The GUI is
+The test suite covers `tracker_utils.py` and `populate_uwl.py`. The GUI is
 validated through manual testing and usage.
 
 ## Test Coverage
@@ -204,3 +204,30 @@ python scripts/generate_test_qr_codes.py
 ```
 
 QR codes are saved to `test_qr_codes/` or `custom_qr_codes/` folders.
+
+## Populating UWL Files
+
+`scripts/populate_uwl.py` writes scan log timestamp and location data into the
+corresponding UWL's "Time & Place" field, saving a copy of the UWL file.
+The original file is never modified.
+
+```bash
+# Single UWL file
+python scripts/populate_uwl.py
+    --uwl path/to/2503_015.uwl
+    --scan-log outputs/scan_log_bcp_ag_evap.csv
+    --sample-id 2503-015
+    --process bcp_ag_evap
+
+# Auto-locate UWL from a directory by sample ID
+python scripts/populate_uwl.py
+    --uwl-dir path/to/uwl_files/
+    --scan-log outputs/scan_log_bcp_ag_evap.csv
+    --sample-id 2503-015
+    --process bcp_ag_evap
+    --output-dir ./populated/
+```
+
+Output is written to `{stem}_populated.uwl` in the same directory as the input
+file (or `--output-dir` if specified). Note: The process name must match the process
+object's name in the UWL file exactly.
