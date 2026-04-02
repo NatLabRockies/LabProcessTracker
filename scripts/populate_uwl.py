@@ -415,7 +415,7 @@ def main():
     if not_found:
         warnings.warn(
             f"Section(s) not in UWL: {not_found}. "
-            "Check that the process name matches a section name in the UWL file exactly.",
+            "Check that the process name matches a section name in the UWL file.",
             stacklevel=1,
         )
 
