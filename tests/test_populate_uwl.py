@@ -432,7 +432,7 @@ class TestIntegration:
         """--uwl-dir should find .uwl file using 5-segment tokenized format."""
         uwl_dir = tmp_path / "uwl"
         uwl_dir.mkdir()
-        uwl_filename = "UWL_repps_demos1_taskmeeting031825_test-sample.uwl"
+        uwl_filename = "UWL_rdaxini_demos1_taskmeeting031825_test-sample.uwl"
         (uwl_dir / uwl_filename).write_text(
             FIXTURE_UWL.read_text(encoding="utf-8"), encoding="utf-8"
         )
@@ -446,8 +446,10 @@ class TestIntegration:
             "--output-dir", str(out),
         ])
         main()
-        output_filename = "UWL_repps_demos1_taskmeeting031825_test-sample_populated.uwl"
-        assert (out / output_filename).exists()
+        output_file = (
+            out / "UWL_rdaxini_demos1_taskmeeting031825_test-sample_populated.uwl"
+        )
+        assert output_file.exists()
 
     def test_missing_section_warns_and_exits(self, tmp_path, monkeypatch):
         """A process name with no matching UWL section warns and exits."""
