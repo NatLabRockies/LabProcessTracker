@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: tandems-runners
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false
