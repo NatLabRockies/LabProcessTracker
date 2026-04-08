@@ -27,6 +27,7 @@ Testing
 Documentation
 ~~~~~~~~~~~~~
 * Replace all instances of NREL with NLR (:issue:`86`, :issue`84`, :pull:`88`)
+* Add BSD 3-Clause License (LICENSE.MD). (:pull:`2`)
 
 
 Contributors
