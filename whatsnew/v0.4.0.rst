@@ -7,26 +7,33 @@ v0.4.0 (April 2026)
 Breaking Changes
 ~~~~~~~~~~~~~~~~
 * Update tools_processes.json database with standardized process names that match the
-  the process names in the UWL files. (:issue:`89`, :pull:`87`)
+  the process names in the UWL files. (Internal repo reference: :issue:`89`, :pull:`87`)
 
 
 Enhancements
 ~~~~~~~~~~~~
 * Add script `populate_uwl.py` to populate UWL file with process date, time, and
-  tool/location information from scan log csv file. (:issue:`12`, :pull:`87`)
+  tool/location information from scan log csv file.
+  (Internal repo reference: :issue:`12`, :pull:`87`)
 
 
 Maintenance
 ~~~~~~~~~~~
+* Migrate internal NLR enterprise repository to public-facing repository on
+  'https://github.com/NatLabRockies/LabProcessTracker/'. Note that issue and pull
+  request references have been reset to 1 for the public-facing repository.
 
 
 Testing
 ~~~~~~~
+* Update runners in GitHub Actions workflows to use `ubuntu-latest` instead of
+  `tandems-runners`. (:pull:`3`)
 
 
 Documentation
 ~~~~~~~~~~~~~
-* Replace all instances of NREL with NLR (:issue:`86`, :issue:`84`, :pull:`88`)
+* Replace all instances of NREL with NLR
+  (Internal repo reference: :issue:`86`, :issue:`84`, :pull:`88`)
 * Add BSD 3-Clause License (LICENSE.MD). (:pull:`2`)
 
 
