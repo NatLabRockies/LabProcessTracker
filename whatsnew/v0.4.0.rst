@@ -14,6 +14,8 @@ Enhancements
 ~~~~~~~~~~~~
 * Add script `populate_uwl.py` to populate UWL file with process date, time, and
   tool/location information from scan log csv file. (:issue:`12`, :pull:`87`)
+* Create `uwl_utils.py` module to provide utility functions for UWL file manipulation.
+  (:pull:`10`)
 
 
 Maintenance
