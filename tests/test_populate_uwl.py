@@ -9,10 +9,11 @@ from pathlib import Path
 
 import pytest
 
-# Add scripts directory to path for imports
+# Add scripts and src directories to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from populate_uwl import (  # noqa: E402
+from uwl_utils import (  # noqa: E402
     _parse_timestamp,
     _next_uwl_id,
     _make_time_and_place_item,
@@ -24,17 +25,13 @@ from populate_uwl import (  # noqa: E402
     validate_sample_id_match,
     apply_populators,
     FIELD_POPULATORS,
-    main,
 )
+from populate_uwl import main  # noqa: E402
 
 DATA_DIR = Path(__file__).parent / "data"
 FIXTURE_UWL = DATA_DIR / "test_sample.uwl"
 FIXTURE_CSV = DATA_DIR / "test_scan_log.csv"
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _read_time_and_place(uwl_path: Path, section_name: str) -> dict:
     """Return the Time & Place parameter-value dict for a given section."""
@@ -61,10 +58,6 @@ def _read_action_values(uwl_path: Path, section_name: str, action_name: str) -> 
         f"Action '{action_name}' missing in section '{section_name}' ({uwl_path})"
     )
 
-
-# ---------------------------------------------------------------------------
-# TestTimestampParsing
-# ---------------------------------------------------------------------------
 
 class TestTimestampParsing:
     """Tests for _parse_timestamp()."""
@@ -94,36 +87,39 @@ class TestTimestampParsing:
             _parse_timestamp("not-a-date")
 
 
-# ---------------------------------------------------------------------------
-# TestLocateUWL
-# ---------------------------------------------------------------------------
-
 class TestLocateUWL:
     """Tests for locate_uwl()."""
 
-    def test_finds_exact_stem_match(self, tmp_path):
-        (tmp_path / "exact_match.uwl").write_text("{}", encoding="utf-8")
-        result = locate_uwl(tmp_path, "exact_match")
-        assert result == tmp_path / "exact_match.uwl"
+    def test_finds_valid_formatted_filename(self, tmp_path):
+        """Should locate a file with valid 5-segment tokenized format."""
+        uwl_file = tmp_path / "UWL_uid_pid_bid_exact-match.uwl"
+        uwl_file.write_text("{}", encoding="utf-8")
+        result = locate_uwl(tmp_path, "exact-match")
+        assert result == uwl_file
 
-    def test_finds_via_hyphen_to_underscore_normalization(self, tmp_path):
-        # file is named with underscore, lookup uses hyphen
-        (tmp_path / "test_sample.uwl").write_text("{}", encoding="utf-8")
-        result = locate_uwl(tmp_path, "test-sample")
-        assert result == tmp_path / "test_sample.uwl"
+    def test_raises_on_malformed_filename(self, tmp_path):
+        """Should raise ValueError when .uwl file has malformed filename.
+
+        Filename must have exactly 5+ segments (not 5+ segments).
+        """
+        (tmp_path / "malformed.uwl").write_text("{}", encoding="utf-8")
+        with pytest.raises(ValueError, match="Malformed UWL filename"):
+            locate_uwl(tmp_path, "test_sample")
 
     def test_raises_when_not_found(self, tmp_path):
+        """Should raise FileNotFoundError when no file matches sample_id."""
+        uwl_file = tmp_path / "UWL_uid_pid_bid_other-sample.uwl"
+        uwl_file.write_text("{}", encoding="utf-8")
         with pytest.raises(FileNotFoundError, match="nonexistent-sample"):
             locate_uwl(tmp_path, "nonexistent-sample")
 
     def test_raises_includes_dir_in_message(self, tmp_path):
+        """Error message should include the directory path."""
+        uwl_file = tmp_path / "UWL_uid_pid_bid_other-sample.uwl"
+        uwl_file.write_text("{}", encoding="utf-8")
         with pytest.raises(FileNotFoundError, match=re.escape(str(tmp_path))):
             locate_uwl(tmp_path, "missing")
 
-
-# ---------------------------------------------------------------------------
-# TestFindSection
-# ---------------------------------------------------------------------------
 
 class TestFindSection:
     """Tests for find_section()."""
@@ -149,10 +145,6 @@ class TestFindSection:
         result = find_section(self._make_objects(), "Sample")
         assert result is None
 
-
-# ---------------------------------------------------------------------------
-# TestFindItemByName
-# ---------------------------------------------------------------------------
 
 class TestFindItemByName:
     """Tests for find_item_by_name()."""
@@ -186,10 +178,6 @@ class TestFindItemByName:
         result = find_item_by_name({}, "Time & Place")
         assert result is None
 
-
-# ---------------------------------------------------------------------------
-# TestApplyPopulators
-# ---------------------------------------------------------------------------
 
 class TestApplyPopulators:
     """Tests for apply_populators()."""
@@ -242,10 +230,6 @@ class TestApplyPopulators:
         assert item["Values"][0] == "09:00"
 
 
-# ---------------------------------------------------------------------------
-# TestSampleIdValidation
-# ---------------------------------------------------------------------------
-
 class TestSampleIdValidation:
     """Tests for embedded Sample ID extraction and validation."""
 
@@ -262,10 +246,6 @@ class TestSampleIdValidation:
         with pytest.raises(ValueError, match="Sample ID mismatch"):
             validate_sample_id_match(data, "wrong-sample")
 
-
-# ---------------------------------------------------------------------------
-# TestCSVLoading
-# ---------------------------------------------------------------------------
 
 class TestCSVLoading:
     """Tests for load_matching_records()."""
@@ -311,10 +291,6 @@ class TestCSVLoading:
         assert isinstance(records[0]["_parsed_ts"], datetime)
 
 
-# ---------------------------------------------------------------------------
-# TestNextUwlId
-# ---------------------------------------------------------------------------
-
 class TestNextUwlId:
     """Tests for _next_uwl_id() and _make_time_and_place_item()."""
 
@@ -344,10 +320,6 @@ class TestNextUwlId:
         assert item["Values"] == ["", "", ""]
 
 
-# ---------------------------------------------------------------------------
-# TestFieldPopulatorsDict
-# ---------------------------------------------------------------------------
-
 class TestFieldPopulatorsDict:
     """Smoke tests for the FIELD_POPULATORS module-level dict."""
 
@@ -363,10 +335,6 @@ class TestFieldPopulatorsDict:
     def test_date_is_callable(self):
         assert callable(FIELD_POPULATORS["Date"])
 
-
-# ---------------------------------------------------------------------------
-# TestIntegration
-# ---------------------------------------------------------------------------
 
 class TestIntegration:
     """End-to-end tests calling main() via monkeypatched sys.argv."""
@@ -461,10 +429,11 @@ class TestIntegration:
         assert not (tmp_path / "test_sample.uwl").exists()
 
     def test_uwl_dir_autolocate(self, tmp_path, monkeypatch):
-        """--uwl-dir should find the .uwl file by sample ID with normalization."""
+        """--uwl-dir should find .uwl file using 5-segment tokenized format."""
         uwl_dir = tmp_path / "uwl"
         uwl_dir.mkdir()
-        (uwl_dir / "test_sample.uwl").write_text(
+        uwl_filename = "UWL_rdaxini_demos1_taskmeeting031825_test-sample.uwl"
+        (uwl_dir / uwl_filename).write_text(
             FIXTURE_UWL.read_text(encoding="utf-8"), encoding="utf-8"
         )
         out = tmp_path / "out"
@@ -477,7 +446,10 @@ class TestIntegration:
             "--output-dir", str(out),
         ])
         main()
-        assert (out / "test_sample_populated.uwl").exists()
+        output_file = (
+            out / "UWL_rdaxini_demos1_taskmeeting031825_test-sample_populated.uwl"
+        )
+        assert output_file.exists()
 
     def test_missing_section_warns_and_exits(self, tmp_path, monkeypatch):
         """A process name with no matching UWL section warns and exits."""
