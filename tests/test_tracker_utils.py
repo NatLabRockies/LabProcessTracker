@@ -144,7 +144,7 @@ class TestMessageFormatting:
         """Test formatting a log message."""
         record = {
             'Timestamp': '2025-01-01 12:00:00',
-            'Operator': 'TestOp',
+            'User': 'TestOp',
             'ProcessName': 'test_process',
             'SampleID': 'SAMPLE123'
         }
@@ -206,7 +206,7 @@ class TestCommandDetection:
         """Test RESET command detection."""
         is_cmd, cmd_type = tu.is_command("RESET")
         assert is_cmd
-        assert cmd_type == tu.RESET_OPERATOR_CMD
+        assert cmd_type == tu.RESET_USER_CMD
 
     def test_is_command_case_insensitive(self):
         """Test that commands are case-insensitive."""
@@ -224,37 +224,37 @@ class TestCommandDetection:
         assert cmd_type is None
 
 
-class TestOperatorValidation:
-    """Test cases for operator name validation."""
+class TestUserValidation:
+    """Test cases for user name validation."""
 
-    def test_validate_operator_name_valid(self):
-        """Test valid operator names."""
-        is_valid, msg = tu.validate_operator_name("John Doe")
+    def test_validate_username_valid(self):
+        """Test valid user names."""
+        is_valid, msg = tu.validate_username("John Doe")
         assert is_valid
         assert msg == ""
 
-    def test_validate_operator_name_empty(self):
-        """Test empty operator name."""
-        is_valid, msg = tu.validate_operator_name("")
+    def test_validate_username_empty(self):
+        """Test empty user name."""
+        is_valid, msg = tu.validate_username("")
         assert not is_valid
         assert "empty" in msg.lower()
 
-    def test_validate_operator_name_too_short(self):
-        """Test operator name too short."""
-        is_valid, msg = tu.validate_operator_name("A")
+    def test_validate_username_too_short(self):
+        """Test user name too short."""
+        is_valid, msg = tu.validate_username("A")
         assert not is_valid
         assert "2 characters" in msg
 
-    def test_validate_operator_name_too_long(self):
-        """Test operator name too long."""
+    def test_validate_username_too_long(self):
+        """Test user name too long."""
         long_name = "A" * 51
-        is_valid, msg = tu.validate_operator_name(long_name)
+        is_valid, msg = tu.validate_username(long_name)
         assert not is_valid
         assert "50 characters" in msg
 
-    def test_validate_operator_name_whitespace(self):
-        """Test operator name with only whitespace."""
-        is_valid, msg = tu.validate_operator_name("   ")
+    def test_validate_username_whitespace(self):
+        """Test user name with only whitespace."""
+        is_valid, msg = tu.validate_username("   ")
         assert not is_valid
         assert "empty" in msg.lower()
 
@@ -376,7 +376,7 @@ class TestBatchScanning:
 
         # Create log record with batch
         record = tu.create_log_record(
-            operator_name="TestOp",
+            username="TestOp",
             process_name="test_process",
             batch_id="BATCH123"
         )
@@ -669,11 +669,11 @@ class TestTrayBatchRecordCreation:
         """Test creating batch records for single sample."""
         tray_samples = [{"position": "A1", "sample_id": "SAMPLE001"}]
         records = tu.create_tray_batch_records(
-            "TestOperator", "066726-S-XXX", tray_samples, "test_process"
+            "TestUser", "066726-S-XXX", tray_samples, "test_process"
         )
 
         assert len(records) == 1
-        assert records[0]["Operator"] == "TestOperator"
+        assert records[0]["User"] == "TestUser"
         assert records[0]["TrayID"] == "066726-S-XXX"
         assert records[0]["Position"] == "A1"
         assert records[0]["SampleID"] == "SAMPLE001"
@@ -698,7 +698,7 @@ class TestTrayBatchRecordCreation:
             assert record["Position"] == tray_samples[i]["position"]
             assert record["SampleID"] == tray_samples[i]["sample_id"]
             assert record["ProcessName"] == "c215ss_jv"
-            assert record["Operator"] == "TestOp"
+            assert record["User"] == "TestOp"
 
     def test_create_tray_batch_records_empty_list(self):
         """Test creating batch records with empty sample list."""
@@ -734,7 +734,7 @@ class TestTrayLogRecordFormat:
             "TestOp", "066726-S-XXX", "A1", "SAMPLE001", "test_process"
         )
 
-        assert record["Operator"] == "TestOp"
+        assert record["User"] == "TestOp"
         assert record["TrayID"] == "066726-S-XXX"
         assert record["Position"] == "A1"
         assert record["SampleID"] == "SAMPLE001"
@@ -745,7 +745,7 @@ class TestTrayLogRecordFormat:
         """Test formatting log message with tray info."""
         record = {
             "Timestamp": "2026-01-29 12:00:00",
-            "Operator": "TestOp",
+            "User": "TestOp",
             "TrayID": "066726-S-XXX",
             "Position": "A1",
             "SampleID": "SAMPLE001",
@@ -764,7 +764,7 @@ class TestTrayLogRecordFormat:
         """Test formatting log message without tray info still works."""
         record = {
             "Timestamp": "2026-01-29 12:00:00",
-            "Operator": "TestOp",
+            "User": "TestOp",
             "SampleID": "SAMPLE001",
             "ProcessName": "test_process"
         }

@@ -18,7 +18,7 @@ QR_BATCH_PREFIX = 'B%:'
 EXIT_CMD = 'EXIT'
 SAVE_CMD = 'SAVE'
 UNDO_CMD = 'UNDO'
-RESET_OPERATOR_CMD = 'RESET'
+RESET_USER_CMD = 'RESET'
 
 # --- Process Color Mappings ---
 # Default color for unknown processes
@@ -243,7 +243,7 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
 
 # --- Logging Functions ---
 def create_log_record(
-    operator_name: str,
+    username: str,
     process_name: str,
     sample_id: str = "",
     batch_id: str = ""
@@ -251,7 +251,7 @@ def create_log_record(
     """Create a log record dictionary with current timestamp.
 
     Args:
-        operator_name: Name of the operator
+        username: Name of the user
         process_name: Name of the process
         sample_id: ID of the sample (empty if batch)
         batch_id: ID of the batch (empty if sample)
@@ -262,7 +262,7 @@ def create_log_record(
     scan_time = datetime.datetime.now().strftime(DATE_FORMAT)
     return {
         'Timestamp': scan_time,
-        'Operator': operator_name,
+        'User': username,
         'ProcessName': process_name,
         'SampleID': sample_id,
         'BatchID': batch_id,
@@ -270,7 +270,7 @@ def create_log_record(
 
 
 def create_log_record_with_tray(
-    operator_name: str,
+    username: str,
     tray_id: str,
     position: str,
     sample_id: str,
@@ -280,7 +280,7 @@ def create_log_record_with_tray(
     """Create a log record with tray and position info.
 
     Args:
-        operator_name: Name of the operator
+        username: Name of the user
         tray_id: ID of the tray
         position: Position in the tray (e.g., 'A1', 'B2')
         sample_id: ID of the sample
@@ -293,7 +293,7 @@ def create_log_record_with_tray(
     scan_time = datetime.datetime.now().strftime(DATE_FORMAT)
     record = {
         'Timestamp': scan_time,
-        'Operator': operator_name,
+        'User': username,
         'SampleID': sample_id,
         'ProcessName': process_name,
         'TrayID': tray_id,
@@ -332,7 +332,7 @@ def save_log_to_csv(
     has_session = any(('SessionID' in r) for r in log_records)
 
     # Base fieldnames (always present)
-    fieldnames = ['Timestamp', 'Operator', 'SampleID', 'ProcessName']
+    fieldnames = ['Timestamp', 'User', 'SampleID', 'ProcessName']
 
     # Add optional fields at the end
     if has_tray:
@@ -359,23 +359,23 @@ def save_log_to_csv(
         return False, f"Could not save log to file: {e}"
 
 
-# --- Operator Management ---
-def validate_operator_name(name: str) -> tuple[bool, str]:
-    """Validate an operator name.
+# --- User Management ---
+def validate_username(name: str) -> tuple[bool, str]:
+    """Validate a user name.
 
     Args:
-        name: The operator name to validate
+        name: The user name to validate
 
     Returns:
         Tuple of (is_valid: bool, error_message: str or empty string)
     """
     name = name.strip()
     if not name:
-        return False, "Operator name cannot be empty."
+        return False, "User name cannot be empty."
     if len(name) < 2:
-        return False, "Operator name must be at least 2 characters."
+        return False, "User name must be at least 2 characters."
     if len(name) > 50:
-        return False, "Operator name must be less than 50 characters."
+        return False, "User name must be less than 50 characters."
     return True, ""
 
 
@@ -416,7 +416,7 @@ def format_log_message(record: dict) -> str:
     Returns:
         Formatted log message string
     """
-    msg = f"[LOGGED] {record['Timestamp']} | Operator: '{record['Operator']}'"
+    msg = f"[LOGGED] {record['Timestamp']} | User: '{record['User']}'"
 
     # Add tray info if present
     if 'TrayID' in record and 'Position' in record:
@@ -567,7 +567,7 @@ def is_command(qr_text: str) -> tuple[bool, str | None]:
     Returns:
         Tuple of (is_command, command_type)
         - is_command: True if text is a valid command
-        - command_type: One of EXIT_CMD, SAVE_CMD, UNDO_CMD, RESET_OPERATOR_CMD, or None
+        - command_type: One of EXIT_CMD, SAVE_CMD, UNDO_CMD, RESET_USER_CMD, or None
     """
     qr_upper = qr_text.upper()
 
@@ -577,8 +577,8 @@ def is_command(qr_text: str) -> tuple[bool, str | None]:
         return True, SAVE_CMD
     elif qr_upper == UNDO_CMD:
         return True, UNDO_CMD
-    elif qr_upper == RESET_OPERATOR_CMD:
-        return True, RESET_OPERATOR_CMD
+    elif qr_upper == RESET_USER_CMD:
+        return True, RESET_USER_CMD
     else:
         return False, None
 
@@ -671,7 +671,7 @@ def should_accept_scan_in_tray_mode(
 
 
 def create_tray_batch_records(
-    operator_name: str,
+    username: str,
     tray_id: str,
     tray_samples: list,
     process_name: str
@@ -679,7 +679,7 @@ def create_tray_batch_records(
     """Create log records for all samples in a tray with the assigned process.
 
     Args:
-        operator_name: Name of the operator
+        username: Name of the user
         tray_id: ID of the tray
         tray_samples: List of dicts with 'position' and 'sample_id' keys
         process_name: Name of the process to assign
@@ -690,7 +690,7 @@ def create_tray_batch_records(
     records = []
     for entry in tray_samples:
         record = create_log_record_with_tray(
-            operator_name,
+            username,
             tray_id,
             entry["position"],
             entry["sample_id"],
@@ -701,7 +701,7 @@ def create_tray_batch_records(
 
 
 def create_batch_operation_records(
-    operator_name: str,
+    username: str,
     all_tray_data: dict,
     process_name: str,
     session_id: str
@@ -709,7 +709,7 @@ def create_batch_operation_records(
     """Create log records for all samples across multiple trays for batch operations.
 
     Args:
-        operator_name: Name of the operator
+        username: Name of the user
         all_tray_data: Dict mapping {tray_id: [{"position": pos, "sample_id": id}, ...]}
         process_name: Name of the batch operation process
         session_id: Session ID linking all trays together
@@ -721,7 +721,7 @@ def create_batch_operation_records(
     for tray_id, samples_list in all_tray_data.items():
         for entry in samples_list:
             record = create_log_record_with_tray(
-                operator_name,
+                username,
                 tray_id,
                 entry["position"],
                 entry["sample_id"],

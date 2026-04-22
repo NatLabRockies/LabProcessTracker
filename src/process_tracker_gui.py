@@ -21,7 +21,7 @@ class ProcessTrackerGUI(tk.Tk):
         self.current_process = None
         self.tool_process = None
         self.log_file = None
-        self.operator_name = None
+        self.username = None
         self.log_records = []
 
         # Tray mode state - updated for multi-tray support
@@ -53,23 +53,23 @@ class ProcessTrackerGUI(tk.Tk):
         tk.Label(
             username_frame, text="NLR Username:", bg="#f0f0f0"
         ).pack(side=tk.LEFT, padx=(0, 5))
-        self.operator_entry = tk.Entry(username_frame, width=25)
-        self.operator_entry.pack(side=tk.LEFT, padx=(0, 5))
-        self.operator_entry.focus_set()
-        self.operator_entry.bind("<Return>", lambda e: self.set_operator())
+        self.user_entry = tk.Entry(username_frame, width=25)
+        self.user_entry.pack(side=tk.LEFT, padx=(0, 5))
+        self.user_entry.focus_set()
+        self.user_entry.bind("<Return>", lambda e: self.set_user())
 
-        self.set_operator_btn = tk.Button(
-            username_frame, text="Set", command=self.set_operator
+        self.set_user_btn = tk.Button(
+            username_frame, text="Set", command=self.set_user
         )
-        self.set_operator_btn.pack(side=tk.LEFT, padx=(0, 5))
+        self.set_user_btn.pack(side=tk.LEFT, padx=(0, 5))
 
-        self.reset_operator_btn = tk.Button(
+        self.reset_user_btn = tk.Button(
             username_frame,
             text="Reset",
-            command=self.reset_operator,
+            command=self.reset_user,
             state="disabled"
         )
-        self.reset_operator_btn.pack(side=tk.LEFT)
+        self.reset_user_btn.pack(side=tk.LEFT)
 
         # Process Status Block
         self.process_frame = tk.Frame(main_container, height=150, bg="grey")
@@ -149,38 +149,38 @@ class ProcessTrackerGUI(tk.Tk):
         )
         self.log_file_label.pack(pady=(5, 0))
 
-    def set_operator(self):
-        name = self.operator_entry.get().strip()
-        is_valid, error_msg = tu.validate_operator_name(name)
+    def set_user(self):
+        name = self.user_entry.get().strip()
+        is_valid, error_msg = tu.validate_username(name)
         if not is_valid:
             self.print_terminal(f"[ERROR] {error_msg}")
             return
-        self.operator_name = name
+        self.username = name
         greeting = (
-            f"Hello, {self.operator_name}. Have fun scanning... "
+            f"Hello, {self.username}. Have fun scanning... "
             "ps I hope your processes have a UWL file"
         )
         self.print_terminal(greeting)
-        self.operator_entry.config(state="disabled")
-        self.set_operator_btn.config(state="disabled")
-        self.reset_operator_btn.config(state="normal")
+        self.user_entry.config(state="disabled")
+        self.set_user_btn.config(state="disabled")
+        self.reset_user_btn.config(state="normal")
         self.qr_entry.focus_set()
 
-    def reset_operator(self):
+    def reset_user(self):
         """Reset the NLR username, allowing a new user to take over."""
-        if not self.operator_name:
+        if not self.username:
             self.print_terminal("[INFO] No NLR username is currently set.")
             return
 
-        old_operator = self.operator_name
-        self.operator_name = None
-        self.operator_entry.delete(0, tk.END)
-        self.operator_entry.config(state="normal")
-        self.set_operator_btn.config(state="normal")
-        self.reset_operator_btn.config(state="disabled")
-        self.print_terminal(f"[RESET] NLR username '{old_operator}' has been reset.")
+        old_user = self.username
+        self.username = None
+        self.user_entry.delete(0, tk.END)
+        self.user_entry.config(state="normal")
+        self.set_user_btn.config(state="normal")
+        self.reset_user_btn.config(state="disabled")
+        self.print_terminal(f"[RESET] NLR username '{old_user}' has been reset.")
         self.print_terminal("Please enter a new NLR username to continue.")
-        self.operator_entry.focus_set()
+        self.user_entry.focus_set()
 
     def show_tray_dialog(self, tray_id, positions, position):
         """Show or update the tray position dialog."""
@@ -275,11 +275,11 @@ class ProcessTrackerGUI(tk.Tk):
             )
 
     def handle_scan(self):
-        if not self.operator_name:
-            self.print_terminal("[ERROR] Please enter operator name first.")
+        if not self.username:
+            self.print_terminal("[ERROR] Please enter user name first.")
             return
-        # Type assertion: operator_name is not None after check
-        assert self.operator_name is not None
+        # Type assertion: username is not None after check
+        assert self.username is not None
         qr_text = self.qr_entry.get().strip()
         self.qr_entry.delete(0, tk.END)
         if not qr_text:
@@ -298,8 +298,8 @@ class ProcessTrackerGUI(tk.Tk):
             elif cmd_type == tu.UNDO_CMD:
                 self.undo_last_scan()
                 return
-            elif cmd_type == tu.RESET_OPERATOR_CMD:
-                self.reset_operator()
+            elif cmd_type == tu.RESET_USER_CMD:
+                self.reset_user()
                 return
 
         # Parse input
@@ -465,7 +465,7 @@ class ProcessTrackerGUI(tk.Tk):
 
                     # Create batch operation records for all trays
                     batch_records = tu.create_batch_operation_records(
-                        self.operator_name,
+                        self.username,
                         self.tray_samples,
                         self.current_process,
                         self.session_id
@@ -536,7 +536,7 @@ class ProcessTrackerGUI(tk.Tk):
                     # Log samples from current tray only
                     current_tray_samples = self.tray_samples[self.current_tray_id]
                     batch_records = tu.create_tray_batch_records(
-                        self.operator_name,
+                        self.username,
                         self.current_tray_id,
                         current_tray_samples,
                         self.current_process
@@ -665,10 +665,10 @@ class ProcessTrackerGUI(tk.Tk):
             self.update_sample_block(data_type, status_type="ERROR")
 
     def log_scan_event(self, process_name, sample_id="", batch_id=""):
-        # Type assertion: operator_name checked at start of handle_scan
-        assert self.operator_name is not None
+        # Type assertion: username checked at start of handle_scan
+        assert self.username is not None
         record = tu.create_log_record(
-            self.operator_name, process_name, sample_id, batch_id
+            self.username, process_name, sample_id, batch_id
         )
         self.log_records.append(record)
         self.print_terminal(tu.format_log_message(record))
