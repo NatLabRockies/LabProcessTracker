@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.3.3-blue.svg" alt="Version">
+<img src="https://img.shields.io/badge/version-v0.4.0-blue.svg" alt="Version">
 
 <div align="left">
   <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
@@ -57,11 +57,21 @@ No additional installations are required.
   with each tray of samples
 - Scan the load QR code to log time time all trays are loaded
 
+**Substrate Checkout:**
+- Click the **`CHECKOUT`** button to enter checkout mode
+- Scan a sample QR code to open the checkout dialog; enter the number of
+  consecutively-numbered samples being checked out (e.g. `50` for samples `2503-015`
+  through `2503-064`)
+- Click **`EXIT CHECKOUT`** (or press `SAVE`) to write the records to
+  `checkout_log.csv` and return to normal tracking mode
+- `UNDO` removes the last checkout record while in checkout mode
+
  **Command buttons:**
    - `UNDO` — Remove the last scan from the session
    - `SAVE` — Save current session scans
    - `RESET` — Change the user
    - `EXIT` — Exit the tracker (prompts to save if there are unsaved scans)
+   - `CHECKOUT` — Toggle substrate checkout mode
 
 **QR Code Format:**
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
@@ -108,6 +118,7 @@ while ensuring unapproved processes are tracked and not mixed with approved logs
   `scan_log_bd8_xrd.csv`)
 - **Multi-process sessions:** When you switch between different processes, the
   application automatically saves records to the appropriate file for each process
+- **Checkout log:** Checkout records are appended to a separate `checkout_log.csv`
 - Default output locations:
   - **Running from source:** `outputs/` folder in the project directory
   - **Running as executable:** `~/Documents/process_tracking_outputs/`

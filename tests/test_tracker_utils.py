@@ -144,7 +144,7 @@ class TestMessageFormatting:
         """Test formatting a log message."""
         record = {
             'Timestamp': '2025-01-01 12:00:00',
-            'Operator': 'TestOp',
+            'User': 'TestOp',
             'ProcessName': 'test_process',
             'SampleID': 'SAMPLE123'
         }
@@ -206,7 +206,7 @@ class TestCommandDetection:
         """Test RESET command detection."""
         is_cmd, cmd_type = tu.is_command("RESET")
         assert is_cmd
-        assert cmd_type == tu.RESET_OPERATOR_CMD
+        assert cmd_type == tu.RESET_USER_CMD
 
     def test_is_command_case_insensitive(self):
         """Test that commands are case-insensitive."""
@@ -224,37 +224,37 @@ class TestCommandDetection:
         assert cmd_type is None
 
 
-class TestOperatorValidation:
-    """Test cases for operator name validation."""
+class TestUserValidation:
+    """Test cases for user name validation."""
 
-    def test_validate_operator_name_valid(self):
-        """Test valid operator names."""
-        is_valid, msg = tu.validate_operator_name("John Doe")
+    def test_validate_username_valid(self):
+        """Test valid user names."""
+        is_valid, msg = tu.validate_username("John Doe")
         assert is_valid
         assert msg == ""
 
-    def test_validate_operator_name_empty(self):
-        """Test empty operator name."""
-        is_valid, msg = tu.validate_operator_name("")
+    def test_validate_username_empty(self):
+        """Test empty user name."""
+        is_valid, msg = tu.validate_username("")
         assert not is_valid
         assert "empty" in msg.lower()
 
-    def test_validate_operator_name_too_short(self):
-        """Test operator name too short."""
-        is_valid, msg = tu.validate_operator_name("A")
+    def test_validate_username_too_short(self):
+        """Test user name too short."""
+        is_valid, msg = tu.validate_username("A")
         assert not is_valid
         assert "2 characters" in msg
 
-    def test_validate_operator_name_too_long(self):
-        """Test operator name too long."""
+    def test_validate_username_too_long(self):
+        """Test user name too long."""
         long_name = "A" * 51
-        is_valid, msg = tu.validate_operator_name(long_name)
+        is_valid, msg = tu.validate_username(long_name)
         assert not is_valid
         assert "50 characters" in msg
 
-    def test_validate_operator_name_whitespace(self):
-        """Test operator name with only whitespace."""
-        is_valid, msg = tu.validate_operator_name("   ")
+    def test_validate_username_whitespace(self):
+        """Test user name with only whitespace."""
+        is_valid, msg = tu.validate_username("   ")
         assert not is_valid
         assert "empty" in msg.lower()
 
@@ -376,7 +376,7 @@ class TestBatchScanning:
 
         # Create log record with batch
         record = tu.create_log_record(
-            operator_name="TestOp",
+            username="TestOp",
             process_name="test_process",
             batch_id="BATCH123"
         )
@@ -517,6 +517,117 @@ class TestQuarantineLogic:
         output_dir = tu.get_output_dir("invalid_proc", base)
         assert "unapproved" in output_dir
         assert output_dir == os.path.join(base, "unapproved")
+
+
+class TestCheckout:
+    """Tests for the sample checkout utilities."""
+
+    # --- generate_consecutive_sample_ids ---
+
+    def test_single_id_returns_start(self):
+        ids = tu.generate_consecutive_sample_ids("2503-015", 1)
+        assert ids == ["2503-015"]
+
+    @pytest.mark.parametrize("start,count,expected_last", [
+        ("2503-015", 5,  "2503-019"),
+        ("2503-001", 10, "2503-010"),
+        ("2503-098", 3,  "2503-100"),
+        ("2503-999", 1,  "2503-999"),
+    ])
+    def test_bulk_range(self, start, count, expected_last):
+        ids = tu.generate_consecutive_sample_ids(start, count)
+        assert len(ids) == count
+        assert ids[0] == start
+        assert ids[-1] == expected_last
+
+    def test_zero_padding_preserved(self):
+        ids = tu.generate_consecutive_sample_ids("2503-007", 3)
+        assert ids == ["2503-007", "2503-008", "2503-009"]
+
+    def test_overflow_raises(self):
+        with pytest.raises(ValueError, match="overflow"):
+            tu.generate_consecutive_sample_ids("2503-998", 3)
+
+    def test_no_dash_raises(self):
+        with pytest.raises(ValueError):
+            tu.generate_consecutive_sample_ids("2503015", 1)
+
+    def test_non_numeric_suffix_raises(self):
+        with pytest.raises(ValueError):
+            tu.generate_consecutive_sample_ids("2503-ABC", 1)
+
+    def test_count_zero_raises(self):
+        with pytest.raises(ValueError):
+            tu.generate_consecutive_sample_ids("2503-015", 0)
+
+    def test_count_negative_raises(self):
+        with pytest.raises(ValueError):
+            tu.generate_consecutive_sample_ids("2503-015", -1)
+
+    def test_all_ids_share_prefix(self):
+        ids = tu.generate_consecutive_sample_ids("2503-010", 5)
+        assert all(id_.startswith("2503-") for id_ in ids)
+
+    def test_ids_are_consecutive(self):
+        ids = tu.generate_consecutive_sample_ids("2503-020", 10)
+        suffixes = [int(id_.rsplit("-", 1)[1]) for id_ in ids]
+        assert suffixes == list(range(20, 30))
+
+    # --- create_checkout_record ---
+
+    def test_checkout_record_fields(self):
+        record = tu.create_checkout_record("rdaxini", "2503-015")
+        assert record["User"] == "rdaxini"
+        assert record["SampleID"] == "2503-015"
+        assert "Timestamp" in record
+        # Timestamp must be parseable
+        from datetime import datetime
+        datetime.strptime(record["Timestamp"], tu.DATE_FORMAT)
+
+    def test_checkout_record_no_process_field(self):
+        record = tu.create_checkout_record("rdaxini", "2503-015")
+        assert "ProcessName" not in record
+
+    # --- format_checkout_message ---
+
+    def test_format_checkout_message_contains_key_fields(self):
+        record = tu.create_checkout_record("rdaxini", "2503-015")
+        msg = tu.format_checkout_message(record)
+        assert "[CHECKOUT]" in msg
+        assert "rdaxini" in msg
+        assert "2503-015" in msg
+
+    # --- save_checkout_to_csv ---
+
+    def test_save_checkout_creates_file_with_header(self, tmp_path):
+        records = [tu.create_checkout_record("rdaxini", "2503-015")]
+        log_file = str(tmp_path / "checkout_log.csv")
+        success, msg = tu.save_checkout_to_csv(records, log_file, str(tmp_path))
+        assert success
+        import csv
+        with open(log_file, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+        assert len(rows) == 1
+        assert rows[0]["SampleID"] == "2503-015"
+        assert rows[0]["User"] == "rdaxini"
+
+    def test_save_checkout_appends(self, tmp_path):
+        log_file = str(tmp_path / "checkout_log.csv")
+        r1 = [tu.create_checkout_record("rdaxini", "2503-015")]
+        r2 = [tu.create_checkout_record("rdaxini", "2503-016")]
+        tu.save_checkout_to_csv(r1, log_file, str(tmp_path))
+        tu.save_checkout_to_csv(r2, log_file, str(tmp_path))
+        import csv
+        with open(log_file, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        assert len(rows) == 2
+        assert rows[1]["SampleID"] == "2503-016"
+
+    def test_save_checkout_empty_returns_false(self, tmp_path):
+        log_file = str(tmp_path / "checkout_log.csv")
+        success, msg = tu.save_checkout_to_csv([], log_file, str(tmp_path))
+        assert not success
 
     def test_get_output_dir_invalid_process(self):
         """Test output dir for invalid process uses quarantine folder."""
@@ -669,11 +780,11 @@ class TestTrayBatchRecordCreation:
         """Test creating batch records for single sample."""
         tray_samples = [{"position": "A1", "sample_id": "SAMPLE001"}]
         records = tu.create_tray_batch_records(
-            "TestOperator", "066726-S-XXX", tray_samples, "test_process"
+            "TestUser", "066726-S-XXX", tray_samples, "test_process"
         )
 
         assert len(records) == 1
-        assert records[0]["Operator"] == "TestOperator"
+        assert records[0]["User"] == "TestUser"
         assert records[0]["TrayID"] == "066726-S-XXX"
         assert records[0]["Position"] == "A1"
         assert records[0]["SampleID"] == "SAMPLE001"
@@ -698,7 +809,7 @@ class TestTrayBatchRecordCreation:
             assert record["Position"] == tray_samples[i]["position"]
             assert record["SampleID"] == tray_samples[i]["sample_id"]
             assert record["ProcessName"] == "c215ss_jv"
-            assert record["Operator"] == "TestOp"
+            assert record["User"] == "TestOp"
 
     def test_create_tray_batch_records_empty_list(self):
         """Test creating batch records with empty sample list."""
@@ -734,7 +845,7 @@ class TestTrayLogRecordFormat:
             "TestOp", "066726-S-XXX", "A1", "SAMPLE001", "test_process"
         )
 
-        assert record["Operator"] == "TestOp"
+        assert record["User"] == "TestOp"
         assert record["TrayID"] == "066726-S-XXX"
         assert record["Position"] == "A1"
         assert record["SampleID"] == "SAMPLE001"
@@ -745,7 +856,7 @@ class TestTrayLogRecordFormat:
         """Test formatting log message with tray info."""
         record = {
             "Timestamp": "2026-01-29 12:00:00",
-            "Operator": "TestOp",
+            "User": "TestOp",
             "TrayID": "066726-S-XXX",
             "Position": "A1",
             "SampleID": "SAMPLE001",
@@ -764,7 +875,7 @@ class TestTrayLogRecordFormat:
         """Test formatting log message without tray info still works."""
         record = {
             "Timestamp": "2026-01-29 12:00:00",
-            "Operator": "TestOp",
+            "User": "TestOp",
             "SampleID": "SAMPLE001",
             "ProcessName": "test_process"
         }
