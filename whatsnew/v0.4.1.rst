@@ -10,6 +10,8 @@ Breaking Changes
 
 Enhancements
 ~~~~~~~~~~~~
+- Add new checkout feature to allow users to check out substrates to track their usage.
+  (:issue:`13`, :pull:`14`)
 
 
 Maintenance
@@ -26,4 +28,5 @@ Documentation
 
 Contributors
 ~~~~~~~~~~~~
+- Rajiv Daxini (:ghuser:`rdaxini`)
 
