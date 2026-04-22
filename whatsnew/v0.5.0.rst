@@ -1,0 +1,37 @@
+.. _whatsnew050:
+
+v0.5.0 (April 2026)
+------------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+* Rename scan-log/check-out CSV field `Operator` to `User` for consistency with
+  updated terminology. Existing downstream parsing that expects `Operator` must be
+  updated. (:pull:`16`)
+
+
+Enhancements
+~~~~~~~~~~~~
+* Add new checkout feature to allow users to check out substrates to track their usage.
+  (:issue:`13`, :pull:`14`)
+
+
+Maintenance
+~~~~~~~~~~~
+
+
+
+Testing
+~~~~~~~
+
+
+Documentation
+~~~~~~~~~~~~~
+
+
+
+Contributors
+~~~~~~~~~~~~
+* Rajiv Daxini (:ghuser:`rdaxini`)
+
