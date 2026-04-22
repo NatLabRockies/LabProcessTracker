@@ -7,8 +7,8 @@ import tkinter as tk
 # Color constants for dialog components
 BG_COLOR_DIALOG = "#eaf6ff"
 BG_COLOR_GRID_CELL = "#ffffff"
-BG_COLOR_GRID_COMPLETE = "#d5f4e6"  # Light green
-BG_COLOR_CHECKOUT = "#8e44ad"       # Purple for checkout mode
+BG_COLOR_GRID_COMPLETE = "#d5f4e6"
+BG_COLOR_CHECKOUT = "#8e44ad"
 
 
 class TrayPositionDialog(tk.Toplevel):
