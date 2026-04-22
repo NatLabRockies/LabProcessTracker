@@ -19,6 +19,7 @@ EXIT_CMD = 'EXIT'
 SAVE_CMD = 'SAVE'
 UNDO_CMD = 'UNDO'
 RESET_USER_CMD = 'RESET'
+CHECKOUT_LOG_FILENAME = 'checkout_log.csv'
 
 # --- Process Color Mappings ---
 # Default color for unknown processes
