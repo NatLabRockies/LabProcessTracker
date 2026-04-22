@@ -1,0 +1,32 @@
+.. _whatsnew041:
+
+v0.4.1 (Month Year)
+------------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+- Add new checkout feature to allow users to check out substrates to track their usage.
+  (:issue:`13`, :pull:`14`)
+
+
+Maintenance
+~~~~~~~~~~~
+
+
+Testing
+~~~~~~~
+
+
+Documentation
+~~~~~~~~~~~~~
+
+
+Contributors
+~~~~~~~~~~~~
+- Rajiv Daxini (:ghuser:`rdaxini`)
+
