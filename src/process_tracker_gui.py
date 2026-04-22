@@ -202,7 +202,7 @@ class ProcessTrackerGUI(tk.Tk):
             self.enter_checkout_mode()
 
     def enter_checkout_mode(self):
-        """Enter checkout mode: log samples against operator without a process."""
+        """Enter checkout mode: log samples against user without a process."""
         if self.tray_mode:
             self.print_terminal(
                 "[ERROR] Cannot enter checkout mode during tray mode. "
@@ -250,7 +250,7 @@ class ProcessTrackerGUI(tk.Tk):
 
     def _confirm_checkout(self, first_sample_id: str, count: int):
         """Create checkout records for first_sample_id plus count-1 consecutives."""
-        assert self.operator_name is not None
+        assert self.username is not None
         try:
             sample_ids = tu.generate_consecutive_sample_ids(
                 first_sample_id, count
@@ -260,7 +260,7 @@ class ProcessTrackerGUI(tk.Tk):
             return
         for sid in sample_ids:
             self.checkout_records.append(
-                tu.create_checkout_record(self.operator_name, sid)
+                tu.create_checkout_record(self.username, sid)
             )
         if count == 1:
             self.print_terminal(

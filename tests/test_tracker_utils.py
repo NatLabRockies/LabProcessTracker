@@ -577,7 +577,7 @@ class TestCheckout:
 
     def test_checkout_record_fields(self):
         record = tu.create_checkout_record("rdaxini", "2503-015")
-        assert record["Operator"] == "rdaxini"
+        assert record["User"] == "rdaxini"
         assert record["SampleID"] == "2503-015"
         assert "Timestamp" in record
         # Timestamp must be parseable
@@ -610,7 +610,7 @@ class TestCheckout:
             rows = list(reader)
         assert len(rows) == 1
         assert rows[0]["SampleID"] == "2503-015"
-        assert rows[0]["Operator"] == "rdaxini"
+        assert rows[0]["User"] == "rdaxini"
 
     def test_save_checkout_appends(self, tmp_path):
         log_file = str(tmp_path / "checkout_log.csv")

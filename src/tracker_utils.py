@@ -777,19 +777,19 @@ def generate_consecutive_sample_ids(start_id: str, count: int) -> list[str]:
     ]
 
 
-def create_checkout_record(operator_name: str, sample_id: str) -> dict:
+def create_checkout_record(username: str, sample_id: str) -> dict:
     """Create a checkout log record with the current timestamp.
 
     Args:
-        operator_name: Name of the operator checking out the sample
+        username: Name of the user checking out the sample
         sample_id: ID of the sample being checked out
 
     Returns:
-        Dictionary with Timestamp, Operator, SampleID
+        Dictionary with Timestamp, User, SampleID
     """
     return {
         'Timestamp': datetime.datetime.now().strftime(DATE_FORMAT),
-        'Operator': operator_name,
+        'User': username,
         'SampleID': sample_id,
     }
 
@@ -800,7 +800,7 @@ def save_checkout_to_csv(
     """Append checkout records to the checkout log CSV.
 
     Args:
-        records: List of checkout record dicts (Timestamp, Operator, SampleID)
+        records: List of checkout record dicts (Timestamp, User, SampleID)
         checkout_log_file: Full path to the checkout log file
         outputs_folder: Directory to create if it does not exist
 
@@ -812,7 +812,7 @@ def save_checkout_to_csv(
 
     os.makedirs(outputs_folder, exist_ok=True)
     file_exists = os.path.exists(checkout_log_file)
-    fieldnames = ['Timestamp', 'Operator', 'SampleID']
+    fieldnames = ['Timestamp', 'User', 'SampleID']
 
     try:
         with open(checkout_log_file, 'a', newline='', encoding='utf-8') as csvfile:
@@ -842,6 +842,6 @@ def format_checkout_message(record: dict) -> str:
     """
     return (
         f"[CHECKOUT] {record['Timestamp']} | "
-        f"Operator: '{record['Operator']}' | "
+        f"User: '{record['User']}' | "
         f"Sample: '{record['SampleID']}'"
     )
