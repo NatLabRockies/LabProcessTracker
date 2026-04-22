@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import scrolledtext, messagebox
 import os
 import tracker_utils as tu
-from gui_components import TrayPositionDialog
+from gui_components import TrayPositionDialog, BulkCheckoutDialog, BG_COLOR_CHECKOUT
 
 OUTPUTS_FOLDER = tu.get_default_output_dir()
 
@@ -35,6 +35,10 @@ class ProcessTrackerGUI(tk.Tk):
         # Multi-tray session state
         self.all_trays_in_session = []  # List of completed tray IDs
         self.session_id = None  # Session ID for batch operations
+
+        # Checkout mode state
+        self.checkout_mode = False
+        self.checkout_records = []
 
         self.create_widgets()
 
@@ -121,6 +125,13 @@ class ProcessTrackerGUI(tk.Tk):
             btn_frame, text="EXIT", width=10, command=self.exit_app
         )
         self.exit_btn.grid(row=0, column=2, padx=5)
+        self.checkout_btn = tk.Button(
+            btn_frame, text="CHECKOUT", width=12,
+            command=self.toggle_checkout_mode
+        )
+        self.checkout_btn.grid(row=0, column=3, padx=5)
+        self._checkout_btn_default_bg = self.checkout_btn.cget("bg")
+        self._checkout_btn_default_fg = self.checkout_btn.cget("fg")
 
         # Terminal Output
         tk.Label(main_container, text="Activity Log:", bg="#f0f0f0").pack()
@@ -181,6 +192,104 @@ class ProcessTrackerGUI(tk.Tk):
         self.print_terminal(f"[RESET] NLR username '{old_user}' has been reset.")
         self.print_terminal("Please enter a new NLR username to continue.")
         self.user_entry.focus_set()
+
+    # --- Checkout Mode ---
+    def toggle_checkout_mode(self):
+        """Toggle checkout mode on or off."""
+        if self.checkout_mode:
+            self.exit_checkout_mode()
+        else:
+            self.enter_checkout_mode()
+
+    def enter_checkout_mode(self):
+        """Enter checkout mode: log samples against operator without a process."""
+        if self.tray_mode:
+            self.print_terminal(
+                "[ERROR] Cannot enter checkout mode during tray mode. "
+                "Complete or exit tray scanning first."
+            )
+            return
+        self.checkout_mode = True
+        self.process_frame.config(bg=BG_COLOR_CHECKOUT)
+        self.process_label.config(bg=BG_COLOR_CHECKOUT, text="CHECKOUT MODE")
+        self.checkout_btn.config(
+            text="EXIT CHECKOUT", bg=BG_COLOR_CHECKOUT, fg="white"
+        )
+        self.print_terminal(
+            "[CHECKOUT] Checkout mode active. Scan a sample QR code to begin."
+        )
+        self.qr_entry.focus_set()
+
+    def exit_checkout_mode(self):
+        """Exit checkout mode, auto-saving any pending checkout records."""
+        if self.checkout_records:
+            self.save_checkout_log()
+        self.checkout_mode = False
+        self.checkout_btn.config(
+            text="CHECKOUT",
+            bg=self._checkout_btn_default_bg,
+            fg=self._checkout_btn_default_fg,
+        )
+        if self.current_process:
+            valid = tu.is_process_valid(self.current_process)
+            self.update_process_block(self.current_process, valid=valid)
+        else:
+            self.update_process_block(None)
+        self.print_terminal("[CHECKOUT] Checkout mode exited.")
+        self.qr_entry.focus_set()
+
+    def handle_checkout_scan(self, sample_id: str):
+        """Open BulkCheckoutDialog after scanning a sample in checkout mode."""
+        BulkCheckoutDialog(
+            self,
+            sample_id,
+            tu.generate_consecutive_sample_ids,
+            self._confirm_checkout,
+            lambda: self.print_terminal("[CHECKOUT] Cancelled."),
+        )
+
+    def _confirm_checkout(self, first_sample_id: str, count: int):
+        """Create checkout records for first_sample_id plus count-1 consecutives."""
+        assert self.operator_name is not None
+        try:
+            sample_ids = tu.generate_consecutive_sample_ids(
+                first_sample_id, count
+            )
+        except ValueError as exc:
+            self.print_terminal(f"[CHECKOUT ERROR] {exc}")
+            return
+        for sid in sample_ids:
+            self.checkout_records.append(
+                tu.create_checkout_record(self.operator_name, sid)
+            )
+        if count == 1:
+            self.print_terminal(
+                tu.format_checkout_message(self.checkout_records[-1])
+            )
+        else:
+            self.print_terminal(
+                f"[CHECKOUT] {count} samples queued: "
+                f"{sample_ids[0]} \u2192 {sample_ids[-1]}. "
+                f"{len(self.checkout_records)} total unsaved."
+            )
+        self.qr_entry.focus_set()
+
+    def save_checkout_log(self):
+        """Save pending checkout records to the checkout log CSV."""
+        if not self.checkout_records:
+            self.print_terminal("[INFO] No checkout records to save.")
+            return
+        checkout_log_path = os.path.join(
+            OUTPUTS_FOLDER, tu.CHECKOUT_LOG_FILENAME
+        )
+        success, message = tu.save_checkout_to_csv(
+            self.checkout_records, checkout_log_path, OUTPUTS_FOLDER
+        )
+        if success:
+            self.print_terminal(f"[SUCCESS] {message}")
+            self.checkout_records.clear()
+        else:
+            self.print_terminal(f"[CRITICAL ERROR] {message}")
 
     def show_tray_dialog(self, tray_id, positions, position):
         """Show or update the tray position dialog."""
@@ -313,6 +422,17 @@ class ProcessTrackerGUI(tk.Tk):
 
         # Type assertion: if data_type is not None, data_id is also not None
         assert data_id is not None
+
+        # --- Checkout Mode ---
+        if self.checkout_mode:
+            if tu.is_sample_type(data_type):
+                self.handle_checkout_scan(data_id)
+            else:
+                self.print_terminal(
+                    "[CHECKOUT] Only sample QR codes (S%:ID) are accepted "
+                    "in checkout mode."
+                )
+            return
 
         # --- Tray Mode Entry ---
         if data_type == "TRAY":
@@ -674,6 +794,15 @@ class ProcessTrackerGUI(tk.Tk):
         self.print_terminal(tu.format_log_message(record))
 
     def undo_last_scan(self):
+        if self.checkout_mode:
+            if self.checkout_records:
+                removed = self.checkout_records.pop()
+                self.print_terminal(
+                    f"[UNDO] Removed checkout: '{removed['SampleID']}'"
+                )
+            else:
+                self.print_terminal("[INFO] No checkout records to undo.")
+            return
         if self.tray_mode and self.current_tray_id:
             # Undo in tray mode: remove last tray sample
             current_tray_samples = self.tray_samples.get(self.current_tray_id, [])
@@ -723,6 +852,9 @@ class ProcessTrackerGUI(tk.Tk):
             self.update_sample_block("Last scan undone", status_type="UNDO")
 
     def save_log(self):
+        if self.checkout_mode:
+            self.save_checkout_log()
+            return
         if not self.log_file:
             self.print_terminal(
                 "[ERROR] No log file defined. "
@@ -744,6 +876,16 @@ class ProcessTrackerGUI(tk.Tk):
         """Exit the application with prompt to save unsaved data."""
         # Close tray dialog if open
         self.close_tray_dialog()
+
+        # Prompt to save pending checkout records before exiting
+        if self.checkout_records:
+            count = len(self.checkout_records)
+            if messagebox.askyesno(
+                "Unsaved Checkout Data",
+                f"You have {count} unsaved checkout record(s). "
+                "Save before exiting?"
+            ):
+                self.save_checkout_log()
 
         if self.log_records:
             count = len(self.log_records)

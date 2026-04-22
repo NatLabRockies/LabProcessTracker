@@ -8,6 +8,7 @@ import tkinter as tk
 BG_COLOR_DIALOG = "#eaf6ff"
 BG_COLOR_GRID_CELL = "#ffffff"
 BG_COLOR_GRID_COMPLETE = "#d5f4e6"  # Light green
+BG_COLOR_CHECKOUT = "#8e44ad"       # Purple for checkout mode
 
 
 class TrayPositionDialog(tk.Toplevel):
@@ -216,3 +217,155 @@ class TrayPositionDialog(tk.Toplevel):
     def close(self):
         """Close the dialog."""
         self.destroy()
+
+
+class BulkCheckoutDialog(tk.Toplevel):
+    """Modal dialog for single or bulk sample checkout.
+
+    Shows the scanned first sample ID, a count entry, a live preview of
+    the ID range, and Confirm/Cancel buttons.
+    """
+
+    def __init__(
+        self, parent, first_sample_id, generate_ids_fn,
+        on_confirm_callback, on_cancel_callback
+    ):
+        super().__init__(parent)
+        self.title("Checkout Samples")
+        self.configure(bg=BG_COLOR_DIALOG)
+        self.resizable(False, False)
+
+        self.parent = parent
+        self.first_sample_id = first_sample_id
+        self.generate_ids_fn = generate_ids_fn
+        self.on_confirm_callback = on_confirm_callback
+        self.on_cancel_callback = on_cancel_callback
+
+        self.geometry("400x220")
+        self.transient(parent)
+        self.grab_set()
+
+        # Center on parent
+        self.update_idletasks()
+        x = (parent.winfo_x() + (parent.winfo_width() // 2)
+             - (self.winfo_width() // 2))
+        y = (parent.winfo_y() + (parent.winfo_height() // 2)
+             - (self.winfo_height() // 2))
+        self.geometry(f"+{x}+{y}")
+
+        # First sample label
+        tk.Label(
+            self,
+            text=f"First sample: {first_sample_id}",
+            bg=BG_COLOR_DIALOG,
+            fg="#1a5276",
+            font=("Arial", 12, "bold"),
+        ).pack(pady=(15, 5))
+
+        # Count entry row
+        count_frame = tk.Frame(self, bg=BG_COLOR_DIALOG)
+        count_frame.pack(pady=5)
+        tk.Label(
+            count_frame,
+            text="Number of samples:",
+            bg=BG_COLOR_DIALOG,
+            font=("Arial", 10),
+        ).pack(side=tk.LEFT, padx=(0, 8))
+
+        self.count_var = tk.StringVar(value="1")
+        self.count_entry = tk.Entry(
+            count_frame, textvariable=self.count_var, width=6,
+            font=("Arial", 11)
+        )
+        self.count_entry.pack(side=tk.LEFT)
+        self.count_entry.select_range(0, tk.END)
+        self.count_entry.focus_set()
+
+        # Live preview label
+        self.preview_var = tk.StringVar()
+        tk.Label(
+            self,
+            textvariable=self.preview_var,
+            bg=BG_COLOR_DIALOG,
+            fg="#27ae60",
+            font=("Arial", 10),
+            wraplength=360,
+        ).pack(pady=(5, 5))
+
+        # Buttons
+        btn_frame = tk.Frame(self, bg=BG_COLOR_DIALOG)
+        btn_frame.pack(pady=(5, 15))
+
+        tk.Button(
+            btn_frame,
+            text="Confirm",
+            command=self._confirm,
+            bg=BG_COLOR_CHECKOUT,
+            fg="white",
+            font=("Arial", 10, "bold"),
+            width=10,
+            relief=tk.RAISED,
+            padx=10,
+            pady=6,
+        ).grid(row=0, column=0, padx=8)
+
+        tk.Button(
+            btn_frame,
+            text="Cancel",
+            command=self._cancel,
+            bg="#7f8c8d",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            width=10,
+            relief=tk.RAISED,
+            padx=10,
+            pady=6,
+        ).grid(row=0, column=1, padx=8)
+
+        self.bind("<Return>", lambda e: self._confirm())
+        self.bind("<Escape>", lambda e: self._cancel())
+        self.protocol("WM_DELETE_WINDOW", self._cancel)
+
+        # Update preview whenever count changes
+        self.count_var.trace_add("write", self._update_preview)
+        self._update_preview()
+
+    def _update_preview(self, *_args):
+        """Recompute and display the checkout range preview."""
+        try:
+            count = int(self.count_var.get())
+            if count < 1:
+                self.preview_var.set("Count must be at least 1.")
+                return
+            ids = self.generate_ids_fn(self.first_sample_id, count)
+            if count == 1:
+                self.preview_var.set(f"Will check out: {ids[0]}")
+            else:
+                suffix = f" ({count} samples)" if count > 10 else ""
+                self.preview_var.set(
+                    f"Will check out: {ids[0]} \u2192 {ids[-1]}{suffix}"
+                )
+        except ValueError as exc:
+            self.preview_var.set(f"Error: {exc}")
+        except Exception:
+            self.preview_var.set("Invalid count.")
+
+    def _confirm(self):
+        """Validate count and invoke the confirm callback."""
+        try:
+            count = int(self.count_var.get())
+            if count < 1:
+                return
+        except ValueError:
+            return
+        self.grab_release()
+        self.destroy()
+        self.on_confirm_callback(self.first_sample_id, count)
+        self.parent.qr_entry.focus_set()
+
+    def _cancel(self):
+        """Cancel checkout and close the dialog."""
+        self.grab_release()
+        self.destroy()
+        self.on_cancel_callback()
+        self.parent.qr_entry.focus_set()
