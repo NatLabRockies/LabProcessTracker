@@ -1,4 +1,4 @@
-.. _whatsnewXYZ:
+.. _whatsnew040:
 
 v0.4.0 (April 2026)
 ------------------------
@@ -25,10 +25,12 @@ Maintenance
   'https://github.com/NatLabRockies/LabProcessTracker/'. Note that issue and pull
   request references have been reset to 1 for the public-facing repository.
 
+
 Testing
 ~~~~~~~
 * Update runners in GitHub Actions workflows to use `ubuntu-latest` instead of
   `tandems-runners`. (:pull:`3`)
+
 
 Documentation
 ~~~~~~~~~~~~~
