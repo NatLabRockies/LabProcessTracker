@@ -19,6 +19,7 @@ EXIT_CMD = 'EXIT'
 SAVE_CMD = 'SAVE'
 UNDO_CMD = 'UNDO'
 RESET_OPERATOR_CMD = 'RESET'
+CHECKOUT_LOG_FILENAME = "checkout_log.csv"
 
 # --- Process Color Mappings ---
 # Default color for unknown processes
@@ -730,3 +731,118 @@ def create_batch_operation_records(
             )
             records.append(record)
     return records
+
+
+# --- Checkout Logic ---
+def generate_consecutive_sample_ids(start_id: str, count: int) -> list[str]:
+    """Generate consecutive sample IDs starting from start_id.
+
+    Parses IDs in the format <prefix>-<NNN> where NNN is a zero-padded numeric
+    suffix. The original padding width is preserved in all generated IDs.
+
+    Args:
+        start_id: Starting sample ID (e.g. '2503-015')
+        count: Number of IDs to generate (>= 1)
+
+    Returns:
+        List of count sample ID strings
+
+    Raises:
+        ValueError: If start_id has no '-' separator, suffix is non-numeric,
+                    count < 1, or the range would overflow the suffix padding.
+    """
+    if count < 1:
+        raise ValueError(f"Count must be at least 1, got {count}.")
+    parts = start_id.rsplit("-", 1)
+    if len(parts) != 2 or not parts[1]:
+        raise ValueError(
+            f"Sample ID '{start_id}' must contain a '-' separator with a "
+            "numeric suffix (e.g. '2503-015')."
+        )
+    prefix, suffix = parts
+    if not suffix.isdigit():
+        raise ValueError(
+            f"Suffix '{suffix}' in '{start_id}' is not numeric. "
+            "Expected format: prefix-NNN (e.g. '2503-015')."
+        )
+    pad_len = len(suffix)
+    start_num = int(suffix)
+    max_num = (10 ** pad_len) - 1
+    if start_num + count - 1 > max_num:
+        raise ValueError(
+            f"Range overflow: '{start_id}' + {count} samples would exceed "
+            f"maximum suffix value {max_num} for {pad_len}-digit padding."
+        )
+    return [
+        f"{prefix}-{str(start_num + i).zfill(pad_len)}" for i in range(count)
+    ]
+
+
+def create_checkout_record(operator_name: str, sample_id: str) -> dict:
+    """Create a checkout log record with the current timestamp.
+
+    Args:
+        operator_name: Name of the operator checking out the sample
+        sample_id: ID of the sample being checked out
+
+    Returns:
+        Dictionary with Timestamp, Operator, SampleID
+    """
+    return {
+        'Timestamp': datetime.datetime.now().strftime(DATE_FORMAT),
+        'Operator': operator_name,
+        'SampleID': sample_id,
+    }
+
+
+def save_checkout_to_csv(
+    records: list, checkout_log_file: str, outputs_folder: str
+) -> tuple[bool, str]:
+    """Append checkout records to the checkout log CSV.
+
+    Args:
+        records: List of checkout record dicts (Timestamp, Operator, SampleID)
+        checkout_log_file: Full path to the checkout log file
+        outputs_folder: Directory to create if it does not exist
+
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
+    if not records:
+        return False, "No checkout records to save."
+
+    os.makedirs(outputs_folder, exist_ok=True)
+    file_exists = os.path.exists(checkout_log_file)
+    fieldnames = ['Timestamp', 'Operator', 'SampleID']
+
+    try:
+        with open(checkout_log_file, 'a', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(
+                csvfile, fieldnames=fieldnames, extrasaction='ignore'
+            )
+            if not file_exists:
+                writer.writeheader()
+            writer.writerows(records)
+        return (
+            True,
+            f"Successfully saved {len(records)} checkout record(s) to "
+            f"{checkout_log_file}."
+        )
+    except Exception as e:
+        return False, f"Could not save checkout log: {e}"
+
+
+def format_checkout_message(record: dict) -> str:
+    """Format a checkout record into a human-readable terminal message.
+
+    Args:
+        record: Checkout record dictionary
+
+    Returns:
+        Formatted message string
+    """
+    return (
+        f"[CHECKOUT] {record['Timestamp']} | "
+        f"Operator: '{record['Operator']}' | "
+        f"Sample: '{record['SampleID']}'"
+    )
