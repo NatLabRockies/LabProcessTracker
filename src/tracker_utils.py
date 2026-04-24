@@ -829,14 +829,10 @@ def save_checkout_to_csv(
     fieldnames = ['Timestamp', 'User', 'SampleID']
 
     # Group records by (year, month) derived from each record's Timestamp
-    now = datetime.datetime.now()
     monthly_groups: dict = {}
     for record in records:
-        try:
-            ts = datetime.datetime.strptime(record['Timestamp'], DATE_FORMAT)
-            key = (ts.year, ts.month)
-        except (ValueError, KeyError):
-            key = (now.year, now.month)
+        ts = datetime.datetime.strptime(record['Timestamp'], DATE_FORMAT)
+        key = (ts.year, ts.month)
         monthly_groups.setdefault(key, []).append(record)
 
     total_written = 0
