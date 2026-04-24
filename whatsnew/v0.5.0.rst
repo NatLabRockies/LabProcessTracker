@@ -19,6 +19,14 @@ Enhancements
 
 Maintenance
 ~~~~~~~~~~~
+* Major refactor and clean up (:pull:`19`):
+  - Remove unused internal helpers ``get_unsaved_count`` and ``is_data_type``.
+  - Simplify ``get_process_color`` and ``get_process_info`` — redundant validity
+    checks removed in favour of ``dict.get`` defaults.
+  - Trim verbose Args/Returns docstrings on trivial utility functions throughout
+    ``tracker_utils.py`` and ``qr_utils.py``.
+  - Remove ``# ===`` visual separator blocks from ``generate_custom_qr_codes.py``
+    and fix ``# --- Error Messages ---`` section header to ``# --- Display Names ---``.
 
 
 
