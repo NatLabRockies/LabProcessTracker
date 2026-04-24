@@ -7,6 +7,8 @@ import os
 # Add src directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+import csv  # noqa: E402
+import datetime  # noqa: E402
 import pytest  # noqa: E402
 import tracker_utils as tu  # noqa: E402
 from tracker_utils import (  # noqa: E402
@@ -581,8 +583,7 @@ class TestCheckout:
         assert record["SampleID"] == "2503-015"
         assert "Timestamp" in record
         # Timestamp must be parseable
-        from datetime import datetime
-        datetime.strptime(record["Timestamp"], tu.DATE_FORMAT)
+        datetime.datetime.strptime(record["Timestamp"], tu.DATE_FORMAT)
 
     def test_checkout_record_no_process_field(self):
         record = tu.create_checkout_record("rdaxini", "2503-015")
@@ -599,12 +600,19 @@ class TestCheckout:
 
     # --- save_checkout_to_csv ---
 
+    def test_get_checkout_log_filename(self):
+        assert tu.get_checkout_log_filename(2026, 4) == "checkout_log_2026-04.csv"
+        assert tu.get_checkout_log_filename(2025, 12) == "checkout_log_2025-12.csv"
+        assert tu.get_checkout_log_filename(2026, 1) == "checkout_log_2026-01.csv"
+
     def test_save_checkout_creates_file_with_header(self, tmp_path):
         records = [tu.create_checkout_record("rdaxini", "2503-015")]
-        log_file = str(tmp_path / "checkout_log.csv")
-        success, msg = tu.save_checkout_to_csv(records, log_file, str(tmp_path))
+        success, msg = tu.save_checkout_to_csv(records, str(tmp_path))
         assert success
-        import csv
+        now = datetime.datetime.now()
+        expected_filename = tu.get_checkout_log_filename(now.year, now.month)
+        log_file = tmp_path / expected_filename
+        assert log_file.exists()
         with open(log_file, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
@@ -613,21 +621,41 @@ class TestCheckout:
         assert rows[0]["User"] == "rdaxini"
 
     def test_save_checkout_appends(self, tmp_path):
-        log_file = str(tmp_path / "checkout_log.csv")
         r1 = [tu.create_checkout_record("rdaxini", "2503-015")]
         r2 = [tu.create_checkout_record("rdaxini", "2503-016")]
-        tu.save_checkout_to_csv(r1, log_file, str(tmp_path))
-        tu.save_checkout_to_csv(r2, log_file, str(tmp_path))
-        import csv
+        tu.save_checkout_to_csv(r1, str(tmp_path))
+        tu.save_checkout_to_csv(r2, str(tmp_path))
+        now = datetime.datetime.now()
+        log_file = tmp_path / tu.get_checkout_log_filename(now.year, now.month)
         with open(log_file, newline="", encoding="utf-8") as f:
             rows = list(csv.DictReader(f))
         assert len(rows) == 2
         assert rows[1]["SampleID"] == "2503-016"
 
     def test_save_checkout_empty_returns_false(self, tmp_path):
-        log_file = str(tmp_path / "checkout_log.csv")
-        success, msg = tu.save_checkout_to_csv([], log_file, str(tmp_path))
+        success, msg = tu.save_checkout_to_csv([], str(tmp_path))
         assert not success
+
+    def test_save_checkout_routes_to_monthly_files(self, tmp_path):
+        """Records with different months are written to separate files."""
+        records = [
+            {'Timestamp': '2026-03-15 10:00:00', 'User': 'rdaxini',
+             'SampleID': '2503-001'},
+            {'Timestamp': '2026-04-02 09:00:00', 'User': 'rdaxini',
+             'SampleID': '2504-001'},
+        ]
+        success, msg = tu.save_checkout_to_csv(records, str(tmp_path))
+        assert success
+        mar_file = tmp_path / "checkout_log_2026-03.csv"
+        apr_file = tmp_path / "checkout_log_2026-04.csv"
+        assert mar_file.exists()
+        assert apr_file.exists()
+        with open(mar_file, newline="", encoding="utf-8") as f:
+            mar_rows = list(csv.DictReader(f))
+        with open(apr_file, newline="", encoding="utf-8") as f:
+            apr_rows = list(csv.DictReader(f))
+        assert len(mar_rows) == 1 and mar_rows[0]["SampleID"] == "2503-001"
+        assert len(apr_rows) == 1 and apr_rows[0]["SampleID"] == "2504-001"
 
     def test_get_output_dir_invalid_process(self):
         """Test output dir for invalid process uses quarantine folder."""

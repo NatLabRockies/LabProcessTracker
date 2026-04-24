@@ -794,15 +794,30 @@ def create_checkout_record(username: str, sample_id: str) -> dict:
     }
 
 
+def get_checkout_log_filename(year: int, month: int) -> str:
+    """Get the checkout log filename for a given year and month.
+
+    Args:
+        year: Four-digit year (e.g., 2026)
+        month: Month number (1-12)
+
+    Returns:
+        Filename string like 'checkout_log_2026-04.csv'
+    """
+    return f"checkout_log_{year:04d}-{month:02d}.csv"
+
+
 def save_checkout_to_csv(
-    records: list, checkout_log_file: str, outputs_folder: str
+    records: list, outputs_folder: str
 ) -> tuple[bool, str]:
-    """Append checkout records to the checkout log CSV.
+    """Append checkout records to monthly checkout log CSV files.
+
+    Records are grouped by the month in their Timestamp and written to
+    the appropriate monthly file (e.g., checkout_log_2026-04.csv).
 
     Args:
         records: List of checkout record dicts (Timestamp, User, SampleID)
-        checkout_log_file: Full path to the checkout log file
-        outputs_folder: Directory to create if it does not exist
+        outputs_folder: Directory to write monthly log files into
 
     Returns:
         Tuple of (success: bool, message: str)
@@ -811,21 +826,35 @@ def save_checkout_to_csv(
         return False, "No checkout records to save."
 
     os.makedirs(outputs_folder, exist_ok=True)
-    file_exists = os.path.exists(checkout_log_file)
     fieldnames = ['Timestamp', 'User', 'SampleID']
 
+    # Group records by (year, month) derived from each record's Timestamp
+    monthly_groups: dict = {}
+    for record in records:
+        ts = datetime.datetime.strptime(record['Timestamp'], DATE_FORMAT)
+        key = (ts.year, ts.month)
+        monthly_groups.setdefault(key, []).append(record)
+
+    total_written = 0
+    files_written = []
     try:
-        with open(checkout_log_file, 'a', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(
-                csvfile, fieldnames=fieldnames, extrasaction='ignore'
-            )
-            if not file_exists:
-                writer.writeheader()
-            writer.writerows(records)
+        for (year, month), month_records in monthly_groups.items():
+            filename = get_checkout_log_filename(year, month)
+            filepath = os.path.join(outputs_folder, filename)
+            file_exists = os.path.exists(filepath)
+            with open(filepath, 'a', newline='', encoding='utf-8') as csvfile:
+                writer = csv.DictWriter(
+                    csvfile, fieldnames=fieldnames, extrasaction='ignore'
+                )
+                if not file_exists:
+                    writer.writeheader()
+                writer.writerows(month_records)
+            total_written += len(month_records)
+            files_written.append(filename)
         return (
             True,
-            f"Successfully saved {len(records)} checkout record(s) to "
-            f"{checkout_log_file}."
+            f"Successfully saved {total_written} checkout record(s) to "
+            f"{', '.join(files_written)}."
         )
     except Exception as e:
         return False, f"Could not save checkout log: {e}"

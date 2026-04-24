@@ -28,7 +28,7 @@ Testing
 
 Documentation
 ~~~~~~~~~~~~~
-
+* Checkout scan log splits by month (:issue:`17`, :pull:`18`)
 
 
 Contributors

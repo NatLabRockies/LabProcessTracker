@@ -279,11 +279,8 @@ class ProcessTrackerGUI(tk.Tk):
         if not self.checkout_records:
             self.print_terminal("[INFO] No checkout records to save.")
             return
-        checkout_log_path = os.path.join(
-            OUTPUTS_FOLDER, tu.CHECKOUT_LOG_FILENAME
-        )
         success, message = tu.save_checkout_to_csv(
-            self.checkout_records, checkout_log_path, OUTPUTS_FOLDER
+            self.checkout_records, OUTPUTS_FOLDER
         )
         if success:
             self.print_terminal(f"[SUCCESS] {message}")
