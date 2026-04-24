@@ -830,7 +830,7 @@ def save_checkout_to_csv(
 
     # Group records by (year, month) derived from each record's Timestamp
     now = datetime.datetime.now()
-    monthly_groups: dict[tuple[int, int], list] = {}
+    monthly_groups: dict = {}
     for record in records:
         try:
             ts = datetime.datetime.strptime(record['Timestamp'], DATE_FORMAT)

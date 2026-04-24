@@ -639,8 +639,10 @@ class TestCheckout:
     def test_save_checkout_routes_to_monthly_files(self, tmp_path):
         """Records with different months are written to separate files."""
         records = [
-            {'Timestamp': '2026-03-15 10:00:00', 'User': 'rdaxini', 'SampleID': '2503-001'},
-            {'Timestamp': '2026-04-02 09:00:00', 'User': 'rdaxini', 'SampleID': '2504-001'},
+            {'Timestamp': '2026-03-15 10:00:00', 'User': 'rdaxini',
+             'SampleID': '2503-001'},
+            {'Timestamp': '2026-04-02 09:00:00', 'User': 'rdaxini',
+             'SampleID': '2504-001'},
         ]
         success, msg = tu.save_checkout_to_csv(records, str(tmp_path))
         assert success
