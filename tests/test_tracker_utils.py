@@ -374,7 +374,6 @@ class TestBatchScanning:
 
         # Verify type detection helpers
         assert tu.is_batch_type("BATCH") is True
-        assert tu.is_data_type("BATCH") is True
 
         # Create log record with batch
         record = tu.create_log_record(

@@ -1,9 +1,7 @@
 """
 Generate custom QR codes for the process tracker application.
 
-This script provides an easy template for generating your own QR codes.
-Simply edit the lists below and run the script to generate labeled QR code images.
-
+Edit the lists in main() and run the script to generate labeled QR code images.
 For testing edge cases, see generate_test_qr_codes.py
 """
 from pathlib import Path
@@ -17,10 +15,6 @@ def main():
     output_dir.mkdir(exist_ok=True)
 
     print(f"Generating CUSTOM QR codes in: {output_dir}\n")
-
-    # ========================================================================
-    # EDIT BELOW THIS LINE TO GENERATE YOUR CUSTOM QR CODES
-    # ========================================================================
 
     # --- SAMPLES ---
     # Sample format: S%:YYMM-NN where YY=year, MM=month, NN=sample number
@@ -61,10 +55,6 @@ def main():
         # ("EXIT", "Command: EXIT", "command_EXIT.png"),
         # ("RESET", "Command: RESET", "command_RESET.png"),
     ]
-
-    # ========================================================================
-    # DO NOT EDIT BELOW THIS LINE (unless you know what you're doing)
-    # ========================================================================
 
     total_count = 0
 
