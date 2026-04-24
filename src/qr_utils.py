@@ -8,17 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 def generate_qr_with_label(data, label, filename, output_dir):
-    """Generate a QR code image with a label underneath and save it.
-
-    Args:
-        data: The data to encode in the QR code
-        label: Text label to display below the QR code
-        filename: Output filename (e.g., 'sample_001.png')
-        output_dir: Directory path to save the file
-
-    Returns:
-        None - saves the QR code image to disk
-    """
+    """Generate a QR code image with a label underneath and save it to output_dir."""
     # Generate QR code with minimal border
     qr = qrcode.QRCode(
         version=1,
