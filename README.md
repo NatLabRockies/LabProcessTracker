@@ -24,7 +24,7 @@ Navigate to the `exe/dist` folder and double-click the executable:
 python src/process_tracker_gui.py
 ```
 
-No additional installations are required.
+No additional installations are required beyond Python.
 
 ## How to use
 **Sample/Process Tracking:**
@@ -53,8 +53,8 @@ No additional installations are required.
 - You can skip individual positions or skip all remaining positions
 - Once all positions are filled or skipped, scan a single process QR code to associate
   and log all samples with that process
-- Repeat for as many trays as you have, logging sample positions and associating a process
-  with each tray of samples
+- Repeat for as many trays as you have, logging sample positions and associating a
+  process with each tray of samples
 - Scan the load QR code to log the time all trays are loaded
 
 **Substrate Checkout:**
@@ -87,10 +87,8 @@ No additional installations are required.
 
 **Batch vs Sample Logging:**
 - **Sample scanning:** Used to log individual samples processed through a tool
-- **Batch scanning:** Used to log that an entire batch of samples processed
-  - The batch scan records that the whole batch went through this specific process
-  - CSV logs contain separate `SampleID` and `BatchID` columns
-  - Only one is populated per scan (mutually exclusive)
+- **Batch scanning:** Used to log that an entire batch went through a process; records a
+  `BatchID` instead of a `SampleID` (mutually exclusive per scan)
 
 **Process Validation & Quarantine Logging:**
 
@@ -108,9 +106,6 @@ When you scan a process QR code (`P%:process_name`):
   - You can continue logging samples for this process, but records are kept separate
     from approved processes.
   - **Contact Rajiv.Daxini@nlr.gov** to request adding new processes to the database.
-
-The quarantine logic allows rapid deployment on new systems without blocking workflow,
-while ensuring unapproved processes are tracked and not mixed with approved logs.
 
 ## Output
 
@@ -144,8 +139,7 @@ No external dependencies required unless using optional features or development 
 
 ## For Developers
 
-If you want to install and run the repository directly (for development or
-customization), you can install it using pip:
+Install the package locally with pip:
 
 ```bash
 pip install .
@@ -183,7 +177,6 @@ The executable will be created in `exe/dist/` directory:
 To run the test suite:
 
 ```bash
-# Using the test runner script
 python scripts/run_tests.py
 
 # Or directly with pytest
@@ -196,12 +189,8 @@ pytest tests/ -v --cov --cov-report=term-missing --cov-report=html
 **Note:** You need to install the test dependencies first: `pip install .[test]`
 
 The test suite covers `tracker_utils.py` and `populate_uwl.py`. The GUI is
-validated through manual testing and usage.
-
-## Test Coverage
-
-Test coverage reports are generated in `htmlcov/` after running tests.
-See the terminal output for summary and open `htmlcov/index.html` for details.
+validated through manual testing and usage. Coverage reports are generated in
+`htmlcov/` — open `htmlcov/index.html` for details.
 
 ## Generating QR Codes
 
