@@ -53,9 +53,9 @@ No additional installations are required.
 - You can skip individual positions or skip all remaining positions
 - Once all positions are filled or skipped, scan a single process QR code to associate
   and log all samples with that process
-- Repeat for as many trays you have, logging sample positions and associating a process
+- Repeat for as many trays as you have, logging sample positions and associating a process
   with each tray of samples
-- Scan the load QR code to log time time all trays are loaded
+- Scan the load QR code to log the time all trays are loaded
 
 **Substrate Checkout:**
 - Click the **`CHECKOUT`** button to enter checkout mode
@@ -208,7 +208,7 @@ See the terminal output for summary and open `htmlcov/index.html` for details.
 Two scripts are provided for QR code generation:
 
 - **`scripts/generate_test_qr_codes.py`** - Create test set with valid/invalid examples
-- **`scripts/generate_custom_qr_codes.py`** - Template for generating your own QR codes
+- **`scripts/generate_custom_qr_codes.py`** - Template for generating custom QR codes
 
 Run either script to generate labeled QR code images:
 ```bash
