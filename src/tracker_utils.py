@@ -552,7 +552,7 @@ def create_checkout_record(username: str, sample_id: str) -> dict:
 
 def get_checkout_log_filename(year: int, month: int) -> str:
     """Return monthly checkout log filename, e.g. checkout_log_2026-04.csv."""
-    return f"checkout_log_{year:04d}-{month:02d}.csv"
+    return f"checkout_log_{year:04d}-{month:02d}.csv"  # noqa: E231
 
 
 def save_checkout_to_csv(
