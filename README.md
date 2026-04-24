@@ -63,7 +63,7 @@ No additional installations are required.
   consecutively-numbered samples being checked out (e.g. `50` for samples `2503-015`
   through `2503-064`)
 - Click **`EXIT CHECKOUT`** (or press `SAVE`) to write the records to
-  `checkout_log.csv` and return to normal tracking mode
+  `checkout_log_YYYY-MM.csv` and return to normal tracking mode
 - `UNDO` removes the last checkout record while in checkout mode
 
  **Command buttons:**
@@ -118,7 +118,8 @@ while ensuring unapproved processes are tracked and not mixed with approved logs
   `scan_log_bd8_xrd.csv`)
 - **Multi-process sessions:** When you switch between different processes, the
   application automatically saves records to the appropriate file for each process
-- **Checkout log:** Checkout records are appended to a separate `checkout_log.csv`
+- **Checkout log:** Checkout records are appended to a monthly file
+  (e.g., `checkout_log_2026-04.csv`)
 - Default output locations:
   - **Running from source:** `outputs/` folder in the project directory
   - **Running as executable:** `~/Documents/process_tracking_outputs/`
