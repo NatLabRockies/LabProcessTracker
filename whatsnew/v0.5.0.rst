@@ -1,8 +1,7 @@
 .. _whatsnew050:
 
 v0.5.0 (April 2026)
-------------------------
-
+-------------------
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
@@ -13,7 +12,7 @@ Breaking Changes
 
 Enhancements
 ~~~~~~~~~~~~
-* Add new checkout feature to allow users to check out substrates to track their usage.
+* Add new checkout feature to allow users to checkout substrates to track their usage.
   (:issue:`13`, :pull:`14`)
 
 
@@ -27,11 +26,6 @@ Maintenance
     ``tracker_utils.py`` and ``qr_utils.py``.
   - Remove ``# ===`` visual separator blocks from ``generate_custom_qr_codes.py``
     and fix ``# --- Error Messages ---`` section header to ``# --- Display Names ---``.
-
-
-
-Testing
-~~~~~~~
 
 
 Documentation
