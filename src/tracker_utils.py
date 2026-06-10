@@ -103,56 +103,20 @@ load_process_data()
 load_tray_data()
 
 
-def get_unapproved_log_filename(process_name: str) -> str:
-    """Generate the quarantine log filename for unapproved processes."""
-    return f"scan_log_UNAPPROVED_{process_name}.csv"
-
-
-def get_unapproved_output_dir(base_outputs: str) -> str:
-    """Get the quarantine folder for unapproved process logs."""
-    return os.path.join(base_outputs, UNAPPROVED_FOLDER_NAME)
-
-
-def is_process_valid(process_name: str) -> bool:
-    """Check if a process is valid (exists in JSON)."""
-    return process_name in PROCESS_COLORS
-
-
-def get_process_color(process_name: str) -> str:
-    """Get color for process, default if invalid."""
-    return PROCESS_COLORS.get(process_name, DEFAULT_PROCESS_COLOR)
-
-
-def get_process_info(process_name: str) -> dict:
-    """Get info for process, empty dict if invalid."""
-    return PROCESS_INFO.get(process_name, {})
-
-
 def get_log_filename(process_name: str, valid: bool = True) -> str:
-    """Get log filename, quarantine if invalid."""
-    if valid:
-        return f"scan_log_{process_name}.csv"
-    else:
-        return get_unapproved_log_filename(process_name)
+    """Return scan log filename; quarantined name if process is unapproved."""
+    return (
+        f"scan_log_{process_name}.csv"
+        if valid
+        else f"scan_log_UNAPPROVED_{process_name}.csv"
+    )
 
 
 def get_output_dir(process_name: str, base_outputs: str) -> str:
-    """Get output dir, quarantine if invalid."""
-    if is_process_valid(process_name):
+    """Return base_outputs for valid processes, else the unapproved subfolder."""
+    if process_name in PROCESS_COLORS:
         return base_outputs
-    else:
-        return get_unapproved_output_dir(base_outputs)
-
-
-def is_batch_operation_process(process_name: str) -> bool:
-    """Return True if the process is marked as a batch operation."""
-    info = PROCESS_INFO.get(process_name, {})
-    return info.get('is_batch_operation', False)
-
-
-def generate_session_id() -> str:
-    """Generate a unique session ID (format YYYYMMDD_HHMMSS)."""
-    return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    return os.path.join(base_outputs, UNAPPROVED_FOLDER_NAME)
 
 
 # --- Output Directory Logic ---
@@ -314,73 +278,28 @@ def validate_username(name: str) -> tuple[bool, str]:
 
 
 # --- Session State Helpers ---
-def _format_data_id(record: dict) -> str:
-    """Return formatted batch or sample ID string for display."""
-    if record.get('BatchID'):
-        return f"Batch: '{record['BatchID']}'"
-    else:
-        return f"Sample: '{record['SampleID']}'"
-
-
 def format_log_message(record: dict) -> str:
     """Format a log record into a human-readable terminal message."""
     msg = f"[LOGGED] {record['Timestamp']} | User: '{record['User']}'"
 
-    # Add tray info if present
     if 'TrayID' in record and 'Position' in record:
         msg += f" | Tray: '{record['TrayID']}' | Pos: '{record['Position']}'"
 
-    # Add batch or sample, then process
-    msg += f" | {_format_data_id(record)} | Process: '{record['ProcessName']}'"
+    data_id = (
+        f"Batch: '{record['BatchID']}'" if record.get('BatchID')
+        else f"Sample: '{record['SampleID']}'"
+    )
+    msg += f" | {data_id} | Process: '{record['ProcessName']}'"
 
-    # Add session ID if present
     if 'SessionID' in record:
         msg += f" | Session: {record['SessionID']}"
 
     return msg
 
 
-def format_undo_message(record: dict) -> str:
-    """Format an undo message for a log record."""
-    base_msg = (
-        f"[UNDO] Removed last scan: {record['Timestamp']} | "
-        f"Process: '{record['ProcessName']}' | "
-    )
-    return base_msg + _format_data_id(record)
-
-
 def format_legacy_sample_warning(sample_id: str) -> str:
     """Format a warning message for legacy sample format detection."""
     return f"[WARNING] Legacy sample format detected: {sample_id}"
-
-
-def should_auto_save_on_process_switch(
-    current_tool: str, new_process: str, has_records: bool
-) -> bool:
-    """Return True if switching to a different process with unsaved records."""
-    return (
-        current_tool is not None
-        and new_process != current_tool
-        and has_records
-    )
-
-
-def format_auto_save_message(count: int, filename: str) -> str:
-    """Format an auto-save notification message."""
-    return f"[AUTO-SAVE] Saved {count} record(s) to {filename}"
-
-
-# --- Display Names ---
-def get_process_display_name(abbreviated_name: str) -> str:
-    """Return human-readable process name, or abbreviated_name if not found."""
-    info = PROCESS_INFO.get(abbreviated_name, {})
-    return info.get('process', abbreviated_name)
-
-
-def get_tool_display_name(abbreviated_name: str) -> str:
-    """Return human-readable tool name, or abbreviated_name if not found."""
-    info = PROCESS_INFO.get(abbreviated_name, {})
-    return info.get('tool', abbreviated_name)
 
 
 def validate_and_normalize_process(
@@ -404,30 +323,9 @@ def validate_and_normalize_process(
     return True, normalized, ""
 
 
-def is_command(qr_text: str) -> tuple[bool, str | None]:
-    """Return (True, command_type) if input is a command, else (False, None)."""
-    qr_upper = qr_text.upper()
-
-    if qr_upper == EXIT_CMD:
-        return True, EXIT_CMD
-    elif qr_upper == SAVE_CMD:
-        return True, SAVE_CMD
-    elif qr_upper == UNDO_CMD:
-        return True, UNDO_CMD
-    elif qr_upper == RESET_USER_CMD:
-        return True, RESET_USER_CMD
-    else:
-        return False, None
-
-
 def is_sample_type(scan_type: str) -> bool:
     """Return True if scan_type is SAMPLE or SAMPLE_LEGACY."""
     return scan_type in ("SAMPLE", "SAMPLE_LEGACY")
-
-
-def is_batch_type(scan_type: str) -> bool:
-    """Return True if scan_type is BATCH."""
-    return scan_type == "BATCH"
 
 
 # --- Tray Mode Logic ---
@@ -449,10 +347,8 @@ def should_accept_scan_in_tray_mode(
 ) -> tuple[bool, str]:
     """Return (True, '') if the scan type is valid for the current tray state."""
     if data_type in ("SAMPLE", "SAMPLE_LEGACY"):
-        # Always accept samples in tray mode
         return True, ""
     elif data_type == "PROCESS":
-        # Only accept process if all positions are filled/skipped
         return validate_tray_ready_for_process(
             tray_position_index, total_positions
         )
@@ -468,42 +364,17 @@ def create_tray_batch_records(
     username: str,
     tray_id: str,
     tray_samples: list,
-    process_name: str
+    process_name: str,
+    session_id: str = "",
 ) -> list:
     """Create log records for all samples in a single tray."""
-    records = []
-    for entry in tray_samples:
-        record = create_log_record_with_tray(
-            username,
-            tray_id,
-            entry["position"],
-            entry["sample_id"],
-            process_name
+    return [
+        create_log_record_with_tray(
+            username, tray_id, entry["position"], entry["sample_id"],
+            process_name, session_id,
         )
-        records.append(record)
-    return records
-
-
-def create_batch_operation_records(
-    username: str,
-    all_tray_data: dict,
-    process_name: str,
-    session_id: str
-) -> list:
-    """Create log records for all samples across multiple trays in a batch session."""
-    records = []
-    for tray_id, samples_list in all_tray_data.items():
-        for entry in samples_list:
-            record = create_log_record_with_tray(
-                username,
-                tray_id,
-                entry["position"],
-                entry["sample_id"],
-                process_name,
-                session_id
-            )
-            records.append(record)
-    return records
+        for entry in tray_samples
+    ]
 
 
 # --- Checkout Logic ---
@@ -539,15 +410,6 @@ def generate_consecutive_sample_ids(start_id: str, count: int) -> list[str]:
     return [
         f"{prefix}-{str(start_num + i).zfill(pad_len)}" for i in range(count)
     ]
-
-
-def create_checkout_record(username: str, sample_id: str) -> dict:
-    """Create a checkout record dict with the current timestamp."""
-    return {
-        'Timestamp': datetime.datetime.now().strftime(DATE_FORMAT),
-        'User': username,
-        'SampleID': sample_id,
-    }
 
 
 def get_checkout_log_filename(year: int, month: int) -> str:
@@ -595,12 +457,3 @@ def save_checkout_to_csv(
         )
     except Exception as e:
         return False, f"Could not save checkout log: {e}"
-
-
-def format_checkout_message(record: dict) -> str:
-    """Format a checkout record into a human-readable terminal message."""
-    return (
-        f"[CHECKOUT] {record['Timestamp']} | "
-        f"User: '{record['User']}' | "
-        f"Sample: '{record['SampleID']}'"
-    )

@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
+import datetime
 import os
 import tracker_utils as tu
 from gui_components import TrayPositionDialog, BulkCheckoutDialog, BG_COLOR_CHECKOUT
@@ -9,6 +10,16 @@ OUTPUTS_FOLDER = tu.get_default_output_dir()
 # Font size constants
 FONT_SIZE_LARGE = 26
 FONT_SIZE_MEDIUM = 22
+
+# Sample block: (text template using {info}, font size)
+_SAMPLE_BLOCK = {
+    "SAMPLE": ("Sample\n{info}", FONT_SIZE_MEDIUM),
+    "BATCH": ("Batch\n{info}", FONT_SIZE_MEDIUM),
+    "ERROR": ("ERROR\n{info}", FONT_SIZE_MEDIUM),
+    "ALERT": ("{info}", FONT_SIZE_LARGE),
+    "UNDO": ("Last scan undone", FONT_SIZE_LARGE),
+    "RESET": ("No sample", FONT_SIZE_LARGE),
+}
 
 
 # --- GUI Class ---
@@ -42,7 +53,6 @@ class ProcessTrackerGUI(tk.Tk):
 
         self.create_widgets()
 
-        # Handle window close event (X button)
         self.protocol("WM_DELETE_WINDOW", self.exit_app)
 
     def create_widgets(self):
@@ -144,7 +154,7 @@ class ProcessTrackerGUI(tk.Tk):
             takefocus=0
         )
         self.terminal.pack(pady=5, fill=tk.BOTH, expand=True)
-        # Prevent focus and selection in the activity log
+        # Block focus/selection in the activity log
         self.terminal.bind(
             "<1>", lambda e: (self.qr_entry.focus_set(), "break")
         )
@@ -231,8 +241,10 @@ class ProcessTrackerGUI(tk.Tk):
             fg=self._checkout_btn_default_fg,
         )
         if self.current_process:
-            valid = tu.is_process_valid(self.current_process)
-            self.update_process_block(self.current_process, valid=valid)
+            self.update_process_block(
+                self.current_process,
+                valid=self.current_process in tu.PROCESS_COLORS,
+            )
         else:
             self.update_process_block(None)
         self.print_terminal("[CHECKOUT] Checkout mode exited.")
@@ -250,7 +262,6 @@ class ProcessTrackerGUI(tk.Tk):
 
     def _confirm_checkout(self, first_sample_id: str, count: int):
         """Create checkout records for first_sample_id plus count-1 consecutives."""
-        assert self.username is not None
         try:
             sample_ids = tu.generate_consecutive_sample_ids(
                 first_sample_id, count
@@ -258,13 +269,18 @@ class ProcessTrackerGUI(tk.Tk):
         except ValueError as exc:
             self.print_terminal(f"[CHECKOUT ERROR] {exc}")
             return
+        now = datetime.datetime.now().strftime(tu.DATE_FORMAT)
         for sid in sample_ids:
-            self.checkout_records.append(
-                tu.create_checkout_record(self.username, sid)
-            )
+            self.checkout_records.append({
+                'Timestamp': now,
+                'User': self.username,
+                'SampleID': sid,
+            })
         if count == 1:
+            last = self.checkout_records[-1]
             self.print_terminal(
-                tu.format_checkout_message(self.checkout_records[-1])
+                f"[CHECKOUT] {last['Timestamp']} | "
+                f"User: '{last['User']}' | Sample: '{last['SampleID']}'"
             )
         else:
             self.print_terminal(
@@ -304,7 +320,6 @@ class ProcessTrackerGUI(tk.Tk):
             self.tray_dialog.update_position(position)
             self.tray_dialog.lift()
 
-        # Always refocus QR entry after showing/updating dialog
         self.qr_entry.focus_set()
 
     def close_tray_dialog(self):
@@ -312,6 +327,29 @@ class ProcessTrackerGUI(tk.Tk):
         if self.tray_dialog and self.tray_dialog.winfo_exists():
             self.tray_dialog.close()
             self.tray_dialog = None
+
+    def _finish_current_tray(self):
+        """Mark current tray complete and print session totals."""
+        self.all_trays_in_session.append(self.current_tray_id)
+        self.close_tray_dialog()
+
+        sample_count = len(self.tray_samples[self.current_tray_id])
+        tray_count = len(self.all_trays_in_session)
+        total_samples = sum(
+            len(self.tray_samples[tray_id])
+            for tray_id in self.all_trays_in_session
+        )
+
+        self.print_terminal(
+            f"[TRAY] Tray {self.current_tray_id} complete with "
+            f"{sample_count} sample(s). "
+            f"Total: {tray_count} tray(s), "
+            f"{total_samples} sample(s) in session."
+        )
+        self.print_terminal(
+            "[TRAY] Scan another TRAY to add to session, "
+            "or scan PROCESS QR code."
+        )
 
     def skip_current_position(self):
         """Skip the current position and move to next."""
@@ -326,28 +364,7 @@ class ProcessTrackerGUI(tk.Tk):
                     self.current_tray_id, self.tray_positions, next_pos
                 )
             else:
-                # Mark tray as complete
-                self.all_trays_in_session.append(self.current_tray_id)
-                self.close_tray_dialog()
-
-                # Calculate counts for display
-                sample_count = len(self.tray_samples[self.current_tray_id])
-                tray_count = len(self.all_trays_in_session)
-                total_samples = sum(
-                    len(self.tray_samples[tray_id])
-                    for tray_id in self.all_trays_in_session
-                )
-
-                self.print_terminal(
-                    f"[TRAY] Tray {self.current_tray_id} complete with "
-                    f"{sample_count} sample(s). "
-                    f"Total: {tray_count} tray(s), "
-                    f"{total_samples} sample(s) in session."
-                )
-                self.print_terminal(
-                    "[TRAY] Scan another TRAY to add to session, "
-                    "or scan PROCESS QR code."
-                )
+                self._finish_current_tray()
 
     def skip_all_remaining_positions(self):
         """Skip all remaining tray positions and allow process scanning."""
@@ -356,59 +373,28 @@ class ProcessTrackerGUI(tk.Tk):
             skipped = len(self.tray_positions) - self.tray_position_index
             self.print_terminal(f"[TRAY] Skipped {skipped} remaining position(s).")
             self.tray_position_index = len(self.tray_positions)
-
-            # Mark tray as complete
-            self.all_trays_in_session.append(self.current_tray_id)
-            self.close_tray_dialog()
-
-            # Calculate counts for display
-            sample_count = len(self.tray_samples[self.current_tray_id])
-            tray_count = len(self.all_trays_in_session)
-            total_samples = sum(
-                len(self.tray_samples[tray_id])
-                for tray_id in self.all_trays_in_session
-            )
-
-            self.print_terminal(
-                f"[TRAY] Tray {self.current_tray_id} complete with "
-                f"{sample_count} sample(s). "
-                f"Total: {tray_count} tray(s), "
-                f"{total_samples} sample(s) in session."
-            )
-            self.print_terminal(
-                "[TRAY] Scan another TRAY to add to session, "
-                "or scan PROCESS QR code."
-            )
+            self._finish_current_tray()
 
     def handle_scan(self):
         if not self.username:
             self.print_terminal("[ERROR] Please enter user name first.")
             return
-        # Type assertion: username is not None after check
-        assert self.username is not None
         qr_text = self.qr_entry.get().strip()
         self.qr_entry.delete(0, tk.END)
         if not qr_text:
             return
 
-        # Check if input is a command
-        is_cmd, cmd_type = tu.is_command(qr_text)
+        cmds = {
+            tu.EXIT_CMD: self.exit_app,
+            tu.SAVE_CMD: self.save_log,
+            tu.UNDO_CMD: self.undo_last_scan,
+            tu.RESET_USER_CMD: self.reset_user,
+        }
+        cmd = cmds.get(qr_text.upper())
+        if cmd:
+            cmd()
+            return
 
-        if is_cmd:
-            if cmd_type == tu.EXIT_CMD:
-                self.exit_app()
-                return
-            elif cmd_type == tu.SAVE_CMD:
-                self.save_log()
-                return
-            elif cmd_type == tu.UNDO_CMD:
-                self.undo_last_scan()
-                return
-            elif cmd_type == tu.RESET_USER_CMD:
-                self.reset_user()
-                return
-
-        # Parse input
         data_type, data_id = tu.parse_input(qr_text)
         if not data_type:
             self.print_terminal(
@@ -416,9 +402,6 @@ class ProcessTrackerGUI(tk.Tk):
                 "Use 'P%:Name', 'S%:ID', 'B%:ID', or 'T%:TrayID'."
             )
             return
-
-        # Type assertion: if data_type is not None, data_id is also not None
-        assert data_id is not None
 
         # --- Checkout Mode ---
         if self.checkout_mode:
@@ -439,7 +422,6 @@ class ProcessTrackerGUI(tk.Tk):
                 self.print_terminal(f"[ERROR] Unknown tray ID: {tray_id}")
                 return
 
-            # Check if starting new tray while current tray incomplete
             if self.tray_mode and self.tray_position_index < len(self.tray_positions):
                 self.print_terminal(
                     "[ERROR] Complete or skip all positions in current tray "
@@ -447,22 +429,19 @@ class ProcessTrackerGUI(tk.Tk):
                 )
                 return
 
-            # Initialize session on first tray
             if not self.tray_mode or len(self.all_trays_in_session) == 0:
-                self.session_id = tu.generate_session_id()
+                self.session_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 self.print_terminal(
                     f"[SESSION] Started new multi-tray session: "
                     f"{self.session_id}"
                 )
 
-            # Set up new tray
             self.tray_mode = True
             self.current_tray_id = tray_id
             self.tray_positions = layout
-            self.tray_samples[tray_id] = []  # Initialize list for this tray
+            self.tray_samples[tray_id] = []
             self.tray_position_index = 0
 
-            # Show dialog with grid
             self.show_tray_dialog(tray_id, layout, self.tray_positions[0])
 
             tray_num = len(self.all_trays_in_session) + 1
@@ -544,52 +523,46 @@ class ProcessTrackerGUI(tk.Tk):
                 return
 
             elif data_type == "PROCESS":
-                # Check if this is a batch operation process
                 is_valid, normalized_process, error_msg = (
                     tu.validate_and_normalize_process(data_id)
                 )
                 if not is_valid:
                     self.print_terminal(error_msg)
 
-                is_batch_op = tu.is_batch_operation_process(normalized_process)
+                proc_info = tu.PROCESS_INFO.get(normalized_process, {})
+                is_batch_op = proc_info.get('is_batch_operation', False)
 
                 if is_batch_op:
-                    # Batch operation - apply to ALL trays in session
                     if not self.all_trays_in_session:
                         self.print_terminal(
                             "[ERROR] No completed trays in session for batch operation."
                         )
                         return
-                    # Type assertion: session_id is set when tray mode is active
-                    assert self.session_id is not None
-                    # Set process info
                     self.current_process = normalized_process
                     self.tool_process = normalized_process
                     self.outputs_folder = tu.get_output_dir(
                         normalized_process, OUTPUTS_FOLDER
                     )
-                    valid = tu.is_process_valid(normalized_process)
+                    valid = normalized_process in tu.PROCESS_COLORS
                     self.log_file = os.path.join(
                         self.outputs_folder,
                         tu.get_log_filename(self.tool_process, valid=valid)
                     )
-                    tool_display_name = tu.get_tool_display_name(
-                        self.tool_process
+                    tool_display_name = proc_info.get(
+                        'tool', self.tool_process
                     )
-                    process_display_name = tu.get_process_display_name(
-                        self.current_process
+                    process_display_name = proc_info.get(
+                        'process', self.current_process
                     )
 
-                    # Create batch operation records for all trays
-                    batch_records = tu.create_batch_operation_records(
-                        self.username,
-                        self.tray_samples,
-                        self.current_process,
-                        self.session_id
-                    )
+                    batch_records = []
+                    for tray_id, samples in self.tray_samples.items():
+                        batch_records.extend(tu.create_tray_batch_records(
+                            self.username, tray_id, samples,
+                            self.current_process, self.session_id,
+                        ))
                     self.log_records.extend(batch_records)
 
-                    # Log each record
                     for record in batch_records:
                         self.print_terminal(tu.format_log_message(record))
 
@@ -601,7 +574,6 @@ class ProcessTrackerGUI(tk.Tk):
                         f"Session: {self.session_id}"
                     )
 
-                    # End multi-tray session
                     self.tray_mode = False
                     self.current_tray_id = None
                     self.tray_positions = []
@@ -619,8 +591,6 @@ class ProcessTrackerGUI(tk.Tk):
                     self.update_process_block(self.current_process, valid=valid)
 
                 else:
-                    # Regular process - apply to current tray only
-                    # Mark current tray as complete if it has samples
                     if (
                         self.current_tray_id and
                         self.current_tray_id not in self.all_trays_in_session and
@@ -640,17 +610,15 @@ class ProcessTrackerGUI(tk.Tk):
                     self.outputs_folder = tu.get_output_dir(
                         normalized_process, OUTPUTS_FOLDER
                     )
-                    valid = tu.is_process_valid(normalized_process)
+                    valid = normalized_process in tu.PROCESS_COLORS
                     self.log_file = os.path.join(
                         self.outputs_folder,
                         tu.get_log_filename(self.tool_process, valid=valid)
                     )
-                    tool_display_name = tu.get_tool_display_name(self.tool_process)
+                    tool_display_name = proc_info.get(
+                        'tool', self.tool_process
+                    )
 
-                    # Type assertion: current_tray_id is set in tray mode
-                    assert self.current_tray_id is not None
-
-                    # Log samples from current tray only
                     current_tray_samples = self.tray_samples[self.current_tray_id]
                     batch_records = tu.create_tray_batch_records(
                         self.username,
@@ -677,7 +645,6 @@ class ProcessTrackerGUI(tk.Tk):
                         fg="orange" if not valid else "gray"
                     )
                     self.update_process_block(self.current_process, valid=valid)
-                    # Stay in tray mode for next tray
                 return
 
         # --- Normal Mode (no tray) ---
@@ -686,16 +653,11 @@ class ProcessTrackerGUI(tk.Tk):
                 tu.validate_and_normalize_process(data_id)
             )
 
-            # Auto-save if switching processes
-            # Type check: ensure tool_process is not None
-            if self.tool_process is not None and tu.should_auto_save_on_process_switch(
-                self.tool_process,
-                normalized_process,
-                len(self.log_records) > 0
+            if (
+                self.tool_process is not None
+                and normalized_process != self.tool_process
+                and self.log_records
             ):
-                # Type assertion: log_file set when tool_process is set
-                assert self.log_file is not None
-
                 record_count = len(self.log_records)
                 old_log_file = os.path.basename(self.log_file)
                 success, _ = tu.save_log_to_csv(
@@ -706,44 +668,36 @@ class ProcessTrackerGUI(tk.Tk):
                 if success:
                     self.log_records.clear()
                     self.print_terminal(
-                        tu.format_auto_save_message(
-                            record_count, old_log_file
-                        )
+                        f"[AUTO-SAVE] Saved {record_count} record(s) to "
+                        f"{old_log_file}"
                     )
 
-            # Always allow setting the process, but warn if invalid
             if not is_valid:
                 self.print_terminal(error_msg)
 
             self.current_process = normalized_process
-
-            # Set quarantine folder and file if invalid
             self.outputs_folder = tu.get_output_dir(
                 normalized_process, OUTPUTS_FOLDER
             )
-            valid = tu.is_process_valid(normalized_process)
+            valid = normalized_process in tu.PROCESS_COLORS
             self.tool_process = normalized_process
             self.log_file = os.path.join(
                 self.outputs_folder,
                 tu.get_log_filename(self.tool_process, valid=valid)
             )
-            tool_display_name = tu.get_tool_display_name(self.tool_process)
+            proc_info = tu.PROCESS_INFO.get(self.tool_process, {})
+            tool_display_name = proc_info.get('tool', self.tool_process)
+            process_display_name = proc_info.get('process', self.current_process)
             self.title(f"Lab Process Tracker GUI - {tool_display_name}")
             self.log_file_label.config(
-                text=f"Log will be saved to: {self.log_file}"
+                text=f"Log will be saved to: {self.log_file}",
+                fg="orange" if not valid else "gray",
             )
-            if not valid:
-                self.log_file_label.config(fg="orange")
-            else:
-                self.log_file_label.config(fg="gray")
             self.print_terminal(f">>> TOOL SET: '{tool_display_name}'")
             self.print_terminal(f">>> Log file: {self.log_file}")
 
             self.update_process_block(self.current_process, valid=valid)
             self.update_sample_block(None, status_type="RESET")
-            process_display_name = tu.get_process_display_name(
-                self.current_process
-            )
             self.print_terminal(
                 f">>> PROCESS UPDATED: Now running: '{process_display_name}'"
             )
@@ -763,7 +717,7 @@ class ProcessTrackerGUI(tk.Tk):
                     )
                 self.log_scan_event(self.current_process, sample_id=data_id)
                 self.update_sample_block(data_id, status_type="SAMPLE")
-        elif tu.is_batch_type(data_type):
+        elif data_type == "BATCH":
             if not self.tool_process or not self.current_process:
                 self.print_terminal(
                     "[ALERT] Cannot log batch. "
@@ -782,8 +736,6 @@ class ProcessTrackerGUI(tk.Tk):
             self.update_sample_block(data_type, status_type="ERROR")
 
     def log_scan_event(self, process_name, sample_id="", batch_id=""):
-        # Type assertion: username checked at start of handle_scan
-        assert self.username is not None
         record = tu.create_log_record(
             self.username, process_name, sample_id, batch_id
         )
@@ -801,7 +753,6 @@ class ProcessTrackerGUI(tk.Tk):
                 self.print_terminal("[INFO] No checkout records to undo.")
             return
         if self.tray_mode and self.current_tray_id:
-            # Undo in tray mode: remove last tray sample
             current_tray_samples = self.tray_samples.get(self.current_tray_id, [])
             if current_tray_samples and self.tray_position_index > 0:
                 removed_sample = current_tray_samples.pop()
@@ -810,11 +761,9 @@ class ProcessTrackerGUI(tk.Tk):
                 )
                 prev_pos = self.tray_positions[self.tray_position_index]
 
-                # If tray was marked complete, un-complete it
                 if self.current_tray_id in self.all_trays_in_session:
                     self.all_trays_in_session.remove(self.current_tray_id)
 
-                # Update grid to clear the cell
                 if self.tray_dialog and self.tray_dialog.winfo_exists():
                     cell_data = self.tray_dialog.grid_cells.get(
                         removed_sample['position']
@@ -840,12 +789,18 @@ class ProcessTrackerGUI(tk.Tk):
             else:
                 self.print_terminal("[INFO] No tray samples to undo.")
         else:
-            # Normal mode undo (existing functionality)
             if not self.log_records:
                 self.print_terminal("[INFO] No scans to undo.")
                 return
-            removed_record = self.log_records.pop()
-            self.print_terminal(tu.format_undo_message(removed_record))
+            r = self.log_records.pop()
+            data_id = (
+                f"Batch: '{r['BatchID']}'" if r.get('BatchID')
+                else f"Sample: '{r['SampleID']}'"
+            )
+            self.print_terminal(
+                f"[UNDO] Removed last scan: {r['Timestamp']} | "
+                f"Process: '{r['ProcessName']}' | {data_id}"
+            )
             self.update_sample_block("Last scan undone", status_type="UNDO")
 
     def save_log(self):
@@ -871,10 +826,8 @@ class ProcessTrackerGUI(tk.Tk):
 
     def exit_app(self):
         """Exit the application with prompt to save unsaved data."""
-        # Close tray dialog if open
         self.close_tray_dialog()
 
-        # Prompt to save pending checkout records before exiting
         if self.checkout_records:
             count = len(self.checkout_records)
             if messagebox.askyesno(
@@ -894,20 +847,17 @@ class ProcessTrackerGUI(tk.Tk):
                 self.save_log()
                 if not self.log_records:
                     self.destroy()
-                else:
-                    if messagebox.askyesno(
-                        "Save Failed",
-                        "Failed to save. Exit anyway?"
-                    ):
-                        self.destroy()
-            else:
-                # Second prompt: Confirm exit without saving
-                if messagebox.askyesno(
-                    "Confirm Exit",
-                    "Exit without saving? "
-                    "All unsaved data will be lost."
+                elif messagebox.askyesno(
+                    "Save Failed",
+                    "Failed to save. Exit anyway?"
                 ):
                     self.destroy()
+            elif messagebox.askyesno(
+                "Confirm Exit",
+                "Exit without saving? "
+                "All unsaved data will be lost."
+            ):
+                self.destroy()
         else:
             self.destroy()
 
@@ -919,10 +869,10 @@ class ProcessTrackerGUI(tk.Tk):
 
     def update_process_block(self, process_name, valid=True):
         if process_name:
-            color = tu.get_process_color(process_name)
-            display_name = tu.get_process_display_name(process_name)
-            text = display_name
-            if not tu.is_process_valid(process_name):
+            color = tu.PROCESS_COLORS.get(process_name, tu.DEFAULT_PROCESS_COLOR)
+            info = tu.PROCESS_INFO.get(process_name, {})
+            text = info.get('process', process_name)
+            if process_name not in tu.PROCESS_COLORS:
                 text += "\n[UNAPPROVED — quarantined]"
         else:
             color = "grey"
@@ -931,44 +881,13 @@ class ProcessTrackerGUI(tk.Tk):
         self.process_label.config(bg=color, text=text)
 
     def update_sample_block(self, sample_info, status_type="SAMPLE"):
-        # Sample box stays neutral gray, only text changes
-        if status_type == "SAMPLE":
-            # Display "Sample" prefix above the sample ID
-            self.sample_label.config(
-                text=f"Sample\n{sample_info}",
-                font=("Arial", FONT_SIZE_MEDIUM, "bold")
-            )
-        elif status_type == "BATCH":
-            # Display "Batch" prefix for batch IDs
-            self.sample_label.config(
-                text=f"Batch\n{sample_info}",
-                font=("Arial", FONT_SIZE_MEDIUM, "bold")
-            )
-        elif status_type == "UNDO":
-            self.sample_label.config(
-                text="Last scan undone",
-                font=("Arial", FONT_SIZE_LARGE, "bold")
-            )
-        elif status_type == "ALERT":
-            self.sample_label.config(
-                text=sample_info,
-                font=("Arial", FONT_SIZE_LARGE, "bold")
-            )
-        elif status_type == "ERROR":
-            self.sample_label.config(
-                text=f"ERROR\n{sample_info}",
-                font=("Arial", FONT_SIZE_MEDIUM, "bold")
-            )
-        elif status_type == "RESET":
-            self.sample_label.config(
-                text="No sample",
-                font=("Arial", FONT_SIZE_LARGE, "bold")
-            )
-        else:
-            self.sample_label.config(
-                text="No sample",
-                font=("Arial", FONT_SIZE_LARGE, "bold")
-            )
+        template, font_size = _SAMPLE_BLOCK.get(
+            status_type, _SAMPLE_BLOCK["RESET"]
+        )
+        self.sample_label.config(
+            text=template.format(info=sample_info),
+            font=("Arial", font_size, "bold"),
+        )
 
 
 if __name__ == "__main__":
