@@ -19,13 +19,11 @@ def build_exe():
     """Build executable for the process tracker GUI."""
     version = get_version()
 
-    # Get project root and paths
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     src_dir = os.path.join(project_root, 'src')
     exe_dir = os.path.join(project_root, 'exe')
 
-    # Clean previous builds
     build_dir = os.path.join(project_root, 'build')
     if os.path.exists(build_dir):
         shutil.rmtree(build_dir)
@@ -40,7 +38,6 @@ def build_exe():
 
     script_path = os.path.join(src_dir, script_name)
 
-    # PyInstaller arguments
     args = [
         script_path,
         '--onefile',
@@ -57,24 +54,19 @@ def build_exe():
         '--noconsole',
     ]
 
-    # Add icon if available
     icon_path = os.path.join(project_root, 'assets', 'icon.ico')
     if os.path.exists(icon_path):
         args.extend(['--icon', icon_path])
 
-    # Run PyInstaller
     PyInstaller.__main__.run(args)
 
-    # Rename the output file to include version
     output_path = os.path.join(
         exe_dir, 'dist', exe_name.replace('.exe', '') + '.exe'
     )
     final_path = os.path.join(exe_dir, 'dist', exe_name)
 
-    if os.path.exists(output_path) and output_path != final_path:
-        if os.path.exists(final_path):
-            os.remove(final_path)
-        os.rename(output_path, final_path)
+    if os.path.exists(output_path):
+        os.replace(output_path, final_path)
 
     print(f"✓ GUI v{version} executable created: {final_path}")
 
