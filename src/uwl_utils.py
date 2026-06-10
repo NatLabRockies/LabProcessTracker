@@ -52,18 +52,11 @@ def _parse_timestamp(ts_str: str) -> datetime:
     )
 
 
-def _populate_time(record: dict, context: dict) -> str:
-    return record["_parsed_ts"].strftime("%H:%M")
-
-
-def _populate_date(record: dict, context: dict) -> str:
-    ts = record["_parsed_ts"]
-    return f"{ts.month}/{ts.day}/{ts.year}"
-
-
 FIELD_POPULATORS = {
-    "Time": _populate_time,
-    "Date": _populate_date,
+    "Time": lambda r, _ctx: r["_parsed_ts"].strftime("%H:%M"),
+    "Date": lambda r, _ctx: (
+        f"{r['_parsed_ts'].month}/{r['_parsed_ts'].day}/{r['_parsed_ts'].year}"
+    ),
 }
 
 
@@ -99,7 +92,7 @@ def load_matching_records(
         reader = csv.DictReader(f)
         for row in reader:
             if not any(v.strip() for v in row.values() if v):
-                continue  # skip blank rows
+                continue
             row_sample = row.get("SampleID", "").strip()
             row_process = row.get("ProcessName", "").strip()
             if row_sample == sample_id.strip() and row_process == process_name.strip():
@@ -159,14 +152,6 @@ def _make_time_and_place_item(item_id: str) -> dict:
     }
 
 
-def _normalize_sample_id(value: str) -> str:
-    """Normalize sample IDs for tolerant comparison.
-
-    Treat hyphen/underscore variants and case differences as equivalent.
-    """
-    return value.strip().replace("-", "_").lower()
-
-
 def get_uwl_sample_id(uwl_data: dict) -> Optional[str]:
     """Extract Sample ID from root-level 'Sample' item, if present."""
     root_objects = uwl_data.get("Objects", {})
@@ -186,7 +171,10 @@ def get_uwl_sample_id(uwl_data: dict) -> Optional[str]:
 
 
 def validate_sample_id_match(uwl_data: dict, requested_sample_id: str) -> None:
-    """Raise ValueError if requested sample ID does not match UWL Sample ID."""
+    """Raise ValueError if requested sample ID does not match UWL Sample ID.
+
+    Hyphen/underscore variants and case differences are treated as equivalent.
+    """
     uwl_sample_id = get_uwl_sample_id(uwl_data)
     if uwl_sample_id is None:
         warnings.warn(
@@ -196,7 +184,10 @@ def validate_sample_id_match(uwl_data: dict, requested_sample_id: str) -> None:
         )
         return
 
-    if _normalize_sample_id(uwl_sample_id) != _normalize_sample_id(requested_sample_id):
+    def _norm(v: str) -> str:
+        return v.strip().replace("-", "_").lower()
+
+    if _norm(uwl_sample_id) != _norm(requested_sample_id):
         raise ValueError(
             "Sample ID mismatch: "
             f"requested '{requested_sample_id}' but UWL contains '{uwl_sample_id}'."
@@ -215,50 +206,43 @@ def locate_uwl(uwl_dir: Path, sample_id: str) -> Path:
         ValueError: If any .uwl file in the directory has a malformed filename.
         FileNotFoundError: If no matching .uwl file is found.
     """
-    # Scan all .uwl files in the directory
+    expected_fmt = (
+        "Expected format: <file_type>_<user_id>_<project_id>_"
+        "<batch_id>_<sample_id>_<optional>.uwl"
+    )
     uwl_files = list(uwl_dir.glob("*.uwl"))
 
     if not uwl_files:
         raise FileNotFoundError(
-            f"No .uwl files found in: {uwl_dir}\n"
-            f"Expected format: <file_type>_<user_id>_<project_id>_"
-            f"<batch_id>_<sample_id>_<optional>.uwl"
+            f"No .uwl files found in: {uwl_dir}\n{expected_fmt}"
         )
 
-    # Validate all filenames and extract sample IDs
     malformed_example = None
     matches = []
 
     for uwl_file in uwl_files:
-        stem = uwl_file.stem
-        extracted_id = _extract_sample_id_from_filename_stem(stem)
-
+        extracted_id = _extract_sample_id_from_filename_stem(uwl_file.stem)
         if extracted_id is None:
             if malformed_example is None:
-                malformed_example = stem
+                malformed_example = uwl_file.stem
         elif extracted_id == sample_id:
             matches.append(uwl_file)
 
-    # If we found malformed filenames, raise ValueError with first example
     if malformed_example is not None:
         raise ValueError(
             f"Malformed UWL filename in {uwl_dir}: '{malformed_example}.uwl'\n"
-            f"Expected format: <file_type>_<user_id>_<project_id>_"
-            f"<batch_id>_<sample_id>_<optional>.uwl"
+            f"{expected_fmt}"
         )
 
-    # Return the match if exactly one found
     if len(matches) == 1:
         return matches[0]
 
-    if len(matches) == 0:
+    if not matches:
         raise FileNotFoundError(
             f"No .uwl file found for sample '{sample_id}' in: {uwl_dir}\n"
-            f"Expected format: <file_type>_<user_id>_<project_id>_"
-            f"<batch_id>_<sample_id>_<optional>.uwl"
+            f"{expected_fmt}"
         )
 
-    # Multiple matches (ambiguous)
     raise FileNotFoundError(
         f"Multiple .uwl files found for sample '{sample_id}' in: {uwl_dir}\n"
         f"Matched: {[f.name for f in matches]}"
