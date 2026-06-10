@@ -33,13 +33,7 @@ class TrayPositionDialog(tk.Toplevel):
         # Calculate grid dimensions from positions
         self.rows, self.cols = self._calculate_grid_dimensions(positions)
 
-        # Cell size based on grid size (smaller cells for larger grids)
-        if self.rows <= 2:
-            self.cell_size = 80
-        elif self.rows <= 5:
-            self.cell_size = 60
-        else:
-            self.cell_size = 50
+        self.cell_size = 80 if self.rows <= 2 else 60 if self.rows <= 5 else 50
 
         # Calculate dialog size based on grid
         grid_width = self.cols * self.cell_size + 40
@@ -52,7 +46,6 @@ class TrayPositionDialog(tk.Toplevel):
         self.transient(parent)
         self.attributes('-topmost', True)
 
-        # Center the dialog on parent
         self.update_idletasks()
         x = (parent.winfo_x() + (parent.winfo_width() // 2)
              - (self.winfo_width() // 2))
@@ -60,7 +53,6 @@ class TrayPositionDialog(tk.Toplevel):
              - (self.winfo_height() // 2))
         self.geometry(f"+{x}+{y}")
 
-        # Message label
         self.message_label = tk.Label(
             self,
             text="Initializing...",
@@ -71,21 +63,17 @@ class TrayPositionDialog(tk.Toplevel):
         )
         self.message_label.pack(pady=(10, 10))
 
-        # Grid frame
         self.grid_frame = tk.Frame(
             self, bg=BG_COLOR_GRID_CELL, relief=tk.RIDGE, borderwidth=2
         )
         self.grid_frame.pack(pady=10, padx=20)
 
-        # Create grid cells
         self.grid_cells = {}
         self._create_grid()
 
-        # Buttons frame
         btn_frame = tk.Frame(self, bg=BG_COLOR_DIALOG)
         btn_frame.pack(pady=(10, 20))
 
-        # Skip current button
         self.skip_btn = tk.Button(
             btn_frame,
             text="Skip Current",
@@ -100,7 +88,6 @@ class TrayPositionDialog(tk.Toplevel):
         )
         self.skip_btn.grid(row=0, column=0, padx=5)
 
-        # Skip all button
         self.skip_all_btn = tk.Button(
             btn_frame,
             text="Skip All Remaining",
@@ -115,7 +102,7 @@ class TrayPositionDialog(tk.Toplevel):
         )
         self.skip_all_btn.grid(row=0, column=1, padx=5)
 
-        # Handle window close (X button) - treat as skip all
+        # X button = skip all
         self.protocol("WM_DELETE_WINDOW", self.skip_all_remaining)
 
     def _calculate_grid_dimensions(self, positions):
@@ -126,7 +113,6 @@ class TrayPositionDialog(tk.Toplevel):
         max_row = 0
         max_col = 0
         for pos in positions:
-            # Parse position like "A1", "B2", "H8"
             row_letter = pos[0]
             col_num = int(pos[1:])
             row_index = ord(row_letter.upper()) - ord('A')
@@ -149,7 +135,7 @@ class TrayPositionDialog(tk.Toplevel):
             col_letter = pos[0]
             row_number = int(pos[1:])
             x_index = letter_to_x[col_letter]
-            # y_index: 0 is bottom (lowest number), so flip so 0 is bottom
+            # 0 is bottom row, so flip the y_index
             y_index = num_rows - 1 - number_to_y[row_number]
 
             cell = tk.Frame(
@@ -199,17 +185,15 @@ class TrayPositionDialog(tk.Toplevel):
         if position in self.grid_cells:
             cell_data = self.grid_cells[position]
             cell_data['sample_label'].config(text=sample_id)
-            cell_data['frame'].config(bg=BG_COLOR_GRID_COMPLETE)  # Light green
+            cell_data['frame'].config(bg=BG_COLOR_GRID_COMPLETE)
 
     def skip_current(self):
         """Call the skip current callback."""
         self.on_skip_callback()
-        # Refocus QR entry in parent window
         self.parent.qr_entry.focus_set()
 
     def skip_all_remaining(self):
         """Call the skip all callback and close dialog."""
-        # Refocus QR entry before closing
         self.parent.qr_entry.focus_set()
         self.on_skip_all_callback()
         self.destroy()
@@ -281,7 +265,6 @@ class BulkCheckoutDialog(tk.Toplevel):
         self.count_entry.select_range(0, tk.END)
         self.count_entry.focus_set()
 
-        # Live preview label
         self.preview_var = tk.StringVar()
         tk.Label(
             self,
@@ -292,7 +275,6 @@ class BulkCheckoutDialog(tk.Toplevel):
             wraplength=360,
         ).pack(pady=(5, 5))
 
-        # Buttons
         btn_frame = tk.Frame(self, bg=BG_COLOR_DIALOG)
         btn_frame.pack(pady=(5, 15))
 
@@ -326,7 +308,6 @@ class BulkCheckoutDialog(tk.Toplevel):
         self.bind("<Escape>", lambda e: self._cancel())
         self.protocol("WM_DELETE_WINDOW", self._cancel)
 
-        # Update preview whenever count changes
         self.count_var.trace_add("write", self._update_preview)
         self._update_preview()
 
