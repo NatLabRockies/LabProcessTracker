@@ -33,6 +33,30 @@ FIXTURE_UWL = DATA_DIR / "test_sample.uwl"
 FIXTURE_CSV = DATA_DIR / "test_scan_log.csv"
 
 
+@pytest.fixture
+def run_main(monkeypatch, tmp_path):
+    """Patch sys.argv and invoke populate_uwl.main() with override-able args."""
+    def _run(*, sample_id="test-sample", process="TestProcess",
+             output_dir=None, skip_check=False,
+             uwl=FIXTURE_UWL, uwl_dir=None):
+        argv = ["populate_uwl"]
+        if uwl_dir is not None:
+            argv += ["--uwl-dir", str(uwl_dir)]
+        else:
+            argv += ["--uwl", str(uwl)]
+        argv += [
+            "--csv", str(FIXTURE_CSV),
+            "--sample-id", sample_id,
+            "--process", process,
+            "--output-dir", str(output_dir or tmp_path),
+        ]
+        if skip_check:
+            argv.append("--skip-sample-id-check")
+        monkeypatch.setattr(sys, "argv", argv)
+        main()
+    return _run
+
+
 def _read_time_and_place(uwl_path: Path, section_name: str) -> dict:
     """Return the Time & Place parameter-value dict for a given section."""
     data = json.loads(uwl_path.read_text(encoding="utf-8"))
@@ -339,96 +363,47 @@ class TestFieldPopulatorsDict:
 class TestIntegration:
     """End-to-end tests calling main() via monkeypatched sys.argv."""
 
-    def test_single_section_populated(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "TestProcess",
-            "--output-dir", str(tmp_path),
-        ])
-        main()
+    def test_single_section_populated(self, tmp_path, run_main):
+        run_main()
         output = tmp_path / "test_sample_populated.uwl"
         assert output.exists()
         tp = _read_time_and_place(output, "TestProcess")
         assert tp["Time"] == "16:50"
         assert tp["Date"] == "3/6/2026"
 
-    def test_unrelated_sections_unchanged(self, tmp_path, monkeypatch):
+    def test_unrelated_sections_unchanged(self, tmp_path, run_main):
         """Sections not targeted should have their Time & Place left empty."""
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "TestProcess",
-            "--output-dir", str(tmp_path),
-        ])
-        main()
+        run_main()
         output = tmp_path / "test_sample_populated.uwl"
         tp = _read_time_and_place(output, "Beta_Process")
         assert tp["Time"] == ""
         assert tp["Date"] == ""
 
-    def test_zero_match_exits(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "nonexistent-sample",
-            "--process", "TestProcess",
-            "--output-dir", str(tmp_path),
-        ])
+    def test_zero_match_exits(self, run_main):
         with pytest.raises(SystemExit):
-            main()
+            run_main(sample_id="nonexistent-sample")
 
-    def test_multi_match_warns_and_uses_earliest(self, tmp_path, monkeypatch):
+    def test_multi_match_warns_and_uses_earliest(self, tmp_path, run_main):
         """Multiple CSV rows: warn and use the earliest timestamp."""
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "dup-sample",
-            "--process", "TestProcess",
-            "--skip-sample-id-check",
-            "--output-dir", str(tmp_path),
-        ])
         with pytest.warns(UserWarning, match="2 records"):
-            main()
+            run_main(sample_id="dup-sample", skip_check=True)
         output = tmp_path / "test_sample_populated.uwl"
         tp = _read_time_and_place(output, "TestProcess")
         assert tp["Time"] == "09:00"  # earlier of 09:00 and 10:00
 
-    def test_original_file_unchanged(self, tmp_path, monkeypatch):
+    def test_original_file_unchanged(self, run_main):
         """Running the script must never modify the source UWL file."""
         original_text = FIXTURE_UWL.read_text(encoding="utf-8")
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "TestProcess",
-            "--output-dir", str(tmp_path),
-        ])
-        main()
+        run_main()
         assert FIXTURE_UWL.read_text(encoding="utf-8") == original_text
 
-    def test_output_is_populated_copy(self, tmp_path, monkeypatch):
+    def test_output_is_populated_copy(self, tmp_path, run_main):
         """Output filename must be {stem}_populated.uwl."""
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "TestProcess",
-            "--output-dir", str(tmp_path),
-        ])
-        main()
+        run_main()
         assert (tmp_path / "test_sample_populated.uwl").exists()
         assert not (tmp_path / "test_sample.uwl").exists()
 
-    def test_uwl_dir_autolocate(self, tmp_path, monkeypatch):
+    def test_uwl_dir_autolocate(self, tmp_path, run_main):
         """--uwl-dir should find .uwl file using 5-segment tokenized format."""
         uwl_dir = tmp_path / "uwl"
         uwl_dir.mkdir()
@@ -437,103 +412,45 @@ class TestIntegration:
             FIXTURE_UWL.read_text(encoding="utf-8"), encoding="utf-8"
         )
         out = tmp_path / "out"
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl-dir", str(uwl_dir),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "TestProcess",
-            "--output-dir", str(out),
-        ])
-        main()
-        output_file = (
+        run_main(uwl_dir=uwl_dir, output_dir=out)
+        assert (
             out / "UWL_rdaxini_demos1_taskmeeting031825_test-sample_populated.uwl"
-        )
-        assert output_file.exists()
+        ).exists()
 
-    def test_missing_section_warns_and_exits(self, tmp_path, monkeypatch):
+    def test_missing_section_warns_and_exits(self, run_main):
         """A process name with no matching UWL section warns and exits."""
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "unknown_process",  # in CSV, no matching section in UWL
-            "--output-dir", str(tmp_path),
-        ])
         with pytest.warns(UserWarning, match="not in UWL"):
             with pytest.raises(SystemExit):
-                main()
+                run_main(process="unknown_process")
 
-    def test_output_is_valid_json(self, tmp_path, monkeypatch):
+    def test_output_is_valid_json(self, tmp_path, run_main):
         """Output file must be valid JSON that can be reloaded."""
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "TestProcess",
-            "--output-dir", str(tmp_path),
-        ])
-        main()
-        output = tmp_path / "test_sample_populated.uwl"
-        data = json.loads(output.read_text(encoding="utf-8"))
+        run_main()
+        data = json.loads(
+            (tmp_path / "test_sample_populated.uwl").read_text(encoding="utf-8")
+        )
         assert data["Format"] == "uwl"
         assert "Objects" in data
 
-    def test_sample_id_mismatch_exits_by_default(self, tmp_path, monkeypatch):
+    def test_sample_id_mismatch_exits_by_default(self, run_main):
         """Default behavior should fail if --sample-id mismatches UWL Sample ID."""
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "other-sample",
-            "--process", "TestProcess",
-            "--output-dir", str(tmp_path),
-        ])
         with pytest.raises(SystemExit, match="Sample ID mismatch"):
-            main()
+            run_main(sample_id="other-sample")
 
-    def test_skip_sample_id_check_allows_mismatch(self, tmp_path, monkeypatch):
+    def test_skip_sample_id_check_allows_mismatch(self, tmp_path, run_main):
         """--skip-sample-id-check should permit processing with mismatched IDs."""
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "other-sample",
-            "--process", "TestProcess",
-            "--skip-sample-id-check",
-            "--output-dir", str(tmp_path),
-        ])
-        main()
+        run_main(sample_id="other-sample", skip_check=True)
         assert (tmp_path / "test_sample_populated.uwl").exists()
 
-    def test_non_abstract_action_node_unchanged(self, tmp_path, monkeypatch):
+    def test_non_abstract_action_node_unchanged(self, tmp_path, run_main):
         """Action nodes should remain unchanged after Time & Place updates."""
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "TestProcess",
-            "--output-dir", str(tmp_path),
-        ])
-        main()
+        run_main()
         output = tmp_path / "test_sample_populated.uwl"
         assert _read_action_values(output, "TestProcess", "Spin") == ["3000", "30"]
 
-    def test_auto_creates_time_and_place_when_missing(self, tmp_path, monkeypatch):
+    def test_auto_creates_time_and_place_when_missing(self, tmp_path, run_main):
         """If a section has no 'Time & Place' item, the script creates it."""
-        monkeypatch.setattr(sys, "argv", [
-            "populate_uwl",
-            "--uwl", str(FIXTURE_UWL),
-            "--csv", str(FIXTURE_CSV),
-            "--sample-id", "test-sample",
-            "--process", "NoTimePlace_Section",
-            "--skip-sample-id-check",
-            "--output-dir", str(tmp_path),
-        ])
-        main()
+        run_main(process="NoTimePlace_Section", skip_check=True)
         output = tmp_path / "test_sample_populated.uwl"
         assert output.exists()
         tp = _read_time_and_place(output, "NoTimePlace_Section")
