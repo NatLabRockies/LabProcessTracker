@@ -1,0 +1,96 @@
+.. _whatsnew051:
+
+v0.5.1 (June 2026)
+------------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+
+
+Maintenance
+~~~~~~~~~~~
+* Repo-wide cleanup pass — no behaviour changes, ~700 net lines removed across
+  13 files.
+
+* ``src/tracker_utils.py``: inlined 10 single-caller / one-line wrapper helpers
+  at their call sites (``get_process_display_name``, ``get_tool_display_name``,
+  ``is_command``, ``is_batch_type``, ``format_undo_message``,
+  ``format_auto_save_message``, ``format_checkout_message``,
+  ``create_checkout_record``, ``create_batch_operation_records``,
+  ``should_auto_save_on_process_switch``). Also removed
+  ``is_process_valid``, ``get_process_color``, ``get_process_info``,
+  ``get_unapproved_log_filename``, ``get_unapproved_output_dir``,
+  ``is_batch_operation_process``, ``generate_session_id``, ``_format_data_id``
+  in favour of direct ``dict.get`` lookups at call sites.
+
+* ``src/process_tracker_gui.py``: replaced the 35-line if/elif chain in
+  ``update_sample_block`` with a module-level ``_SAMPLE_BLOCK`` lookup table;
+  extracted ``_finish_current_tray`` to eliminate 4x repetition of the
+  tray-completion print block; removed 5 unused ``assert ... is not None``
+  type-hint guards and their accompanying comments; collapsed redundant
+  ``if not valid: ...orange else ...gray`` blocks into ternaries on
+  ``.config()``.
+
+* ``src/uwl_utils.py``: replaced ``_populate_time`` / ``_populate_date`` with
+  lambdas in ``FIELD_POPULATORS``; inlined ``_normalize_sample_id``;
+  consolidated repeated "Expected format" error strings in ``locate_uwl``.
+
+* ``src/gui_components.py``: collapsed the ``cell_size`` if/elif chain into a
+  single ternary; removed restate-the-code comments.
+
+* ``scripts/generate_test_qr_codes.py`` and
+  ``scripts/generate_custom_qr_codes.py``: collapsed 7x and 5x repeated
+  ``if items: print(...); for ...:`` blocks into a single data-driven loop
+  over a ``(label, items)`` table.
+
+* ``scripts/create_exe.py``: replaced the fragile
+  ``exists / remove / rename`` block with ``os.replace`` (atomic on POSIX,
+  handles existing destination on Windows).
+
+* ``scripts/populate_uwl.py``: removed a 1-iteration ``for section_name in
+  [args.process]`` loop wrapper and dead ``modified`` / ``not_found``
+  tracking lists.
+
+* ``scripts/run_tests.py``: simplified verbose ``sys.version_info`` unpacking
+  to ``sys.version.split()[0]``; deduplicated separator-print blocks.
+
+* Stripped ~60 restate-the-code inline comments across ``src/`` and
+  ``scripts/`` (e.g. ``# Center the dialog on parent``,
+  ``# Calculate text position (centered)``, ``# Type assertion: ...``).
+  Comments that document non-obvious WHY are retained.
+
+* ``.gitignore``: removed dead ``/exe/*.spec`` pattern that never matched
+  (spec files live in ``exe/spec/``).
+
+* ``pyproject.toml``: removed redundant ``dev`` optional-dependency group;
+  corrected author email from ``nrel.gov`` to ``nlr.gov``.
+
+
+Testing
+~~~~~~~
+* ``tests/test_populate_uwl.py``: extracted a ``run_main`` pytest fixture to
+  replace 13x near-identical ``monkeypatch.setattr(sys, "argv", [...])``
+  blocks. Each test now expresses only the parameters that differ from the
+  baseline.
+
+* ``tests/test_tracker_utils.py``: removed tests for inlined wrappers
+  (``TestProcessInfo``, ``TestAutoSaveLogic``, ``TestCommandDetection``,
+  ``test_get_process_color_*``, ``test_format_undo_message``,
+  ``test_format_auto_save_message``, ``test_format_checkout_message``,
+  ``test_create_checkout_record``); rewrote ``TestProcessDisplayNames`` to
+  assert against ``PROCESS_INFO`` directly. All 138 tests pass.
+
+
+Documentation
+~~~~~~~~~~~~~
+
+
+Contributors
+~~~~~~~~~~~~
+* Rajiv Daxini (:ghuser:`rdaxini`)
+
