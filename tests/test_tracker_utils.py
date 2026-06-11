@@ -7,12 +7,11 @@ import os
 # Add src directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+import csv  # noqa: E402
+import datetime  # noqa: E402
 import pytest  # noqa: E402
 import tracker_utils as tu  # noqa: E402
-from tracker_utils import (  # noqa: E402
-    PROCESS_COLORS,
-    get_process_info
-)
+from tracker_utils import PROCESS_COLORS, PROCESS_INFO  # noqa: E402
 
 
 class TestProcessValidation:
@@ -56,7 +55,7 @@ class TestProcessValidation:
 
 
 class TestProcessDisplayNames:
-    """Test cases for process display name functions."""
+    """Test cases for tool/process display name lookups via PROCESS_INFO."""
 
     @pytest.mark.parametrize("abbreviated,expected_display,expected_tool", [
         ("1p8_mhp_bc", "Bladecoat 1.8eV perovskite", "Laminar Flow Box"),
@@ -64,34 +63,12 @@ class TestProcessDisplayNames:
         ("pae_evap", "Evaporation system", "Angstrom Evaporator"),
     ])
     def test_display_names(self, abbreviated, expected_display, expected_tool):
-        """Test display names for processes."""
-        assert tu.get_process_display_name(abbreviated) == expected_display
-        assert tu.get_tool_display_name(abbreviated) == expected_tool
+        info = PROCESS_INFO[abbreviated]
+        assert info['process'] == expected_display
+        assert info['tool'] == expected_tool
 
-    def test_display_name_invalid_returns_input(self):
-        """Test that invalid process returns the input as display name."""
-        assert tu.get_process_display_name("invalid") == "invalid"
-        assert tu.get_tool_display_name("invalid") == "invalid"
-
-
-class TestProcessInfo:
-    """Test cases for process info retrieval."""
-
-    def test_get_process_info_valid(self):
-        """Test getting full process info for valid process."""
-        info = get_process_info("1p8_mhp_bc")
-        assert isinstance(info, dict)
-        assert "tool" in info
-        assert "process" in info
-        assert "color" in info
-        assert info["tool"] == "Laminar Flow Box"
-        assert info["process"] == "Bladecoat 1.8eV perovskite"
-
-    def test_get_process_info_invalid(self):
-        """Test getting process info for invalid process returns empty dict."""
-        info = get_process_info("invalid_process")
-        assert info == {}
-
+    def test_unknown_process_absent_from_info(self):
+        assert "invalid_process_name" not in PROCESS_INFO
 
 class TestProcessColors:
     """Test cases for process color assignments."""
@@ -110,31 +87,29 @@ class TestProcessColors:
             assert len(color) == 7
             int(color[1:], 16)  # Should not raise ValueError
 
-    def test_get_process_color_valid(self):
-        """Test getting color for valid process."""
-        color = tu.get_process_color("c215ss_jv")
-        assert color.startswith("#")
-        assert len(color) == 7
-
-    def test_get_process_color_invalid(self):
-        """Test getting color for invalid process returns default grey."""
-        color = tu.get_process_color("invalid_process")
-        assert color == tu.DEFAULT_PROCESS_COLOR
-        assert color == "#95a5a6"  # Verify it's the grey default
-
 
 class TestLogFilename:
     """Test cases for log filename generation."""
 
-    def test_get_log_filename(self):
-        """Test log filename generation."""
-        filename = tu.get_log_filename("c215ss_jv")
-        assert filename == "scan_log_c215ss_jv.csv"
-
-    def test_get_log_filename_various_processes(self):
-        """Test log filename for various processes."""
+    def test_get_log_filename_valid(self):
+        """Valid processes get a plain scan_log_<name>.csv."""
+        assert tu.get_log_filename("c215ss_jv") == "scan_log_c215ss_jv.csv"
         assert tu.get_log_filename("bd8_xrd") == "scan_log_bd8_xrd.csv"
-        assert tu.get_log_filename("ftlb234_spinbox") == "scan_log_ftlb234_spinbox.csv"
+
+    def test_get_log_filename_invalid(self):
+        """Invalid processes get the UNAPPROVED prefix."""
+        filename = tu.get_log_filename("invalid_proc", valid=False)
+        assert filename == "scan_log_UNAPPROVED_invalid_proc.csv"
+
+    def test_get_output_dir_valid(self):
+        """Valid processes use the base outputs folder."""
+        assert tu.get_output_dir("1p8_mhp_bc", "/out") == "/out"
+
+    def test_get_output_dir_invalid(self):
+        """Invalid processes route to the unapproved subfolder."""
+        assert tu.get_output_dir("invalid_proc", "/out") == os.path.join(
+            "/out", "unapproved"
+        )
 
 
 class TestMessageFormatting:
@@ -154,74 +129,12 @@ class TestMessageFormatting:
         assert "test_process" in msg
         assert "SAMPLE123" in msg
 
-    def test_format_undo_message(self):
-        """Test formatting an undo message."""
-        record = {
-            'Timestamp': '2025-01-01 12:00:00',
-            'ProcessName': 'test_process',
-            'SampleID': 'SAMPLE123'
-        }
-        msg = tu.format_undo_message(record)
-        assert "[UNDO]" in msg
-        assert "test_process" in msg
-        assert "SAMPLE123" in msg
-
     def test_format_legacy_sample_warning(self):
         """Test formatting a legacy sample warning."""
         msg = tu.format_legacy_sample_warning("2511-09")
         assert "[WARNING]" in msg
         assert "Legacy sample format detected" in msg
         assert "2511-09" in msg
-
-    def test_format_auto_save_message(self):
-        """Test formatting an auto-save message."""
-        msg = tu.format_auto_save_message(3, "scan_log_c212_sonicator.csv")
-        assert "[AUTO-SAVE]" in msg
-        assert "3 record(s)" in msg
-        assert "scan_log_c212_sonicator.csv" in msg
-
-
-class TestCommandDetection:
-    """Test cases for command detection."""
-
-    def test_is_command_exit(self):
-        """Test EXIT command detection."""
-        is_cmd, cmd_type = tu.is_command("EXIT")
-        assert is_cmd
-        assert cmd_type == tu.EXIT_CMD
-
-    def test_is_command_save(self):
-        """Test SAVE command detection."""
-        is_cmd, cmd_type = tu.is_command("SAVE")
-        assert is_cmd
-        assert cmd_type == tu.SAVE_CMD
-
-    def test_is_command_undo(self):
-        """Test UNDO command detection."""
-        is_cmd, cmd_type = tu.is_command("UNDO")
-        assert is_cmd
-        assert cmd_type == tu.UNDO_CMD
-
-    def test_is_command_reset(self):
-        """Test RESET command detection."""
-        is_cmd, cmd_type = tu.is_command("RESET")
-        assert is_cmd
-        assert cmd_type == tu.RESET_USER_CMD
-
-    def test_is_command_case_insensitive(self):
-        """Test that commands are case-insensitive."""
-        is_cmd1, cmd1 = tu.is_command("exit")
-        is_cmd2, cmd2 = tu.is_command("EXIT")
-        is_cmd3, cmd3 = tu.is_command("Exit")
-
-        assert is_cmd1 and is_cmd2 and is_cmd3
-        assert cmd1 == cmd2 == cmd3 == tu.EXIT_CMD
-
-    def test_is_command_not_command(self):
-        """Test that non-commands return False."""
-        is_cmd, cmd_type = tu.is_command("P%:test")
-        assert not is_cmd
-        assert cmd_type is None
 
 
 class TestUserValidation:
@@ -370,10 +283,6 @@ class TestBatchScanning:
         assert data_type == "BATCH"
         assert data_id == "BATCH123"
 
-        # Verify type detection helpers
-        assert tu.is_batch_type("BATCH") is True
-        assert tu.is_data_type("BATCH") is True
-
         # Create log record with batch
         record = tu.create_log_record(
             username="TestOp",
@@ -387,9 +296,6 @@ class TestBatchScanning:
         log_msg = tu.format_log_message(record)
         assert "Batch: 'BATCH123'" in log_msg
         assert "Sample:" not in log_msg
-
-        undo_msg = tu.format_undo_message(record)
-        assert "Batch: 'BATCH123'" in undo_msg
 
     def test_batch_prefix_case_sensitive(self):
         """Test that batch prefix B%: is case-sensitive."""
@@ -428,95 +334,6 @@ class TestBatchScanning:
         )
         assert sample_record['SampleID'] == "S001"
         assert sample_record['BatchID'] == ""
-
-
-class TestAutoSaveLogic:
-    """Test cases for auto-save on process switch logic."""
-
-    def test_should_auto_save_first_process(self):
-        """Test that auto-save doesn't trigger for first process."""
-        # No current tool, so should not auto-save
-        should_save = tu.should_auto_save_on_process_switch(
-            None, "c215ss_jv", True
-        )
-        assert not should_save
-
-    def test_should_auto_save_same_process(self):
-        """Test that auto-save doesn't trigger when same process rescanned."""
-        # Same process, should not auto-save
-        should_save = tu.should_auto_save_on_process_switch(
-            "c215ss_jv", "c215ss_jv", True
-        )
-        assert not should_save
-
-    def test_should_auto_save_no_records(self):
-        """Test that auto-save doesn't trigger if no records exist."""
-        # Different process but no records, should not auto-save
-        should_save = tu.should_auto_save_on_process_switch(
-            "c212_sonicator", "c215ss_jv", False
-        )
-        assert not should_save
-
-    def test_should_auto_save_different_process_with_records(self):
-        """Test that auto-save triggers when switching process."""
-        # Different process with records, SHOULD auto-save
-        should_save = tu.should_auto_save_on_process_switch(
-            "c212_sonicator", "c215ss_jv", True
-        )
-        assert should_save
-
-    def test_should_auto_save_case_insensitive(self):
-        """Test that process comparison is case-sensitive."""
-        # These should be treated as same process (normalized)
-        should_save = tu.should_auto_save_on_process_switch(
-            "c215ss_jv", "c215ss_jv", True
-        )
-        assert not should_save
-
-
-class TestQuarantineLogic:
-    """Test cases specifically for unapproved/quarantine process handling."""
-
-    def test_unapproved_log_filename_format(self):
-        """Test quarantine log filename format."""
-        filename = tu.get_unapproved_log_filename("test_process")
-        assert filename == "scan_log_UNAPPROVED_test_process.csv"
-
-    def test_unapproved_output_directory(self):
-        """Test quarantine output directory."""
-        base = "/test/outputs"
-        unapproved_dir = tu.get_unapproved_output_dir(base)
-        assert "unapproved" in unapproved_dir
-        assert unapproved_dir == os.path.join(base, "unapproved")
-
-    def test_is_process_valid_true(self):
-        """Test is_process_valid returns True for valid processes."""
-        assert tu.is_process_valid("1p8_mhp_bc") is True
-        assert tu.is_process_valid("c60_evap") is True
-
-    def test_is_process_valid_false(self):
-        """Test is_process_valid returns False for invalid processes."""
-        assert tu.is_process_valid("invalid_process") is False
-        assert tu.is_process_valid("not_in_json") is False
-
-    def test_get_log_filename_valid_process(self):
-        """Test log filename for valid process."""
-        filename = tu.get_log_filename("c215ss_jv", valid=True)
-        assert filename == "scan_log_c215ss_jv.csv"
-        assert "UNAPPROVED" not in filename
-
-    def test_get_log_filename_invalid_process(self):
-        """Test log filename for invalid process is quarantined."""
-        filename = tu.get_log_filename("invalid_proc", valid=False)
-        assert "UNAPPROVED" in filename
-        assert filename == "scan_log_UNAPPROVED_invalid_proc.csv"
-
-    def test_get_output_dir_valid_process(self):
-        """Test output dir for valid process uses base folder."""
-        base = "/test/outputs"
-        output_dir = tu.get_output_dir("invalid_proc", base)
-        assert "unapproved" in output_dir
-        assert output_dir == os.path.join(base, "unapproved")
 
 
 class TestCheckout:
@@ -573,38 +390,29 @@ class TestCheckout:
         suffixes = [int(id_.rsplit("-", 1)[1]) for id_ in ids]
         assert suffixes == list(range(20, 30))
 
-    # --- create_checkout_record ---
-
-    def test_checkout_record_fields(self):
-        record = tu.create_checkout_record("rdaxini", "2503-015")
-        assert record["User"] == "rdaxini"
-        assert record["SampleID"] == "2503-015"
-        assert "Timestamp" in record
-        # Timestamp must be parseable
-        from datetime import datetime
-        datetime.strptime(record["Timestamp"], tu.DATE_FORMAT)
-
-    def test_checkout_record_no_process_field(self):
-        record = tu.create_checkout_record("rdaxini", "2503-015")
-        assert "ProcessName" not in record
-
-    # --- format_checkout_message ---
-
-    def test_format_checkout_message_contains_key_fields(self):
-        record = tu.create_checkout_record("rdaxini", "2503-015")
-        msg = tu.format_checkout_message(record)
-        assert "[CHECKOUT]" in msg
-        assert "rdaxini" in msg
-        assert "2503-015" in msg
-
     # --- save_checkout_to_csv ---
 
+    @staticmethod
+    def _record(user, sid, ts=None):
+        return {
+            'Timestamp': ts or datetime.datetime.now().strftime(tu.DATE_FORMAT),
+            'User': user,
+            'SampleID': sid,
+        }
+
+    def test_get_checkout_log_filename(self):
+        assert tu.get_checkout_log_filename(2026, 4) == "checkout_log_2026-04.csv"
+        assert tu.get_checkout_log_filename(2025, 12) == "checkout_log_2025-12.csv"
+        assert tu.get_checkout_log_filename(2026, 1) == "checkout_log_2026-01.csv"
+
     def test_save_checkout_creates_file_with_header(self, tmp_path):
-        records = [tu.create_checkout_record("rdaxini", "2503-015")]
-        log_file = str(tmp_path / "checkout_log.csv")
-        success, msg = tu.save_checkout_to_csv(records, log_file, str(tmp_path))
+        records = [self._record("rdaxini", "2503-015")]
+        success, msg = tu.save_checkout_to_csv(records, str(tmp_path))
         assert success
-        import csv
+        now = datetime.datetime.now()
+        expected_filename = tu.get_checkout_log_filename(now.year, now.month)
+        log_file = tmp_path / expected_filename
+        assert log_file.exists()
         with open(log_file, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
@@ -613,28 +421,39 @@ class TestCheckout:
         assert rows[0]["User"] == "rdaxini"
 
     def test_save_checkout_appends(self, tmp_path):
-        log_file = str(tmp_path / "checkout_log.csv")
-        r1 = [tu.create_checkout_record("rdaxini", "2503-015")]
-        r2 = [tu.create_checkout_record("rdaxini", "2503-016")]
-        tu.save_checkout_to_csv(r1, log_file, str(tmp_path))
-        tu.save_checkout_to_csv(r2, log_file, str(tmp_path))
-        import csv
+        tu.save_checkout_to_csv([self._record("rdaxini", "2503-015")], str(tmp_path))
+        tu.save_checkout_to_csv([self._record("rdaxini", "2503-016")], str(tmp_path))
+        now = datetime.datetime.now()
+        log_file = tmp_path / tu.get_checkout_log_filename(now.year, now.month)
         with open(log_file, newline="", encoding="utf-8") as f:
             rows = list(csv.DictReader(f))
         assert len(rows) == 2
         assert rows[1]["SampleID"] == "2503-016"
 
     def test_save_checkout_empty_returns_false(self, tmp_path):
-        log_file = str(tmp_path / "checkout_log.csv")
-        success, msg = tu.save_checkout_to_csv([], log_file, str(tmp_path))
+        success, msg = tu.save_checkout_to_csv([], str(tmp_path))
         assert not success
 
-    def test_get_output_dir_invalid_process(self):
-        """Test output dir for invalid process uses quarantine folder."""
-        base = "/test/outputs"
-        output_dir = tu.get_output_dir("invalid_proc", base)
-        assert "unapproved" in output_dir
-        assert output_dir == os.path.join(base, "unapproved")
+    def test_save_checkout_routes_to_monthly_files(self, tmp_path):
+        """Records with different months are written to separate files."""
+        records = [
+            {'Timestamp': '2026-03-15 10:00:00', 'User': 'rdaxini',
+             'SampleID': '2503-001'},
+            {'Timestamp': '2026-04-02 09:00:00', 'User': 'rdaxini',
+             'SampleID': '2504-001'},
+        ]
+        success, msg = tu.save_checkout_to_csv(records, str(tmp_path))
+        assert success
+        mar_file = tmp_path / "checkout_log_2026-03.csv"
+        apr_file = tmp_path / "checkout_log_2026-04.csv"
+        assert mar_file.exists()
+        assert apr_file.exists()
+        with open(mar_file, newline="", encoding="utf-8") as f:
+            mar_rows = list(csv.DictReader(f))
+        with open(apr_file, newline="", encoding="utf-8") as f:
+            apr_rows = list(csv.DictReader(f))
+        assert len(mar_rows) == 1 and mar_rows[0]["SampleID"] == "2503-001"
+        assert len(apr_rows) == 1 and apr_rows[0]["SampleID"] == "2504-001"
 
 
 class TestTrayParsing:

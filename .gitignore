@@ -5,7 +5,6 @@ __pycache__/
 
 # PyInstaller build folders
 /exe/build/
-/exe/*.spec
 
 # IDE
 .vscode/

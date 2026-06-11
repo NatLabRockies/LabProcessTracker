@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.4.0-blue.svg" alt="Version">
+<img src="https://img.shields.io/badge/version-v0.5.1-blue.svg" alt="Version">
 
 <div align="left">
   <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
@@ -24,7 +24,7 @@ Navigate to the `exe/dist` folder and double-click the executable:
 python src/process_tracker_gui.py
 ```
 
-No additional installations are required.
+No additional installations are required beyond Python.
 
 ## How to use
 **Sample/Process Tracking:**
@@ -53,9 +53,9 @@ No additional installations are required.
 - You can skip individual positions or skip all remaining positions
 - Once all positions are filled or skipped, scan a single process QR code to associate
   and log all samples with that process
-- Repeat for as many trays you have, logging sample positions and associating a process
-  with each tray of samples
-- Scan the load QR code to log time time all trays are loaded
+- Repeat for as many trays as you have, logging sample positions and associating a
+  process with each tray of samples
+- Scan the load QR code to log the time all trays are loaded
 
 **Substrate Checkout:**
 - Click the **`CHECKOUT`** button to enter checkout mode
@@ -63,7 +63,7 @@ No additional installations are required.
   consecutively-numbered samples being checked out (e.g. `50` for samples `2503-015`
   through `2503-064`)
 - Click **`EXIT CHECKOUT`** (or press `SAVE`) to write the records to
-  `checkout_log.csv` and return to normal tracking mode
+  `checkout_log_YYYY-MM.csv` and return to normal tracking mode
 - `UNDO` removes the last checkout record while in checkout mode
 
  **Command buttons:**
@@ -87,10 +87,8 @@ No additional installations are required.
 
 **Batch vs Sample Logging:**
 - **Sample scanning:** Used to log individual samples processed through a tool
-- **Batch scanning:** Used to log that an entire batch of samples processed
-  - The batch scan records that the whole batch went through this specific process
-  - CSV logs contain separate `SampleID` and `BatchID` columns
-  - Only one is populated per scan (mutually exclusive)
+- **Batch scanning:** Used to log that an entire batch went through a process; records a
+  `BatchID` instead of a `SampleID` (mutually exclusive per scan)
 
 **Process Validation & Quarantine Logging:**
 
@@ -109,16 +107,14 @@ When you scan a process QR code (`P%:process_name`):
     from approved processes.
   - **Contact Rajiv.Daxini@nlr.gov** to request adding new processes to the database.
 
-The quarantine logic allows rapid deployment on new systems without blocking workflow,
-while ensuring unapproved processes are tracked and not mixed with approved logs.
-
 ## Output
 
 - Logs are saved to tool-specific CSV files (e.g., `scan_log_c215ss_jv.csv`,
   `scan_log_bd8_xrd.csv`)
 - **Multi-process sessions:** When you switch between different processes, the
   application automatically saves records to the appropriate file for each process
-- **Checkout log:** Checkout records are appended to a separate `checkout_log.csv`
+- **Checkout log:** Checkout records are appended to a monthly file
+  (e.g., `checkout_log_2026-04.csv`)
 - Default output locations:
   - **Running from source:** `outputs/` folder in the project directory
   - **Running as executable:** `~/Documents/process_tracking_outputs/`
@@ -143,8 +139,7 @@ No external dependencies required unless using optional features or development 
 
 ## For Developers
 
-If you want to install and run the repository directly (for development or
-customization), you can install it using pip:
+Install the package locally with pip:
 
 ```bash
 pip install .
@@ -182,7 +177,6 @@ The executable will be created in `exe/dist/` directory:
 To run the test suite:
 
 ```bash
-# Using the test runner script
 python scripts/run_tests.py
 
 # Or directly with pytest
@@ -195,19 +189,15 @@ pytest tests/ -v --cov --cov-report=term-missing --cov-report=html
 **Note:** You need to install the test dependencies first: `pip install .[test]`
 
 The test suite covers `tracker_utils.py` and `populate_uwl.py`. The GUI is
-validated through manual testing and usage.
-
-## Test Coverage
-
-Test coverage reports are generated in `htmlcov/` after running tests.
-See the terminal output for summary and open `htmlcov/index.html` for details.
+validated through manual testing and usage. Coverage reports are generated in
+`htmlcov/` — open `htmlcov/index.html` for details.
 
 ## Generating QR Codes
 
 Two scripts are provided for QR code generation:
 
 - **`scripts/generate_test_qr_codes.py`** - Create test set with valid/invalid examples
-- **`scripts/generate_custom_qr_codes.py`** - Template for generating your own QR codes
+- **`scripts/generate_custom_qr_codes.py`** - Template for generating custom QR codes
 
 Run either script to generate labeled QR code images:
 ```bash

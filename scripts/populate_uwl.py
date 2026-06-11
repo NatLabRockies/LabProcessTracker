@@ -109,11 +109,9 @@ def main():
 
     args = parser.parse_args()
 
-    # --- Validate inputs ---
     if not args.scan_log.exists():
         sys.exit(f"Error: Scan log not found: {args.scan_log}")
 
-    # --- Resolve UWL path ---
     if args.uwl:
         uwl_path = args.uwl
         if not uwl_path.exists():
@@ -128,7 +126,6 @@ def main():
 
     print(f"UWL file:  {uwl_path}")
 
-    # --- Load and filter scan log ---
     records = load_matching_records(args.scan_log, args.sample_id, args.process)
 
     if not records:
@@ -151,61 +148,44 @@ def main():
         f"sample={record.get('SampleID')} | process={record.get('ProcessName')}"
     )
 
-    # --- Load UWL ---
     with uwl_path.open(encoding="utf-8") as f:
         uwl_data = json.load(f)
 
-    # --- Validate requested sample ID vs UWL embedded sample ID ---
     if not args.skip_sample_id_check:
         try:
             validate_sample_id_match(uwl_data, args.sample_id)
         except ValueError as exc:
             sys.exit(f"Error: {exc}")
 
-    # --- Resolve target section names ---
-    section_names = [args.process]
-
-    # Build context dict (extensible for future FIELD_POPULATORS)
+    section_name = args.process
     context = {
         "sample_id": args.sample_id,
         "process_name": args.process,
     }
 
-    modified = []
-    not_found = []
-
-    for section_name in section_names:
-        section = find_section(uwl_data["Objects"], section_name)
-        if section is None:
-            not_found.append(section_name)
-            continue
-
-        section.setdefault("Objects", {})
-        tp_item = find_item_by_name(section["Objects"], "Time & Place")
-        if tp_item is None:
-            new_id = _next_uwl_id(uwl_data)
-            tp_item = _make_time_and_place_item(new_id)
-            section["Objects"][new_id] = tp_item
-            print(f"  Created 'Time & Place' in section '{section_name}'")
-
-        apply_populators(tp_item, record, context)
-        modified.append(section_name)
-        print(f"  Updated 'Time & Place' in section '{section_name}'")
-
-    if not_found:
+    section = find_section(uwl_data["Objects"], section_name)
+    if section is None:
         warnings.warn(
-            f"Section(s) not in UWL: {not_found}. "
+            f"Section(s) not in UWL: ['{section_name}']. "
             "Check that the process name matches a section name in the UWL file.",
             stacklevel=1,
         )
-
-    if not modified:
         sys.exit(
             "Error: No sections were modified. Nothing written. "
             "Check that --process name matches a section in the UWL file."
         )
 
-    # --- Write output ---
+    section.setdefault("Objects", {})
+    tp_item = find_item_by_name(section["Objects"], "Time & Place")
+    if tp_item is None:
+        new_id = _next_uwl_id(uwl_data)
+        tp_item = _make_time_and_place_item(new_id)
+        section["Objects"][new_id] = tp_item
+        print(f"  Created 'Time & Place' in section '{section_name}'")
+
+    apply_populators(tp_item, record, context)
+    print(f"  Updated 'Time & Place' in section '{section_name}'")
+
     output_dir = args.output_dir or uwl_path.parent
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{uwl_path.stem}_populated.uwl"

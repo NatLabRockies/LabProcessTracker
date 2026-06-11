@@ -9,8 +9,41 @@ from pathlib import Path
 from qr_utils import generate_qr_with_label
 
 
+# (section_label, [(data, qr_label, filename), ...])
+# Sample format: S%:YYMM-NN. Batch: B%:NNNN. Process: P%:abbr. Tray: T%:ID.
+_SECTIONS = [
+    ("Valid Samples (2)", [
+        ("S%:2601-01", "Sample: 2601-01", "sample_2601-01.png"),
+        ("S%:2601-02", "Sample: 2601-02", "sample_2601-02.png"),
+    ]),
+    ("Legacy Sample (1)", [
+        ("2512-99", "Legacy sample: 2512-99", "legacy_sample_2512-99.png"),
+    ]),
+    ("Valid Batch (1)", [
+        ("B%:1234", "Batch: 1234", "batch_1234.png"),
+    ]),
+    ("Valid Processes (3)", [
+        ("P%:ftlb234_spinbox", "Process: Spincoating", "process_spinbox.png"),
+        ("P%:c212_sonicator", "Process: Sonication", "process_sonicator.png"),
+        ("P%:c215ss_jv", "Process: JV Measurement", "process_jv.png"),
+    ]),
+    ("Valid Trays (2)", [
+        ("T%:066726-S-001", "Tray: 066726-S-001 (2x2)", "tray_066726_2x2.png"),
+        ("T%:072266-S-001", "Tray: 072266-S-001 (5x5)", "tray_072266_5x5.png"),
+    ]),
+    ("Invalid QR Codes (edge cases)", [
+        ("X%:2601-01", "BAD: Invalid Prefix", "bad_invalid_prefix.png"),
+        ("2601-01", "BAD: No Prefix", "bad_no_prefix.png"),
+        ("S%2601-01", "BAD: Missing Colon", "bad_missing_colon.png"),
+        ("S%:", "BAD: Empty ID", "bad_empty_id.png"),
+        ("P%:fake_process", "BAD: Unapproved Process", "bad_unapproved_process.png"),
+        ("S%: 2601-01", "BAD: Space After Prefix", "bad_space_in_id.png"),
+        ("RANDOM TEXT", "BAD: Invalid Format", "bad_random_text.png"),
+    ]),
+]
+
+
 def main():
-    # Create output directory
     project_root = Path(__file__).parent.parent
     output_dir = project_root / "test_qr_codes"
     output_dir.mkdir(exist_ok=True)
@@ -19,105 +52,13 @@ def main():
     print("This is a minimal test set. "
           "For custom QR codes, use generate_custom_qr_codes.py\n")
 
-    # === VALID SAMPLES (2) ===
-    print("=== Valid Samples (2) ===")
-    # Format: S%:YYMM-NN where YY=year, MM=month, NN=sample number
-    generate_qr_with_label(
-        "S%:2601-01", "Sample: 2601-01", "sample_2601-01.png", output_dir
-    )
-    generate_qr_with_label(
-        "S%:2601-02", "Sample: 2601-02", "sample_2601-02.png", output_dir
-    )
-    print()
+    for label, items in _SECTIONS:
+        print(f"=== {label} ===")
+        for data, qr_label, filename in items:
+            generate_qr_with_label(data, qr_label, filename, output_dir)
+        print()
 
-    # === LEGACY SAMPLE (1) ===
-    print("=== Legacy Sample (1) ===")
-    # Format: YYMM-NN (no S%: prefix)
-    generate_qr_with_label(
-        "2512-99", "Legacy sample: 2512-99", "legacy_sample_2512-99.png", output_dir
-    )
-    print()
-
-    # === VALID BATCH (1) ===
-    print("=== Valid Batch (1) ===")
-    # Format: B%:four-digit-number
-    generate_qr_with_label("B%:1234", "Batch: 1234", "batch_1234.png", output_dir)
-    print()
-
-    # === VALID PROCESSES (3) ===
-    print("=== Valid Processes (3) ===")
-    generate_qr_with_label(
-        "P%:ftlb234_spinbox", "Process: Spincoating",
-        "process_spinbox.png", output_dir
-    )
-    generate_qr_with_label(
-        "P%:c212_sonicator", "Process: Sonication",
-        "process_sonicator.png", output_dir
-    )
-    generate_qr_with_label(
-        "P%:c215ss_jv", "Process: JV Measurement",
-        "process_jv.png", output_dir
-    )
-    print()
-
-    # === VALID TRAYS (2) ===
-    print("=== Valid Trays (2) ===")
-    # Format: T%:TRAY_ID
-    generate_qr_with_label(
-        "T%:066726-S-001", "Tray: 066726-S-001 (2x2)",
-        "tray_066726_2x2.png", output_dir
-    )
-    generate_qr_with_label(
-        "T%:072266-S-001", "Tray: 072266-S-001 (5x5)",
-        "tray_072266_5x5.png", output_dir
-    )
-    print()
-
-    # === INVALID/BAD QR CODES (one of each type) ===
-    print("=== Invalid QR Codes (edge cases) ===")
-
-    # Bad: Invalid prefix
-    generate_qr_with_label(
-        "X%:2601-01", "BAD: Invalid Prefix",
-        "bad_invalid_prefix.png", output_dir
-    )
-
-    # Bad: No prefix
-    generate_qr_with_label(
-        "2601-01", "BAD: No Prefix", "bad_no_prefix.png", output_dir
-    )
-
-    # Bad: Missing colon
-    generate_qr_with_label(
-        "S%2601-01", "BAD: Missing Colon",
-        "bad_missing_colon.png", output_dir
-    )
-
-    # Bad: Empty ID
-    generate_qr_with_label(
-        "S%:", "BAD: Empty ID", "bad_empty_id.png", output_dir
-    )
-
-    # Bad: Unapproved process
-    generate_qr_with_label(
-        "P%:fake_process", "BAD: Unapproved Process",
-        "bad_unapproved_process.png", output_dir
-    )
-
-    # Bad: Whitespace in ID
-    generate_qr_with_label(
-        "S%: 2601-01", "BAD: Space After Prefix",
-        "bad_space_in_id.png", output_dir
-    )
-
-    # Bad: Random text
-    generate_qr_with_label(
-        "RANDOM TEXT", "BAD: Invalid Format",
-        "bad_random_text.png", output_dir
-    )
-
-    print()
-    print("✓ All TEST QR codes generated successfully!\n")
+    print("\u2713 All TEST QR codes generated successfully!\n")
     print(f"Location: {output_dir}")
     print(f"Total files: {len(list(output_dir.glob('*.png')))} PNG images\n")
     print("To generate custom QR codes, "
