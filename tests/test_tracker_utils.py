@@ -70,6 +70,7 @@ class TestProcessDisplayNames:
     def test_unknown_process_absent_from_info(self):
         assert "invalid_process_name" not in PROCESS_INFO
 
+
 class TestProcessColors:
     """Test cases for process color assignments."""
 
