@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import scrolledtext, messagebox
+from tkinter import scrolledtext, messagebox, ttk
 import datetime
 import os
 import tracker_utils as tu
@@ -26,9 +26,31 @@ _SAMPLE_BLOCK = {
 class ProcessTrackerGUI(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Lab Process Tracker GUI")
-        self.geometry("700x650")
-        self.configure(bg="#f0f0f0")
+        self.title("Lab Process Tracker")
+        self.geometry("900x800")
+        self.minsize(800, 700)
+
+        # Modern dark theme colors
+        self.colors = {
+            'bg_dark': '#2c3e50',
+            'bg_medium': '#34495e',
+            'bg_light': '#ecf0f1',
+            'accent': '#3498db',
+            'success': '#27ae60',
+            'warning': '#f39c12',
+            'danger': '#e74c3c',
+            'text_light': '#ecf0f1',
+            'text_dark': '#2c3e50',
+            'border': '#bdc3c7'
+        }
+
+        self.configure(bg=self.colors['bg_dark'])
+
+        # Apply modern ttk theme
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
+        self.configure_styles()
+
         self.current_process = None
         self.tool_process = None
         self.log_file = None
@@ -55,103 +77,270 @@ class ProcessTrackerGUI(tk.Tk):
 
         self.protocol("WM_DELETE_WINDOW", self.exit_app)
 
+    def configure_styles(self):
+        """Configure ttk styles for modern appearance."""
+        # Button style
+        self.style.configure(
+            'Modern.TButton',
+            background=self.colors['accent'],
+            foreground=self.colors['text_light'],
+            borderwidth=0,
+            focuscolor='none',
+            font=('Segoe UI', 10, 'bold')
+        )
+        self.style.map('Modern.TButton',
+                       background=[('active', '#2980b9')],
+                       relief=[('pressed', 'flat')]
+                       )
+
+        # Entry style
+        self.style.configure(
+            'Modern.TEntry',
+            fieldbackground=self.colors['bg_light'],
+            borderwidth=2,
+            relief='flat'
+        )
+
     def create_widgets(self):
-        # Main container with margins
-        main_container = tk.Frame(self, bg="#f0f0f0")
-        main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        # Main container
+        main_container = tk.Frame(self, bg=self.colors['bg_dark'])
+        main_container.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
 
         # NLR Username Entry
-        username_frame = tk.Frame(main_container, bg="#f0f0f0")
-        username_frame.pack(pady=(10, 0))
+        header_frame = tk.Frame(main_container, bg=self.colors['bg_dark'])
+        header_frame.pack(fill=tk.X, pady=(0, 15))
+
+        title_label = tk.Label(
+            header_frame,
+            text="🔬 Lab Process Tracker",
+            font=('Segoe UI', 20, 'bold'),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['text_light']
+        )
+        title_label.pack()
+
+        # Operator section with modern card design
+        operator_card = tk.Frame(
+            main_container,
+            bg=self.colors['bg_medium'],
+            relief=tk.FLAT,
+            bd=0
+        )
+        operator_card.pack(fill=tk.X, pady=(0, 15))
+
+        operator_inner = tk.Frame(operator_card, bg=self.colors['bg_medium'])
+        operator_inner.pack(fill=tk.X, padx=15, pady=15)
 
         tk.Label(
-            username_frame, text="NLR Username:", bg="#f0f0f0"
-        ).pack(side=tk.LEFT, padx=(0, 5))
-        self.user_entry = tk.Entry(username_frame, width=25)
-        self.user_entry.pack(side=tk.LEFT, padx=(0, 5))
+            operator_inner,
+            text="NLR Username",
+            font=('Segoe UI', 11, 'bold'),
+            bg=self.colors['bg_medium'],
+            fg=self.colors['text_light']
+        ).pack(side=tk.LEFT, padx=(0, 10))
+
+        self.user_entry = tk.Entry(
+            operator_inner,
+            width=20,
+            font=('Segoe UI', 11),
+            bg=self.colors['bg_light'],
+            fg=self.colors['text_dark'],
+            relief=tk.FLAT,
+            bd=2
+        )
+        self.user_entry.pack(side=tk.LEFT, padx=(0, 10), ipady=5)
         self.user_entry.focus_set()
         self.user_entry.bind("<Return>", lambda e: self.set_user())
 
         self.set_user_btn = tk.Button(
-            username_frame, text="Set", command=self.set_user
+            operator_inner,
+            text="✓ Set",
+            command=self.set_user,
+            font=('Segoe UI', 10, 'bold'),
+            bg=self.colors['success'],
+            fg='white',
+            relief=tk.FLAT,
+            padx=20,
+            pady=8,
+            cursor='hand2'
         )
         self.set_user_btn.pack(side=tk.LEFT, padx=(0, 5))
 
         self.reset_user_btn = tk.Button(
-            username_frame,
-            text="Reset",
+            operator_inner,
+            text="↻ Reset",
             command=self.reset_user,
+            font=('Segoe UI', 10, 'bold'),
+            bg=self.colors['warning'],
+            fg='white',
+            relief=tk.FLAT,
+            padx=20,
+            pady=8,
+            cursor='hand2',
             state="disabled"
         )
         self.reset_user_btn.pack(side=tk.LEFT)
 
+        # Status display area
+        status_container = tk.Frame(main_container, bg=self.colors['bg_dark'])
+        status_container.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+
+        # Configure row weights to prevent process/sample from expanding too much
+        status_container.grid_rowconfigure(0, weight=1)
+        status_container.grid_rowconfigure(1, weight=1)
+        status_container.grid_columnconfigure(0, weight=1)
+
         # Process Status Block
-        self.process_frame = tk.Frame(main_container, height=150, bg="grey")
-        self.process_frame.pack(pady=(10, 0), fill=tk.BOTH, expand=True)
+        self.process_frame = tk.Frame(
+            status_container,
+            bg='grey',
+            relief=tk.FLAT,
+            bd=0
+        )
+        self.process_frame.grid(row=0, column=0, sticky='nsew', pady=(0, 10))
+
         self.process_label = tk.Label(
             self.process_frame,
-            text="No process",
-            font=("Arial", FONT_SIZE_LARGE, "bold"),
-            bg="grey",
-            fg="white",
-            wraplength=380,
+            text="No process set",
+            font=('Segoe UI', FONT_SIZE_LARGE, 'bold'),
+            bg='grey',
+            fg='white',
+            wraplength=800,
+            justify=tk.CENTER
         )
         self.process_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # Sample Status Block
-        self.sample_frame = tk.Frame(main_container, height=150, bg="#95a5a6")
-        self.sample_frame.pack(pady=(5, 10), fill=tk.BOTH, expand=True)
+        self.sample_frame = tk.Frame(
+            status_container,
+            bg='#95a5a6',
+            relief=tk.FLAT,
+            bd=0
+        )
+        self.sample_frame.grid(row=1, column=0, sticky='nsew')
 
-        # Label "No sample" or "SAMPLE\n{ID}"
         self.sample_label = tk.Label(
             self.sample_frame,
             text="No sample",
-            font=("Arial", FONT_SIZE_LARGE, "bold"),
-            bg="#95a5a6",
-            fg="white",
-            wraplength=380,
-            justify=tk.CENTER,
+            font=('Segoe UI', FONT_SIZE_LARGE, 'bold'),
+            bg='#95a5a6',
+            fg='white',
+            wraplength=800,
+            justify=tk.CENTER
         )
         self.sample_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        # QR Input
-        tk.Label(main_container, text="Scan QR Code:", bg="#f0f0f0").pack()
-        self.qr_entry = tk.Entry(main_container, width=50)
-        self.qr_entry.pack(pady=5)
+        # QR Input section (always visible, fixed size)
+        input_card = tk.Frame(
+            main_container,
+            bg=self.colors['bg_medium']
+        )
+        input_card.pack(fill=tk.X, pady=(0, 10))
+
+        input_inner = tk.Frame(input_card, bg=self.colors['bg_medium'])
+        input_inner.pack(fill=tk.X, padx=15, pady=15)
+
+        tk.Label(
+            input_inner,
+            text="Scan QR Code:",
+            font=('Segoe UI', 11, 'bold'),
+            bg=self.colors['bg_medium'],
+            fg=self.colors['text_light']
+        ).pack(anchor=tk.W, pady=(0, 5))
+
+        self.qr_entry = tk.Entry(
+            input_inner,
+            font=('Segoe UI', 12),
+            bg=self.colors['bg_light'],
+            fg=self.colors['text_dark'],
+            relief=tk.FLAT,
+            bd=2
+        )
+        self.qr_entry.pack(fill=tk.X, ipady=8)
         self.qr_entry.bind("<Return>", lambda e: self.handle_scan())
 
-        # Command Buttons
-        btn_frame = tk.Frame(main_container, bg="#f0f0f0")
-        btn_frame.pack(pady=10)
+        # Command Buttons (always visible, fixed size)
+        btn_frame = tk.Frame(main_container, bg=self.colors['bg_dark'])
+        btn_frame.pack(pady=(0, 10))
+
+        button_config = {
+            'font': ('Segoe UI', 10, 'bold'),
+            'relief': tk.FLAT,
+            'padx': 25,
+            'pady': 10,
+            'cursor': 'hand2',
+            'fg': 'white'
+        }
+
         self.save_btn = tk.Button(
-            btn_frame, text="SAVE", width=10, command=self.save_log
+            btn_frame,
+            text="💾 SAVE",
+            command=self.save_log,
+            bg=self.colors['success'],
+            **button_config
         )
         self.save_btn.grid(row=0, column=0, padx=5)
+
         self.undo_btn = tk.Button(
-            btn_frame, text="UNDO", width=10, command=self.undo_last_scan
+            btn_frame,
+            text="↶ UNDO",
+            command=self.undo_last_scan,
+            bg=self.colors['warning'],
+            **button_config
         )
         self.undo_btn.grid(row=0, column=1, padx=5)
+
         self.exit_btn = tk.Button(
-            btn_frame, text="EXIT", width=10, command=self.exit_app
+            btn_frame,
+            text="✖ EXIT",
+            command=self.exit_app,
+            bg=self.colors['danger'],
+            **button_config
         )
         self.exit_btn.grid(row=0, column=2, padx=5)
         self.checkout_btn = tk.Button(
-            btn_frame, text="CHECKOUT", width=12,
-            command=self.toggle_checkout_mode
+            btn_frame,
+            text="CHECKOUT",
+            width=12,
+            command=self.toggle_checkout_mode,
+            bg=self.colors['accent'],
+            **button_config
         )
         self.checkout_btn.grid(row=0, column=3, padx=5)
         self._checkout_btn_default_bg = self.checkout_btn.cget("bg")
         self._checkout_btn_default_fg = self.checkout_btn.cget("fg")
 
-        # Terminal Output
-        tk.Label(main_container, text="Activity Log:", bg="#f0f0f0").pack()
-        self.terminal = scrolledtext.ScrolledText(
+        # Terminal (always visible, fixed size)
+        terminal_card = tk.Frame(
             main_container,
-            width=80,
-            height=5,
-            state="disabled",
-            font=("Consolas", 9),
+            bg=self.colors['bg_medium']
+        )
+        terminal_card.pack(fill=tk.X, pady=(0, 10))
+
+        terminal_inner = tk.Frame(terminal_card, bg=self.colors['bg_medium'])
+        terminal_inner.pack(fill=tk.X, padx=10, pady=10)
+
+        tk.Label(
+            terminal_inner,
+            text="Activity Log",
+            font=('Segoe UI', 10, 'bold'),
+            bg=self.colors['bg_medium'],
+            fg=self.colors['text_light']
+        ).pack(anchor=tk.W, pady=(0, 5))
+
+        self.terminal = scrolledtext.ScrolledText(
+            terminal_inner,
+            height=4,
+            state='disabled',
+            font=('Consolas', 10),
+            bg='#1e272e',
+            fg='#00ff00',
+            insertbackground='white',
+            relief=tk.FLAT,
+            bd=0,
+            wrap=tk.WORD,
             takefocus=0
+
         )
         self.terminal.pack(pady=5, fill=tk.BOTH, expand=True)
         # Block focus/selection in the activity log
@@ -160,15 +349,15 @@ class ProcessTrackerGUI(tk.Tk):
         )
         self.terminal.bind("<FocusIn>", lambda e: self.qr_entry.focus_set())
 
-        # Info
+        # Footer info
         self.log_file_label = tk.Label(
             main_container,
             text="Scan a PROCESS QR code to set the tool and begin logging.",
-            bg="#f0f0f0",
-            fg="gray",
-            font=("Arial", 8),
+            font=('Segoe UI', 8),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['border']
         )
-        self.log_file_label.pack(pady=(5, 0))
+        self.log_file_label.pack()
 
     def set_user(self):
         name = self.user_entry.get().strip()
@@ -886,7 +1075,7 @@ class ProcessTrackerGUI(tk.Tk):
         )
         self.sample_label.config(
             text=template.format(info=sample_info),
-            font=("Arial", font_size, "bold"),
+            font=("Segoe UI", font_size, "bold"),
         )
 
 
