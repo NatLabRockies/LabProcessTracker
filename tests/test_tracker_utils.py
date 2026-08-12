@@ -228,17 +228,22 @@ class TestParseInput:
         assert data_id == "BATCH001"
 
     def test_legacy_sample_format(self):
-        """Test parsing legacy sample format (####-##)."""
+        """Test parsing legacy sample format (####-## or ####-###)."""
         data_type, data_id = tu.parse_input("2511-09")
         assert data_type == "SAMPLE_LEGACY"
         assert data_id == "2511-09"
 
     def test_legacy_sample_various_patterns(self):
         """Test various legacy sample patterns."""
-        # Valid legacy format
+        # Valid legacy format (2 digits after dash)
         data_type, data_id = tu.parse_input("1234-56")
         assert data_type == "SAMPLE_LEGACY"
         assert data_id == "1234-56"
+
+        # Valid legacy format (3 digits after dash)
+        data_type, data_id = tu.parse_input("1234-567")
+        assert data_type == "SAMPLE_LEGACY"
+        assert data_id == "1234-567"
 
         # Invalid patterns (should not match)
         data_type, data_id = tu.parse_input("123-45")  # Only 3 digits before dash
@@ -247,7 +252,7 @@ class TestParseInput:
         data_type, data_id = tu.parse_input("12345-67")  # 5 digits before dash
         assert data_type is None
 
-        data_type, data_id = tu.parse_input("1234-567")  # 3 digits after dash
+        data_type, data_id = tu.parse_input("1234-5678")  # 4 digits after dash
         assert data_type is None
 
     def test_case_sensitive_prefix(self):
