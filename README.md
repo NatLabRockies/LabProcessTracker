@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.5.1-blue.svg" alt="Version">
+<img src="https://img.shields.io/badge/version-v0.5.2-blue.svg" alt="Version">
 
 <div align="left">
   <img src="logo/logo_text.jpg" alt="Sample Tracker Logo" width="400">
@@ -81,7 +81,7 @@ No additional installations are required beyond Python.
 - The prefixes (`P%:`, `S%:`, `B%:`, and `T%:`) must be uppercase and include the colon
 - Process names are case-insensitive (automatically normalized to lowercase)
 - Sample IDs and Batch IDs preserve their original case
-- Legacy sample QR codes in format `####-##` (e.g., `2511-09`) are supported
+- Legacy sample QR codes in format `####-##` or `####-###` (e.g., `2511-09` or `2511-091`) are supported
   - A warning will be displayed when legacy format is detected
   - No `S%:` prefix required for legacy samples
 

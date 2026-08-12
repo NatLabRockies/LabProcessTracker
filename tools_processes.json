@@ -65,6 +65,14 @@
       "device_maker": "Ross Kerner"
     },
     {
+      "tool": "Laminar Flow Box",
+      "location": "PDIL",
+      "abbreviated": "activelayer",
+      "notes": "Coat active layer",
+      "color": "#800080",
+      "device_maker": "Marc Migliozzi"
+    },
+    {
       "tool": "Angstrom Evaporator",
       "location": "PDIL",
       "abbreviated": "pae_evap",

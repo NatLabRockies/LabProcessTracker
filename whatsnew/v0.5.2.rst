@@ -1,0 +1,17 @@
+.. _whatsnew052:
+
+v0.5.2 (August 2026)
+------------------------
+
+Enhancements
+~~~~~~~~~~~~
+* Legacy sample QR code format now also accepts a 3-digit suffix (``####-###``,
+  e.g. ``2511-091``) in addition to the existing 2-digit suffix (``####-##``).
+
+Documentation
+~~~~~~~~~~~~~
+* Add `activelayer` process (:pull:`21`)
+
+Contributors
+~~~~~~~~~~~~
+* Rajiv Daxini (:ghuser:`rdaxini`)
