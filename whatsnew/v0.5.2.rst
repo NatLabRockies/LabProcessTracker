@@ -1,0 +1,13 @@
+.. _whatsnew052:
+
+v0.5.2 (August 2026)
+------------------------
+
+Documentation
+~~~~~~~~~~~~~
+* Add `activelayer` process (:pull:`21`)
+
+Contributors
+~~~~~~~~~~~~
+* Rajiv Daxini (:ghuser:`rdaxini`)
+
