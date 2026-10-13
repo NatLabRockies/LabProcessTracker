@@ -3,12 +3,20 @@ GUI components for the Process Tracker GUI application.
 Contains reusable dialog and widget classes.
 """
 import tkinter as tk
+from tkinter import ttk
 
 # Color constants for dialog components
 BG_COLOR_DIALOG = "#eaf6ff"
 BG_COLOR_GRID_CELL = "#ffffff"
 BG_COLOR_GRID_COMPLETE = "#d5f4e6"  # Light green
 BG_COLOR_CHECKOUT = "#8e44ad"       # Purple for checkout mode
+
+CHECKOUT_PATTERNS = ("Pixel", "Module")
+# Vendor-TCO-sheet resistance (ohm/sq)
+CHECKOUT_TCO_OPTIONS = (
+    "Sz-ITO-20", "Sz-ITO-15", "CCC-ITO",
+    "NSG-FTO-7", "NSG-FTO-10", "NSG-FTO-15", "NSG-FTO-20",
+)
 
 
 class TrayPositionDialog(tk.Toplevel):
@@ -206,8 +214,8 @@ class TrayPositionDialog(tk.Toplevel):
 class BulkCheckoutDialog(tk.Toplevel):
     """Modal dialog for single or bulk sample checkout.
 
-    Shows the scanned first sample ID, a count entry, a live preview of
-    the ID range, and Confirm/Cancel buttons.
+    Shows the scanned first sample ID, a count entry, pattern and TCO
+    selectors, a live preview of the ID range, and Confirm/Cancel buttons.
     """
 
     def __init__(
@@ -225,7 +233,7 @@ class BulkCheckoutDialog(tk.Toplevel):
         self.on_confirm_callback = on_confirm_callback
         self.on_cancel_callback = on_cancel_callback
 
-        self.geometry("400x220")
+        self.geometry("400x300")
         self.transient(parent)
         self.grab_set()
 
@@ -264,6 +272,29 @@ class BulkCheckoutDialog(tk.Toplevel):
         self.count_entry.pack(side=tk.LEFT)
         self.count_entry.select_range(0, tk.END)
         self.count_entry.focus_set()
+
+        pattern_frame = tk.Frame(self, bg=BG_COLOR_DIALOG)
+        pattern_frame.pack(pady=5)
+        tk.Label(
+            pattern_frame, text="Pattern:", bg=BG_COLOR_DIALOG,
+            font=("Arial", 10),
+        ).pack(side=tk.LEFT, padx=(0, 8))
+        self.pattern_var = tk.StringVar()
+        ttk.Combobox(
+            pattern_frame, textvariable=self.pattern_var, state="readonly",
+            values=CHECKOUT_PATTERNS, width=15, font=("Arial", 10),
+        ).pack(side=tk.LEFT)
+
+        tco_frame = tk.Frame(self, bg=BG_COLOR_DIALOG)
+        tco_frame.pack(pady=5)
+        tk.Label(
+            tco_frame, text="TCO:", bg=BG_COLOR_DIALOG, font=("Arial", 10),
+        ).pack(side=tk.LEFT, padx=(0, 8))
+        self.tco_var = tk.StringVar()
+        ttk.Combobox(
+            tco_frame, textvariable=self.tco_var,
+            values=CHECKOUT_TCO_OPTIONS, width=15, font=("Arial", 10),
+        ).pack(side=tk.LEFT)
 
         self.preview_var = tk.StringVar()
         tk.Label(
@@ -332,16 +363,21 @@ class BulkCheckoutDialog(tk.Toplevel):
             self.preview_var.set("Invalid count.")
 
     def _confirm(self):
-        """Validate count and invoke the confirm callback."""
+        """Validate inputs and invoke the confirm callback."""
         try:
             count = int(self.count_var.get())
             if count < 1:
                 return
         except ValueError:
             return
+        pattern = self.pattern_var.get()
+        if not pattern:
+            self.preview_var.set("Required: pattern (Pixel or Module)")
+            return
+        tco = self.tco_var.get().strip()
         self.grab_release()
         self.destroy()
-        self.on_confirm_callback(self.first_sample_id, count)
+        self.on_confirm_callback(self.first_sample_id, count, pattern, tco)
         self.parent.qr_entry.focus_set()
 
     def _cancel(self):

@@ -34,8 +34,6 @@ UNAPPROVED_FOLDER_NAME = "unapproved"
 
 def load_process_data():
     """Load process and tool data from JSON file."""
-    global PROCESS_COLORS, PROCESS_INFO
-
     # Determine base path - handles both script and PyInstaller .exe
     if getattr(sys, 'frozen', False):
         # Running as compiled executable
@@ -70,8 +68,6 @@ def load_process_data():
 
 def load_tray_data():
     """Load tray layout data from JSON file."""
-    global TRAY_LAYOUTS
-
     # Determine base path - handles both script and PyInstaller .exe
     if getattr(sys, 'frozen', False):
         # Running as compiled executable
@@ -145,7 +141,8 @@ def get_default_output_dir():
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     """Parse QR code text and return (type, id), or (None, None) if invalid.
 
-    Supports compact prefixes (S%:, P%:, B%:, T%:) and legacy format ####-## or ####-###.
+    Supports compact prefixes (S%:, P%:, B%:, T%:) and legacy format
+    ####-## or ####-###.
     """
     try:
         qr_text = qr_text.strip()
@@ -425,7 +422,7 @@ def save_checkout_to_csv(
         return False, "No checkout records to save."
 
     os.makedirs(outputs_folder, exist_ok=True)
-    fieldnames = ['Timestamp', 'User', 'SampleID']
+    fieldnames = ['Timestamp', 'User', 'SampleID', 'Pattern', 'TCO']
 
     # Group records by (year, month) derived from each record's Timestamp
     monthly_groups: dict = {}
@@ -440,14 +437,23 @@ def save_checkout_to_csv(
         for (year, month), month_records in monthly_groups.items():
             filename = get_checkout_log_filename(year, month)
             filepath = os.path.join(outputs_folder, filename)
-            file_exists = os.path.exists(filepath)
-            with open(filepath, 'a', newline='', encoding='utf-8') as csvfile:
+            rows = month_records
+            mode = 'w'
+            if os.path.exists(filepath):
+                with open(filepath, newline='', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    if reader.fieldnames == fieldnames:
+                        mode = 'a'
+                    else:
+                        # Rewrite older-format logs with the current header
+                        rows = list(reader) + month_records
+            with open(filepath, mode, newline='', encoding='utf-8') as csvfile:
                 writer = csv.DictWriter(
                     csvfile, fieldnames=fieldnames, extrasaction='ignore'
                 )
-                if not file_exists:
+                if mode == 'w':
                     writer.writeheader()
-                writer.writerows(month_records)
+                writer.writerows(rows)
             total_written += len(month_records)
             files_written.append(filename)
         return (
