@@ -405,7 +405,7 @@ class TestCheckout:
             'User': user,
             'SampleID': sid,
             'SampleType': 'Pixel',
-            'TCO': 'SZ ITO',
+            'TCO': 'Sz-ITO-20',
         }
 
     def test_get_checkout_log_filename(self):
@@ -428,7 +428,7 @@ class TestCheckout:
         assert rows[0]["SampleID"] == "2503-015"
         assert rows[0]["User"] == "rdaxini"
         assert rows[0]["SampleType"] == "Pixel"
-        assert rows[0]["TCO"] == "SZ ITO"
+        assert rows[0]["TCO"] == "Sz-ITO-20"
 
     def test_save_checkout_appends(self, tmp_path):
         tu.save_checkout_to_csv([self._record("rdaxini", "2503-015")], str(tmp_path))

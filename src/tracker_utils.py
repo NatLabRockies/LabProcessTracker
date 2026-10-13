@@ -34,8 +34,6 @@ UNAPPROVED_FOLDER_NAME = "unapproved"
 
 def load_process_data():
     """Load process and tool data from JSON file."""
-    global PROCESS_COLORS, PROCESS_INFO
-
     # Determine base path - handles both script and PyInstaller .exe
     if getattr(sys, 'frozen', False):
         # Running as compiled executable
@@ -70,8 +68,6 @@ def load_process_data():
 
 def load_tray_data():
     """Load tray layout data from JSON file."""
-    global TRAY_LAYOUTS
-
     # Determine base path - handles both script and PyInstaller .exe
     if getattr(sys, 'frozen', False):
         # Running as compiled executable
@@ -145,7 +141,8 @@ def get_default_output_dir():
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     """Parse QR code text and return (type, id), or (None, None) if invalid.
 
-    Supports compact prefixes (S%:, P%:, B%:, T%:) and legacy format ####-## or ####-###.
+    Supports compact prefixes (S%:, P%:, B%:, T%:) and legacy format
+    ####-## or ####-###.
     """
     try:
         qr_text = qr_text.strip()

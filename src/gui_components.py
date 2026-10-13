@@ -12,7 +12,11 @@ BG_COLOR_GRID_COMPLETE = "#d5f4e6"  # Light green
 BG_COLOR_CHECKOUT = "#8e44ad"       # Purple for checkout mode
 
 CHECKOUT_SAMPLE_TYPES = ("Pixel", "Module")
-CHECKOUT_TCO_OPTIONS = ("SZ ITO", "CCC ITO", "FTO")
+# Vendor-TCO-sheet resistance (ohm/sq)
+CHECKOUT_TCO_OPTIONS = (
+    "Sz-ITO-20", "Sz-ITO-15", "CCC-ITO",
+    "NSG-FTO-7", "NSG-FTO-10", "NSG-FTO-15", "NSG-FTO-20",
+)
 
 
 class TrayPositionDialog(tk.Toplevel):
