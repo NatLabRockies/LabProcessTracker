@@ -62,6 +62,8 @@ No additional installations are required beyond Python.
 - Scan a sample QR code to open the checkout dialog; enter the number of
   consecutively-numbered samples being checked out (e.g. `50` for samples `2503-015`
   through `2503-064`)
+- Select the sample type (`Pixel` or `Module`, required) and optionally the TCO
+  (pick `SZ ITO`, `CCC ITO`, `FTO`, or type a custom value)
 - Click **`EXIT CHECKOUT`** (or press `SAVE`) to write the records to
   `checkout_log_YYYY-MM.csv` and return to normal tracking mode
 - `UNDO` removes the last checkout record while in checkout mode
