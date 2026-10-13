@@ -260,7 +260,9 @@ class ProcessTrackerGUI(tk.Tk):
             lambda: self.print_terminal("[CHECKOUT] Cancelled."),
         )
 
-    def _confirm_checkout(self, first_sample_id: str, count: int):
+    def _confirm_checkout(
+        self, first_sample_id: str, count: int, sample_type: str, tco: str
+    ):
         """Create checkout records for first_sample_id plus count-1 consecutives."""
         try:
             sample_ids = tu.generate_consecutive_sample_ids(
@@ -275,17 +277,21 @@ class ProcessTrackerGUI(tk.Tk):
                 'Timestamp': now,
                 'User': self.username,
                 'SampleID': sid,
+                'SampleType': sample_type,
+                'TCO': tco,
             })
+        details = f"{sample_type} | TCO: '{tco}'"
         if count == 1:
             last = self.checkout_records[-1]
             self.print_terminal(
                 f"[CHECKOUT] {last['Timestamp']} | "
-                f"User: '{last['User']}' | Sample: '{last['SampleID']}'"
+                f"User: '{last['User']}' | Sample: '{last['SampleID']}' | "
+                f"{details}"
             )
         else:
             self.print_terminal(
                 f"[CHECKOUT] {count} samples queued: "
-                f"{sample_ids[0]} \u2192 {sample_ids[-1]}. "
+                f"{sample_ids[0]} \u2192 {sample_ids[-1]} | {details}. "
                 f"{len(self.checkout_records)} total unsaved."
             )
         self.qr_entry.focus_set()
