@@ -404,7 +404,7 @@ class TestCheckout:
             'Timestamp': ts or datetime.datetime.now().strftime(tu.DATE_FORMAT),
             'User': user,
             'SampleID': sid,
-            'SampleType': 'Pixel',
+            'Pattern': 'Pixel',
             'TCO': 'Sz-ITO-20',
         }
 
@@ -427,7 +427,7 @@ class TestCheckout:
         assert len(rows) == 1
         assert rows[0]["SampleID"] == "2503-015"
         assert rows[0]["User"] == "rdaxini"
-        assert rows[0]["SampleType"] == "Pixel"
+        assert rows[0]["Pattern"] == "Pixel"
         assert rows[0]["TCO"] == "Sz-ITO-20"
 
     def test_save_checkout_appends(self, tmp_path):
@@ -445,7 +445,7 @@ class TestCheckout:
         assert not success
 
     def test_save_checkout_upgrades_legacy_header(self, tmp_path):
-        """Older logs without SampleType/TCO are rewritten with the new header."""
+        """Older logs without Pattern/TCO are rewritten with the new header."""
         log_file = tmp_path / "checkout_log_2026-04.csv"
         log_file.write_text(
             "Timestamp,User,SampleID\n2026-04-01 09:00:00,rdaxini,2504-001\n",
@@ -458,7 +458,7 @@ class TestCheckout:
             rows = list(csv.DictReader(f))
         assert [r["SampleID"] for r in rows] == ["2504-001", "2504-002"]
         assert rows[0]["TCO"] == ""
-        assert rows[1]["SampleType"] == "Pixel"
+        assert rows[1]["Pattern"] == "Pixel"
 
     def test_save_checkout_routes_to_monthly_files(self, tmp_path):
         """Records with different months are written to separate files."""

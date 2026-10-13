@@ -261,7 +261,7 @@ class ProcessTrackerGUI(tk.Tk):
         )
 
     def _confirm_checkout(
-        self, first_sample_id: str, count: int, sample_type: str, tco: str
+        self, first_sample_id: str, count: int, pattern: str, tco: str
     ):
         """Create checkout records for first_sample_id plus count-1 consecutives."""
         try:
@@ -277,10 +277,10 @@ class ProcessTrackerGUI(tk.Tk):
                 'Timestamp': now,
                 'User': self.username,
                 'SampleID': sid,
-                'SampleType': sample_type,
+                'Pattern': pattern,
                 'TCO': tco,
             })
-        details = f"{sample_type} | TCO: '{tco}'"
+        details = f"{pattern} | TCO: '{tco}'"
         if count == 1:
             last = self.checkout_records[-1]
             self.print_terminal(

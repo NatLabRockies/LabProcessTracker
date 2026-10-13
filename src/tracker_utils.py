@@ -422,7 +422,7 @@ def save_checkout_to_csv(
         return False, "No checkout records to save."
 
     os.makedirs(outputs_folder, exist_ok=True)
-    fieldnames = ['Timestamp', 'User', 'SampleID', 'SampleType', 'TCO']
+    fieldnames = ['Timestamp', 'User', 'SampleID', 'Pattern', 'TCO']
 
     # Group records by (year, month) derived from each record's Timestamp
     monthly_groups: dict = {}
