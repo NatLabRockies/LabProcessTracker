@@ -404,6 +404,8 @@ class TestCheckout:
             'Timestamp': ts or datetime.datetime.now().strftime(tu.DATE_FORMAT),
             'User': user,
             'SampleID': sid,
+            'SampleType': 'Pixel',
+            'TCO': 'SZ ITO',
         }
 
     def test_get_checkout_log_filename(self):
@@ -425,6 +427,8 @@ class TestCheckout:
         assert len(rows) == 1
         assert rows[0]["SampleID"] == "2503-015"
         assert rows[0]["User"] == "rdaxini"
+        assert rows[0]["SampleType"] == "Pixel"
+        assert rows[0]["TCO"] == "SZ ITO"
 
     def test_save_checkout_appends(self, tmp_path):
         tu.save_checkout_to_csv([self._record("rdaxini", "2503-015")], str(tmp_path))
@@ -439,6 +443,22 @@ class TestCheckout:
     def test_save_checkout_empty_returns_false(self, tmp_path):
         success, msg = tu.save_checkout_to_csv([], str(tmp_path))
         assert not success
+
+    def test_save_checkout_upgrades_legacy_header(self, tmp_path):
+        """Older logs without SampleType/TCO are rewritten with the new header."""
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text(
+            "Timestamp,User,SampleID\n2026-04-01 09:00:00,rdaxini,2504-001\n",
+            encoding="utf-8",
+        )
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert success and "1 checkout record" in msg
+        with open(log_file, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        assert [r["SampleID"] for r in rows] == ["2504-001", "2504-002"]
+        assert rows[0]["TCO"] == ""
+        assert rows[1]["SampleType"] == "Pixel"
 
     def test_save_checkout_routes_to_monthly_files(self, tmp_path):
         """Records with different months are written to separate files."""
