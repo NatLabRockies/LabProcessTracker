@@ -1,0 +1,37 @@
+.. _whatsnew053:
+
+v0.5.3 (October 2026)
+------------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+* Checkout dialog now records the sample type (Pixel/Module) and TCO
+  (``Vendor-TCO-Resistivity``, e.g. ``Sz-ITO-20``, ``NSG-FTO-7``, or a custom
+  value) as ``SampleType`` and ``TCO`` columns in ``checkout_log_YYYY-MM.csv``.
+  Existing monthly logs are upgraded to the new header on the next save.
+  (:issue:`22`, :pull:`24`)
+
+
+Maintenance
+~~~~~~~~~~~
+
+
+Testing
+~~~~~~~
+
+
+Documentation
+~~~~~~~~~~~~~
+
+
+Contributors
+~~~~~~~~~~~~
+* Rajiv Daxini (:ghuser:`rdaxini`)
+* San Theingi
+* Rosie Bramante
+
