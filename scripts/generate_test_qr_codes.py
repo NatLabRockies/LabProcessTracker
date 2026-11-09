@@ -10,14 +10,17 @@ from qr_utils import generate_qr_with_label
 
 
 # (section_label, [(data, qr_label, filename), ...])
-# Sample format: S%:YYMM-NN. Batch: B%:NNNN. Process: P%:abbr. Tray: T%:ID.
+# Sample format: bare YYMMNNN (new) or YYMM-NN/NNN (old); S%: prefix optional.
+# Batch: B%:NNNN. Process: P%:abbr. Tray: T%:ID.
 _SECTIONS = [
-    ("Valid Samples (2)", [
-        ("S%:2601-01", "Sample: 2601-01", "sample_2601-01.png"),
-        ("S%:2601-02", "Sample: 2601-02", "sample_2601-02.png"),
+    ("Valid Samples - new format (2)", [
+        ("2601001", "Sample: 2601001", "sample_2601001.png"),
+        ("2601002", "Sample: 2601002", "sample_2601002.png"),
     ]),
-    ("Legacy Sample (1)", [
-        ("2512-99", "Legacy sample: 2512-99", "legacy_sample_2512-99.png"),
+    ("Valid Samples - old format (3)", [
+        ("2512-99", "Sample: 2512-99", "sample_2512-99.png"),
+        ("S%:2601-01", "Sample: S%:2601-01", "sample_2601-01.png"),
+        ("S%:2601-02", "Sample: S%:2601-02", "sample_2601-02.png"),
     ]),
     ("Valid Batch (1)", [
         ("B%:1234", "Batch: 1234", "batch_1234.png"),
@@ -33,7 +36,7 @@ _SECTIONS = [
     ]),
     ("Invalid QR Codes (edge cases)", [
         ("X%:2601-01", "BAD: Invalid Prefix", "bad_invalid_prefix.png"),
-        ("2601-01", "BAD: No Prefix", "bad_no_prefix.png"),
+        ("26011", "BAD: Sample ID Too Short", "bad_short_sample_id.png"),
         ("S%2601-01", "BAD: Missing Colon", "bad_missing_colon.png"),
         ("S%:", "BAD: Empty ID", "bad_empty_id.png"),
         ("P%:fake_process", "BAD: Unapproved Process", "bad_unapproved_process.png"),
