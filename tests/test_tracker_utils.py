@@ -460,6 +460,97 @@ class TestCheckout:
         assert rows[0]["TCO"] == ""
         assert rows[1]["Pattern"] == "Pixel"
 
+    def test_save_checkout_upgrades_legacy_header_with_bom(self, tmp_path):
+        """A BOM-prefixed legacy log (e.g. saved by Excel) keeps its timestamps."""
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text(
+            "Timestamp,User,SampleID\n2026-04-01 09:00:00,rdaxini,2504-001\n",
+            encoding="utf-8-sig",
+        )
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert success
+        with open(log_file, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        assert [r["Timestamp"] for r in rows] == [
+            "2026-04-01 09:00:00", "2026-04-02 09:00:00"
+        ]
+        assert [r["SampleID"] for r in rows] == ["2504-001", "2504-002"]
+
+    def test_save_checkout_appends_to_bom_file_with_current_header(self, tmp_path):
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text(
+            "Timestamp,User,SampleID,Pattern,TCO\n"
+            "2026-04-01 09:00:00,rdaxini,2504-001,Module,NSG-FTO-7\n",
+            encoding="utf-8-sig",
+        )
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert success
+        with open(log_file, newline="", encoding="utf-8-sig") as f:
+            rows = list(csv.DictReader(f))
+        assert [r["SampleID"] for r in rows] == ["2504-001", "2504-002"]
+        assert rows[0]["TCO"] == "NSG-FTO-7"
+
+    def test_save_checkout_upgrades_empty_file(self, tmp_path):
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text("", encoding="utf-8")
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert success
+        with open(log_file, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        assert len(rows) == 1 and rows[0]["SampleID"] == "2504-002"
+
+    def test_save_checkout_rejects_unexpected_header(self, tmp_path):
+        """Logs with an unknown layout are not modified and the save fails."""
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        original = (
+            "Timestamp,User,SampleID,Notes\n"
+            "2026-04-01 09:00:00,rdaxini,2504-001,keep me\n"
+        )
+        log_file.write_text(original, encoding="utf-8")
+        before = log_file.read_bytes()
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert not success
+        assert "Unexpected checkout log header" in msg
+        assert log_file.read_bytes() == before
+
+    def test_save_checkout_bad_header_writes_no_other_months(self, tmp_path):
+        """A bad header in one month prevents writes to every month."""
+        bad_file = tmp_path / "checkout_log_2026-04.csv"
+        bad_file.write_text("Foo,Bar\n1,2\n", encoding="utf-8")
+        records = [
+            self._record("rdaxini", "2503-001", ts="2026-03-15 10:00:00"),
+            self._record("rdaxini", "2504-001", ts="2026-04-02 09:00:00"),
+        ]
+        success, msg = tu.save_checkout_to_csv(records, str(tmp_path))
+        assert not success
+        assert not (tmp_path / "checkout_log_2026-03.csv").exists()
+
+    def test_save_checkout_upgrade_failure_preserves_original(
+        self, tmp_path, monkeypatch
+    ):
+        """If the atomic replace fails, the legacy log is left intact."""
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text(
+            "Timestamp,User,SampleID\n2026-04-01 09:00:00,rdaxini,2504-001\n",
+            encoding="utf-8",
+        )
+        before = log_file.read_bytes()
+
+        def fail_replace(src, dst):
+            raise OSError("disk full")
+
+        monkeypatch.setattr(tu.os, "replace", fail_replace)
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert not success
+        assert "disk full" in msg
+        assert log_file.read_bytes() == before
+        assert [p.name for p in tmp_path.iterdir()] == [log_file.name]
+
     def test_save_checkout_routes_to_monthly_files(self, tmp_path):
         """Records with different months are written to separate files."""
         records = [

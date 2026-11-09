@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import re
+import tempfile
 
 # --- Constants ---
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -30,6 +31,10 @@ PROCESS_INFO = {}  # Full process information
 TRAY_LAYOUTS = {}  # Tray position mappings - loaded from JSON
 
 UNAPPROVED_FOLDER_NAME = "unapproved"
+
+CHECKOUT_FIELDNAMES = ['Timestamp', 'User', 'SampleID', 'Pattern', 'TCO']
+# Header used by checkout logs written before Pattern/TCO were added
+LEGACY_CHECKOUT_FIELDNAMES = ['Timestamp', 'User', 'SampleID']
 
 
 def load_process_data():
@@ -414,6 +419,28 @@ def get_checkout_log_filename(year: int, month: int) -> str:
     return f"checkout_log_{year:04d}-{month:02d}.csv"  # noqa: E231
 
 
+def _write_csv_atomic(filepath: str, fieldnames: list, rows: list) -> None:
+    """Write header + rows to a temp file, then atomically replace filepath.
+
+    The original file is left untouched if writing fails.
+    """
+    fd, tmp_path = tempfile.mkstemp(
+        dir=os.path.dirname(filepath) or '.', suffix='.tmp'
+    )
+    try:
+        with os.fdopen(fd, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(
+                csvfile, fieldnames=fieldnames, extrasaction='ignore'
+            )
+            writer.writeheader()
+            writer.writerows(rows)
+        os.replace(tmp_path, filepath)
+    except BaseException:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise
+
+
 def save_checkout_to_csv(
     records: list, outputs_folder: str
 ) -> tuple[bool, str]:
@@ -422,7 +449,7 @@ def save_checkout_to_csv(
         return False, "No checkout records to save."
 
     os.makedirs(outputs_folder, exist_ok=True)
-    fieldnames = ['Timestamp', 'User', 'SampleID', 'Pattern', 'TCO']
+    fieldnames = CHECKOUT_FIELDNAMES
 
     # Group records by (year, month) derived from each record's Timestamp
     monthly_groups: dict = {}
@@ -434,6 +461,9 @@ def save_checkout_to_csv(
     total_written = 0
     files_written = []
     try:
+        # Check every target file before writing any, so an unexpected header
+        # in one month does not leave other months partially saved.
+        plans = []
         for (year, month), month_records in monthly_groups.items():
             filename = get_checkout_log_filename(year, month)
             filepath = os.path.join(outputs_folder, filename)
@@ -447,7 +477,7 @@ def save_checkout_to_csv(
                         mode = 'a'
                     elif (
                         existing_fields is None
-                        or existing_fields == fieldnames[:3]
+                        or existing_fields == LEGACY_CHECKOUT_FIELDNAMES
                     ):
                         # Upgrade only the known legacy layout or an empty file.
                         rows = list(reader) + month_records
@@ -456,14 +486,20 @@ def save_checkout_to_csv(
                             f"Unexpected checkout log header in {filename}: "
                             f"{existing_fields}"
                         )
-            with open(filepath, mode, newline='', encoding='utf-8') as csvfile:
-                writer = csv.DictWriter(
-                    csvfile, fieldnames=fieldnames, extrasaction='ignore'
-                )
-                if mode == 'w':
-                    writer.writeheader()
-                writer.writerows(rows)
-            total_written += len(month_records)
+            plans.append((filename, filepath, mode, rows, len(month_records)))
+
+        for filename, filepath, mode, rows, n_new in plans:
+            if mode == 'a':
+                with open(
+                    filepath, 'a', newline='', encoding='utf-8'
+                ) as csvfile:
+                    writer = csv.DictWriter(
+                        csvfile, fieldnames=fieldnames, extrasaction='ignore'
+                    )
+                    writer.writerows(rows)
+            else:
+                _write_csv_atomic(filepath, fieldnames, rows)
+            total_written += n_new
             files_written.append(filename)
         return (
             True,
