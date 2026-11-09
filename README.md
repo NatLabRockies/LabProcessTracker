@@ -75,15 +75,17 @@ No additional installations are required beyond Python.
 
 **QR Code Format:**
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
-- Sample QR codes must contain: `S%:SampleID` (e.g., `S%:2511-09`)
+- Sample QR codes contain the bare sample ID: `YYMMNNN` (new, e.g. `2601123`) or
+  `YYMM-NN` / `YYMM-NNN` (old, e.g. `2511-09`, `2511-091`)
+  - Bare IDs must be 4 digits + an optional hyphen + 2 or 3 digits
+  - The `S%:` prefix is optional; existing `S%:SampleID` labels (e.g. `S%:2511-09`) still
+    work and the prefix is stripped, so `S%:2601123` and `2601123` log the same ID
+  - Sample IDs are logged exactly as scanned; `2601-123` and `2601123` are distinct IDs
 - Batch QR codes must contain: `B%:BatchID` (e.g., `B%:BATCH2025-001`)
 - Tray QR codes must contain: `T%:TrayID` (e.g., `T%:072266-S-002`)
 - The prefixes (`P%:`, `S%:`, `B%:`, and `T%:`) must be uppercase and include the colon
 - Process names are case-insensitive (automatically normalized to lowercase)
 - Sample IDs and Batch IDs preserve their original case
-- Legacy sample QR codes in format `####-##` or `####-###` (e.g., `2511-09` or `2511-091`) are supported
-  - A warning will be displayed when legacy format is detected
-  - No `S%:` prefix required for legacy samples
 
 **Batch vs Sample Logging:**
 - **Sample scanning:** Used to log individual samples processed through a tool

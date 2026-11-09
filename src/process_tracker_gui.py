@@ -399,7 +399,8 @@ class ProcessTrackerGUI(tk.Tk):
         if not data_type:
             self.print_terminal(
                 f"[ERROR] Invalid format: '{qr_text}'. "
-                "Use 'P%:Name', 'S%:ID', 'B%:ID', or 'T%:TrayID'."
+                "Use 'P%:Name', a sample ID (e.g. '2601123'), 'B%:ID', "
+                "or 'T%:TrayID'."
             )
             return
 
@@ -409,7 +410,7 @@ class ProcessTrackerGUI(tk.Tk):
                 self.handle_checkout_scan(data_id)
             else:
                 self.print_terminal(
-                    "[CHECKOUT] Only sample QR codes (S%:ID) are accepted "
+                    "[CHECKOUT] Only sample QR codes are accepted "
                     "in checkout mode."
                 )
             return
@@ -462,7 +463,7 @@ class ProcessTrackerGUI(tk.Tk):
                 self.print_terminal(error_msg)
                 return
 
-            if data_type == "SAMPLE" or data_type == "SAMPLE_LEGACY":
+            if tu.is_sample_type(data_type):
                 # Check if we're trying to scan more samples than positions
                 if self.tray_position_index >= len(self.tray_positions):
                     self.print_terminal(
@@ -473,10 +474,6 @@ class ProcessTrackerGUI(tk.Tk):
 
                 pos = self.tray_positions[self.tray_position_index]
                 sample_id = data_id
-                if data_type == "SAMPLE_LEGACY":
-                    self.print_terminal(
-                        tu.format_legacy_sample_warning(sample_id)
-                    )
 
                 # Add to current tray's sample list
                 self.tray_samples[self.current_tray_id].append(
@@ -711,10 +708,6 @@ class ProcessTrackerGUI(tk.Tk):
                     "No tool/process set", status_type="ALERT"
                 )
             else:
-                if data_type == "SAMPLE_LEGACY":
-                    self.print_terminal(
-                        tu.format_legacy_sample_warning(data_id)
-                    )
                 self.log_scan_event(self.current_process, sample_id=data_id)
                 self.update_sample_block(data_id, status_type="SAMPLE")
         elif data_type == "BATCH":
