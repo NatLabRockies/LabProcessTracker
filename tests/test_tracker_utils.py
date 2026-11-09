@@ -378,9 +378,26 @@ class TestCheckout:
         with pytest.raises(ValueError, match="overflow"):
             tu.generate_consecutive_sample_ids("2503-998", 3)
 
-    def test_no_dash_raises(self):
+    @pytest.mark.parametrize("start,count,expected", [
+        ("2503015", 3, ["2503015", "2503016", "2503017"]),
+        ("2503098", 3, ["2503098", "2503099", "2503100"]),
+        ("250307", 3, ["250307", "250308", "250309"]),
+    ])
+    def test_hyphenless_range(self, start, count, expected):
+        """Hyphenless IDs increment the digits after YYMM, no hyphen added."""
+        assert tu.generate_consecutive_sample_ids(start, count) == expected
+
+    def test_hyphenless_overflow_does_not_roll_into_yymm(self):
+        """2503999 + 2 must not become 2504000 (month change)."""
+        with pytest.raises(ValueError, match="overflow"):
+            tu.generate_consecutive_sample_ids("2503999", 2)
+
+    @pytest.mark.parametrize("bad_id", [
+        "25031", "25030150", "2503A15", "ABC123", "2503-",
+    ])
+    def test_malformed_id_raises(self, bad_id):
         with pytest.raises(ValueError):
-            tu.generate_consecutive_sample_ids("2503015", 1)
+            tu.generate_consecutive_sample_ids(bad_id, 1)
 
     def test_non_numeric_suffix_raises(self):
         with pytest.raises(ValueError):

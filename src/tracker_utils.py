@@ -378,7 +378,16 @@ def create_tray_batch_records(
 
 # --- Checkout Logic ---
 def generate_consecutive_sample_ids(start_id: str, count: int) -> list[str]:
-    """Generate count consecutive IDs from start_id (format: prefix-NNN).
+    """Generate count consecutive IDs from start_id.
+
+    Supported formats:
+        * ``prefix-NNN`` (e.g. ``2503-015``): the suffix after the last
+          hyphen is incremented and the hyphen is kept.
+        * Hyphenless ``YYMMNN`` / ``YYMMNNN`` (e.g. ``2503015``): the first
+          4 digits are the YYMM prefix and the remaining digits are
+          incremented, so the counter never rolls into the YYMM part.
+
+    Zero-padding of the counter is preserved.
 
     Raises:
         ValueError: If start_id is malformed, count < 1, or range overflows
@@ -386,17 +395,26 @@ def generate_consecutive_sample_ids(start_id: str, count: int) -> list[str]:
     """
     if count < 1:
         raise ValueError(f"Count must be at least 1, got {count}.")
-    parts = start_id.rsplit("-", 1)
-    if len(parts) != 2 or not parts[1]:
+    if "-" in start_id:
+        prefix, suffix = start_id.rsplit("-", 1)
+        sep = "-"
+        if not suffix:
+            raise ValueError(
+                f"Sample ID '{start_id}' must have a numeric suffix after "
+                "the '-' separator (e.g. '2503-015')."
+            )
+        if not suffix.isdigit():
+            raise ValueError(
+                f"Suffix '{suffix}' in '{start_id}' is not numeric. "
+                "Expected format: prefix-NNN (e.g. '2503-015')."
+            )
+    elif BARE_SAMPLE_ID_PATTERN.match(start_id):
+        prefix, suffix = start_id[:4], start_id[4:]
+        sep = ""
+    else:
         raise ValueError(
-            f"Sample ID '{start_id}' must contain a '-' separator with a "
-            "numeric suffix (e.g. '2503-015')."
-        )
-    prefix, suffix = parts
-    if not suffix.isdigit():
-        raise ValueError(
-            f"Suffix '{suffix}' in '{start_id}' is not numeric. "
-            "Expected format: prefix-NNN (e.g. '2503-015')."
+            f"Sample ID '{start_id}' must be 'prefix-NNN' (e.g. '2503-015') "
+            "or hyphenless YYMMNNN (e.g. '2503015')."
         )
     pad_len = len(suffix)
     start_num = int(suffix)
@@ -407,7 +425,8 @@ def generate_consecutive_sample_ids(start_id: str, count: int) -> list[str]:
             f"maximum suffix value {max_num} for {pad_len}-digit padding."
         )
     return [
-        f"{prefix}-{str(start_num + i).zfill(pad_len)}" for i in range(count)
+        f"{prefix}{sep}{str(start_num + i).zfill(pad_len)}"
+        for i in range(count)
     ]
 
 
