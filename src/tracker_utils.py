@@ -159,7 +159,8 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
         # Check for compact QR prefixes (include colon for uniqueness)
         if qr_text.startswith(QR_SAMPLE_PREFIX):
             data_id = qr_text[len(QR_SAMPLE_PREFIX):]
-            if data_id:  # Ensure there's an ID after the prefix
+            # Reject empty IDs and whitespace after the prefix ("S%: 2601-01")
+            if data_id and not data_id[0].isspace():
                 return "SAMPLE", data_id
         elif qr_text.startswith(QR_PROCESS_PREFIX):
             data_id = qr_text[len(QR_PROCESS_PREFIX):]

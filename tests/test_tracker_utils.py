@@ -261,6 +261,11 @@ class TestParseInput:
         assert tu.parse_input("S%:2601123") == tu.parse_input("2601123")
         assert tu.parse_input("S%:2601-12") == tu.parse_input("2601-12")
 
+    @pytest.mark.parametrize("qr_text", ["S%: 2601-01", "S%:\t2601123", "S%:"])
+    def test_prefixed_sample_rejects_space_or_empty(self, qr_text):
+        """Whitespace after S%: (or no ID) must not log a malformed ID."""
+        assert tu.parse_input(qr_text) == (None, None)
+
     def test_case_sensitive_prefix(self):
         """Test that prefix must match exactly (case-sensitive)."""
         # Lowercase prefix should not work
