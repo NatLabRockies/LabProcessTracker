@@ -62,11 +62,15 @@ No additional installations are required beyond Python.
 - Scan a sample QR code to open the checkout dialog; enter the number of
   consecutively-numbered samples being checked out (e.g. `50` for samples `2503-015`
   through `2503-064`)
-- Select the pattern (`Pixel` or `Module`, required) and optionally the TCO
-  as `Vendor-TCO-Resistivity` (e.g. `Sz-ITO-20`, `NSG-FTO-7`) from the list, or type
-  a custom value
+- Select the pattern (`Pixel` or `Module`) and the TCO as
+  `Vendor-TCO-Resistivity` (e.g. `Sz-ITO-20`, `NSG-FTO-7`) from the list, or type
+  a custom value; both are required
 - Click **`EXIT CHECKOUT`** (or press `SAVE`) to write the records to
   `checkout_log_YYYY-MM.csv` and return to normal tracking mode
+- Monthly logs created before `Pattern`/`TCO` were added are upgraded to the new
+  header (with blank values for older rows) the next time records are saved to
+  that month; logs with any other unexpected header are left unchanged and the
+  save is reported as an error
 - `UNDO` removes the last checkout record while in checkout mode
 
  **Command buttons:**
