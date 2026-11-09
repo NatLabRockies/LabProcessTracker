@@ -25,17 +25,17 @@ Enhancements
   ``2601123``). Existing ``S%:`` labels still work; the prefix is stripped, so
   ``S%:2601123`` and ``2601123`` log the same ID. IDs are logged exactly as
   scanned, so ``2601-123`` and ``2601123`` remain distinct. The legacy-format
-  warning is no longer shown for unprefixed IDs.
+  warning is no longer shown for unprefixed IDs. (:pull:`26`)
 * Checkout bulk ranges support hyphenless IDs: the first 4 digits (``YYMM``)
   are fixed and only the trailing counter increments, with zero-padding
   preserved (``2503015`` → ``2503016`` …). Ranges that would roll into the
-  next month (e.g. ``2503999`` + 2) are rejected.
+  next month (e.g. ``2503999`` + 2) are rejected. (:pull:`26`)
 
 
 Bug Fixes
 ~~~~~~~~~
 * ``S%: 2601-01`` (whitespace after the sample prefix) was accepted and logged
-  with a leading space. It is now rejected as an invalid scan.
+  with a leading space. It is now rejected as an invalid scan. (:pull:`26`)
 
 
 Maintenance
@@ -45,7 +45,7 @@ Maintenance
   module-level dicts are mutated in place, so behavior is unchanged) and
   rewrapped the over-length ``parse_input`` docstring (``E501``). (:pull:`24`)
 * QR generation scripts now emit unprefixed sample IDs; the test QR set covers
-  new hyphenless, old hyphenated and ``S%:``-prefixed samples.
+  new hyphenless, old hyphenated and ``S%:``-prefixed samples. (:pull:`26`)
 
 
 Testing
@@ -55,7 +55,7 @@ Testing
   pattern/TCO validation. (:pull:`24`)
 * Added tests for optional ``S%:`` prefix, hyphenless sample IDs (valid and
   invalid patterns), whitespace after the prefix, and hyphenless checkout
-  ranges.
+  ranges. (:pull:`26`)
 
 
 Documentation
@@ -63,7 +63,7 @@ Documentation
 * Documented the checkout pattern/TCO selectors and the monthly checkout log
   header upgrade in ``README.md``. (:pull:`24`)
 * Updated the QR code format section of ``README.md`` for the optional
-  ``S%:`` prefix and hyphenless sample IDs.
+  ``S%:`` prefix and hyphenless sample IDs. (:pull:`26`)
 
 
 Contributors

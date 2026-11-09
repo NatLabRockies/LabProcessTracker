@@ -60,8 +60,8 @@ No additional installations are required beyond Python.
 **Substrate Checkout:**
 - Click the **`CHECKOUT`** button to enter checkout mode
 - Scan a sample QR code to open the checkout dialog; enter the number of
-  consecutively-numbered samples being checked out (e.g. `50` for samples `2503-015`
-  through `2503-064`)
+  consecutively-numbered samples being checked out (e.g. `50` for samples `2601015`
+  through `2601064`)
 - Select the pattern (`Pixel` or `Module`) and the TCO as
   `Vendor-TCO-Resistivity` (e.g. `Sz-ITO-20`, `NSG-FTO-7`) from the list, or type
   a custom value; both are required
@@ -82,15 +82,13 @@ No additional installations are required beyond Python.
 
 **QR Code Format:**
 - Process QR codes must contain: `P%:abbreviated_name` (e.g., `P%:c215ss_jv`)
-- Sample QR codes contain the bare sample ID: `YYMMNNN` (new, e.g. `2601123`) or
-  `YYMM-NN` / `YYMM-NNN` (old, e.g. `2511-09`, `2511-091`)
-  - Bare IDs must be 4 digits + an optional hyphen + 2 or 3 digits
-  - The `S%:` prefix is optional; existing `S%:SampleID` labels (e.g. `S%:2511-09`) still
-    work and the prefix is stripped, so `S%:2601123` and `2601123` log the same ID
-  - Sample IDs are logged exactly as scanned; `2601-123` and `2601123` are distinct IDs
+- Sample QR codes contain only the 7-digit sample ID `YYMMNNN`, with no prefix or
+  hyphen (e.g., `2601123`)
+  - Legacy labels (`S%:` prefix and/or hyphenated `YYMM-NN` / `YYMM-NNN`) are still
+    accepted; IDs are logged exactly as scanned (minus any `S%:` prefix)
 - Batch QR codes must contain: `B%:BatchID` (e.g., `B%:BATCH2025-001`)
 - Tray QR codes must contain: `T%:TrayID` (e.g., `T%:072266-S-002`)
-- The prefixes (`P%:`, `S%:`, `B%:`, and `T%:`) must be uppercase and include the colon
+- The prefixes (`P%:`, `B%:`, and `T%:`) must be uppercase and include the colon
 - Process names are case-insensitive (automatically normalized to lowercase)
 - Sample IDs and Batch IDs preserve their original case
 
@@ -224,16 +222,16 @@ The original file is never modified.
 ```bash
 # Single UWL file
 python scripts/populate_uwl.py
-    --uwl path/to/2503_015.uwl
+    --uwl path/to/2601015.uwl
     --scan-log outputs/scan_log_bcp_ag_evap.csv
-    --sample-id 2503-015
+    --sample-id 2601015
     --process bcp_ag_evap
 
 # Auto-locate UWL from a directory by sample ID
 python scripts/populate_uwl.py
     --uwl-dir path/to/uwl_files/
     --scan-log outputs/scan_log_bcp_ag_evap.csv
-    --sample-id 2503-015
+    --sample-id 2601015
     --process bcp_ag_evap
     --output-dir ./populated/
 ```
