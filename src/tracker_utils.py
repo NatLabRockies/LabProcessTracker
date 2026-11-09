@@ -440,13 +440,22 @@ def save_checkout_to_csv(
             rows = month_records
             mode = 'w'
             if os.path.exists(filepath):
-                with open(filepath, newline='', encoding='utf-8') as f:
+                with open(filepath, newline='', encoding='utf-8-sig') as f:
                     reader = csv.DictReader(f)
-                    if reader.fieldnames == fieldnames:
+                    existing_fields = reader.fieldnames
+                    if existing_fields == fieldnames:
                         mode = 'a'
-                    else:
-                        # Rewrite older-format logs with the current header
+                    elif (
+                        existing_fields is None
+                        or existing_fields == fieldnames[:3]
+                    ):
+                        # Upgrade only the known legacy layout or an empty file.
                         rows = list(reader) + month_records
+                    else:
+                        raise ValueError(
+                            f"Unexpected checkout log header in {filename}: "
+                            f"{existing_fields}"
+                        )
             with open(filepath, mode, newline='', encoding='utf-8') as csvfile:
                 writer = csv.DictWriter(
                     csvfile, fieldnames=fieldnames, extrasaction='ignore'
