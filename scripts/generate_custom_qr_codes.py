@@ -15,10 +15,11 @@ def main():
 
     print(f"Generating CUSTOM QR codes in: {output_dir}\n")
 
-    # Sample format: S%:YYMM-NN where YY=year, MM=month, NN=sample number
+    # Sample format: YYMMNNN where YY=year, MM=month, NNN=sample number.
+    # No prefix needed (S%: is optional and kept only for old labels).
     samples = [
-        ("S%:2601-01", "Sample: 2601-01", "sample_2601-01.png"),
-        # ("S%:2601-02", "Sample: 2601-02", "sample_2601-02.png"),
+        ("2601001", "Sample: 2601001", "sample_2601001.png"),
+        # ("2601002", "Sample: 2601002", "sample_2601002.png"),
     ]
 
     # Format: B%:BATCH_ID

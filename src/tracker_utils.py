@@ -16,6 +16,9 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 QR_SAMPLE_PREFIX = 'S%:'
 QR_PROCESS_PREFIX = 'P%:'
 QR_BATCH_PREFIX = 'B%:'
+# Bare (unprefixed) sample IDs: YYMM + 2-3 digit counter, hyphen optional,
+# e.g. 2601-01, 2601-123 (old format) or 260101, 2601123 (new format).
+BARE_SAMPLE_ID_PATTERN = re.compile(r'^\d{4}-?\d{2,3}$')
 EXIT_CMD = 'EXIT'
 SAVE_CMD = 'SAVE'
 UNDO_CMD = 'UNDO'
@@ -146,8 +149,9 @@ def get_default_output_dir():
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     """Parse QR code text and return (type, id), or (None, None) if invalid.
 
-    Supports compact prefixes (S%:, P%:, B%:, T%:) and legacy format
-    ####-## or ####-###.
+    Supports compact prefixes (S%:, P%:, B%:, T%:). The S%: prefix is
+    optional for sample IDs matching ``BARE_SAMPLE_ID_PATTERN``
+    (####-##, ####-###, ###### or #######).
     """
     try:
         qr_text = qr_text.strip()
@@ -155,7 +159,8 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
         # Check for compact QR prefixes (include colon for uniqueness)
         if qr_text.startswith(QR_SAMPLE_PREFIX):
             data_id = qr_text[len(QR_SAMPLE_PREFIX):]
-            if data_id:  # Ensure there's an ID after the prefix
+            # Reject empty IDs and whitespace after the prefix ("S%: 2601-01")
+            if data_id and not data_id[0].isspace():
                 return "SAMPLE", data_id
         elif qr_text.startswith(QR_PROCESS_PREFIX):
             data_id = qr_text[len(QR_PROCESS_PREFIX):]
@@ -170,10 +175,9 @@ def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
             if data_id:
                 return "TRAY", data_id
 
-        # Legacy format: ####-## or ####-### (4 digits, dash, 2 or 3 digits)
-        # This supports old sample QR codes that don't have the S%: prefix
-        if re.match(r'^\d{4}-\d{2,3}$', qr_text):
-            return "SAMPLE_LEGACY", qr_text
+        # Bare sample ID (no S%: prefix), with or without hyphen
+        if BARE_SAMPLE_ID_PATTERN.match(qr_text):
+            return "SAMPLE", qr_text
 
         return None, None
     except Exception:
@@ -299,11 +303,6 @@ def format_log_message(record: dict) -> str:
     return msg
 
 
-def format_legacy_sample_warning(sample_id: str) -> str:
-    """Format a warning message for legacy sample format detection."""
-    return f"[WARNING] Legacy sample format detected: {sample_id}"
-
-
 def validate_and_normalize_process(
     process_input: str
 ) -> tuple[bool, str, str]:
@@ -326,8 +325,8 @@ def validate_and_normalize_process(
 
 
 def is_sample_type(scan_type: str) -> bool:
-    """Return True if scan_type is SAMPLE or SAMPLE_LEGACY."""
-    return scan_type in ("SAMPLE", "SAMPLE_LEGACY")
+    """Return True if scan_type is SAMPLE."""
+    return scan_type == "SAMPLE"
 
 
 # --- Tray Mode Logic ---
@@ -348,7 +347,7 @@ def should_accept_scan_in_tray_mode(
     data_type: str, tray_position_index: int, total_positions: int
 ) -> tuple[bool, str]:
     """Return (True, '') if the scan type is valid for the current tray state."""
-    if data_type in ("SAMPLE", "SAMPLE_LEGACY"):
+    if is_sample_type(data_type):
         return True, ""
     elif data_type == "PROCESS":
         return validate_tray_ready_for_process(
@@ -381,7 +380,16 @@ def create_tray_batch_records(
 
 # --- Checkout Logic ---
 def generate_consecutive_sample_ids(start_id: str, count: int) -> list[str]:
-    """Generate count consecutive IDs from start_id (format: prefix-NNN).
+    """Generate count consecutive IDs from start_id.
+
+    Supported formats:
+        * ``prefix-NNN`` (e.g. ``2503-015``): the suffix after the last
+          hyphen is incremented and the hyphen is kept.
+        * Hyphenless ``YYMMNN`` / ``YYMMNNN`` (e.g. ``2503015``): the first
+          4 digits are the YYMM prefix and the remaining digits are
+          incremented, so the counter never rolls into the YYMM part.
+
+    Zero-padding of the counter is preserved.
 
     Raises:
         ValueError: If start_id is malformed, count < 1, or range overflows
@@ -389,17 +397,26 @@ def generate_consecutive_sample_ids(start_id: str, count: int) -> list[str]:
     """
     if count < 1:
         raise ValueError(f"Count must be at least 1, got {count}.")
-    parts = start_id.rsplit("-", 1)
-    if len(parts) != 2 or not parts[1]:
+    if "-" in start_id:
+        prefix, suffix = start_id.rsplit("-", 1)
+        sep = "-"
+        if not suffix:
+            raise ValueError(
+                f"Sample ID '{start_id}' must have a numeric suffix after "
+                "the '-' separator (e.g. '2503-015')."
+            )
+        if not suffix.isdigit():
+            raise ValueError(
+                f"Suffix '{suffix}' in '{start_id}' is not numeric. "
+                "Expected format: prefix-NNN (e.g. '2503-015')."
+            )
+    elif BARE_SAMPLE_ID_PATTERN.match(start_id):
+        prefix, suffix = start_id[:4], start_id[4:]
+        sep = ""
+    else:
         raise ValueError(
-            f"Sample ID '{start_id}' must contain a '-' separator with a "
-            "numeric suffix (e.g. '2503-015')."
-        )
-    prefix, suffix = parts
-    if not suffix.isdigit():
-        raise ValueError(
-            f"Suffix '{suffix}' in '{start_id}' is not numeric. "
-            "Expected format: prefix-NNN (e.g. '2503-015')."
+            f"Sample ID '{start_id}' must be 'prefix-NNN' (e.g. '2503-015') "
+            "or hyphenless YYMMNNN (e.g. '2503015')."
         )
     pad_len = len(suffix)
     start_num = int(suffix)
@@ -410,7 +427,8 @@ def generate_consecutive_sample_ids(start_id: str, count: int) -> list[str]:
             f"maximum suffix value {max_num} for {pad_len}-digit padding."
         )
     return [
-        f"{prefix}-{str(start_num + i).zfill(pad_len)}" for i in range(count)
+        f"{prefix}{sep}{str(start_num + i).zfill(pad_len)}"
+        for i in range(count)
     ]
 
 
