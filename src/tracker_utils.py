@@ -419,6 +419,15 @@ def get_checkout_log_filename(year: int, month: int) -> str:
     return f"checkout_log_{year:04d}-{month:02d}.csv"  # noqa: E231
 
 
+def validate_checkout_details(pattern: str, tco: str) -> str | None:
+    """Return an error message if pattern or TCO is missing, else None."""
+    if not (pattern or '').strip():
+        return "Required: pattern (Pixel or Module)."
+    if not (tco or '').strip():
+        return "Required: TCO (e.g. Sz-ITO-20)."
+    return None
+
+
 def _write_csv_atomic(filepath: str, fieldnames: list, rows: list) -> None:
     """Write header + rows to a temp file, then atomically replace filepath.
 

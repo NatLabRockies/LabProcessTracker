@@ -551,6 +551,22 @@ class TestCheckout:
         assert log_file.read_bytes() == before
         assert [p.name for p in tmp_path.iterdir()] == [log_file.name]
 
+    # --- validate_checkout_details ---
+
+    def test_validate_checkout_details_ok(self):
+        assert tu.validate_checkout_details("Pixel", "Sz-ITO-20") is None
+        assert tu.validate_checkout_details("Module", "custom-TCO") is None
+
+    @pytest.mark.parametrize("pattern, tco, expected", [
+        ("", "Sz-ITO-20", "pattern"),
+        ("Pixel", "", "TCO"),
+        ("Pixel", "   ", "TCO"),
+        ("", "", "pattern"),
+    ])
+    def test_validate_checkout_details_missing(self, pattern, tco, expected):
+        error = tu.validate_checkout_details(pattern, tco)
+        assert error is not None and expected in error
+
     def test_save_checkout_routes_to_monthly_files(self, tmp_path):
         """Records with different months are written to separate files."""
         records = [

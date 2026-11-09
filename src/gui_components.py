@@ -5,6 +5,8 @@ Contains reusable dialog and widget classes.
 import tkinter as tk
 from tkinter import ttk
 
+import tracker_utils as tu
+
 # Color constants for dialog components
 BG_COLOR_DIALOG = "#eaf6ff"
 BG_COLOR_GRID_CELL = "#ffffff"
@@ -233,7 +235,7 @@ class BulkCheckoutDialog(tk.Toplevel):
         self.on_confirm_callback = on_confirm_callback
         self.on_cancel_callback = on_cancel_callback
 
-        self.geometry("400x300")
+        self.geometry("400x330")
         self.transient(parent)
         self.grab_set()
 
@@ -304,7 +306,17 @@ class BulkCheckoutDialog(tk.Toplevel):
             fg="#27ae60",
             font=("Arial", 10),
             wraplength=360,
-        ).pack(pady=(5, 5))
+        ).pack(pady=(5, 0))
+
+        self.error_var = tk.StringVar()
+        tk.Label(
+            self,
+            textvariable=self.error_var,
+            bg=BG_COLOR_DIALOG,
+            fg="#c0392b",
+            font=("Arial", 10, "bold"),
+            wraplength=360,
+        ).pack(pady=(0, 5))
 
         btn_frame = tk.Frame(self, bg=BG_COLOR_DIALOG)
         btn_frame.pack(pady=(5, 15))
@@ -340,7 +352,13 @@ class BulkCheckoutDialog(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self._cancel)
 
         self.count_var.trace_add("write", self._update_preview)
+        self.pattern_var.trace_add("write", self._clear_error)
+        self.tco_var.trace_add("write", self._clear_error)
         self._update_preview()
+
+    def _clear_error(self, *_args):
+        """Clear the validation error once the user edits a field."""
+        self.error_var.set("")
 
     def _update_preview(self, *_args):
         """Recompute and display the checkout range preview."""
@@ -370,11 +388,12 @@ class BulkCheckoutDialog(tk.Toplevel):
                 return
         except ValueError:
             return
-        pattern = self.pattern_var.get()
-        if not pattern:
-            self.preview_var.set("Required: pattern (Pixel or Module)")
-            return
+        pattern = self.pattern_var.get().strip()
         tco = self.tco_var.get().strip()
+        error = tu.validate_checkout_details(pattern, tco)
+        if error:
+            self.error_var.set(error)
+            return
         self.grab_release()
         self.destroy()
         self.on_confirm_callback(self.first_sample_id, count, pattern, tco)

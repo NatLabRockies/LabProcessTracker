@@ -753,7 +753,9 @@ class ProcessTrackerGUI(tk.Tk):
             if self.checkout_records:
                 removed = self.checkout_records.pop()
                 self.print_terminal(
-                    f"[UNDO] Removed checkout: '{removed['SampleID']}'"
+                    f"[UNDO] Removed checkout: '{removed['SampleID']}' | "
+                    f"{removed.get('Pattern', '')} | "
+                    f"TCO: '{removed.get('TCO', '')}'"
                 )
             else:
                 self.print_terminal("[INFO] No checkout records to undo.")
