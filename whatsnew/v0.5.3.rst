@@ -1,0 +1,51 @@
+.. _whatsnew053:
+
+v0.5.3 (November 2026)
+------------------------
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+* Checkout dialog now requires the pattern (Pixel/Module) and TCO
+  (``Vendor-TCO-Resistivity``, e.g. ``Sz-ITO-20``, ``NSG-FTO-7``, or a custom
+  value), recorded as ``Pattern`` and ``TCO`` columns in
+  ``checkout_log_YYYY-MM.csv``. Missing fields are flagged in red in the dialog,
+  and ``UNDO`` messages now show the removed record's pattern and TCO.
+  Existing monthly logs with the legacy ``Timestamp,User,SampleID`` header
+  (including UTF-8 BOM files saved by Excel) are upgraded on the next save via
+  an atomic rewrite; logs with any other header are left untouched and the save
+  fails with an error. (:issue:`22`, :pull:`24`)
+
+
+Maintenance
+~~~~~~~~~~~
+* Fixed flake8 violations in ``tracker_utils``: removed the unused ``global``
+  statements in ``load_process_data`` and ``load_tray_data`` (``F824``; the
+  module-level dicts are mutated in place, so behavior is unchanged) and
+  rewrapped the over-length ``parse_input`` docstring (``E501``). (:pull:`24`)
+
+
+Testing
+~~~~~~~
+* Added tests for checkout log upgrades from BOM-prefixed legacy files,
+  rejection of unexpected headers, atomic-write failure handling, and checkout
+  pattern/TCO validation. (:pull:`24`)
+
+
+Documentation
+~~~~~~~~~~~~~
+* Documented the checkout pattern/TCO selectors and the monthly checkout log
+  header upgrade in ``README.md``. (:pull:`24`)
+
+
+Contributors
+~~~~~~~~~~~~
+* Rajiv Daxini (:ghuser:`rdaxini`)
+* San Theingi
+* Rosie Bramante
+* Robert Tirawat (:ghuser:`rtirawat`)
+
