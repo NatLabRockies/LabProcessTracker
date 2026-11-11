@@ -146,7 +146,7 @@ def get_default_output_dir():
 def parse_input(qr_text: str) -> tuple[str, str] | tuple[None, None]:
     """Parse QR code text and return (type, id), or (None, None) if invalid.
 
-    Supports compact prefixes (S%:, P%:, B%:, T%:) and legacy format ####-## or ####-###.
+    Supports compact prefixes (S%:, P%:, B%:, T%:) and legacy ####-## or ####-###.
     """
     try:
         qr_text = qr_text.strip()
