@@ -10,8 +10,8 @@ import tracker_utils as tu
 # Color constants for dialog components
 BG_COLOR_DIALOG = "#eaf6ff"
 BG_COLOR_GRID_CELL = "#ffffff"
-BG_COLOR_GRID_COMPLETE = "#d5f4e6"  # Light green
-BG_COLOR_CHECKOUT = "#8e44ad"       # Purple for checkout mode
+BG_COLOR_GRID_COMPLETE = "#d5f4e6"
+BG_COLOR_CHECKOUT = "#8e44ad"
 
 CHECKOUT_PATTERNS = ("Pixel", "Module")
 # Vendor-TCO-sheet resistance (ohm/sq)
