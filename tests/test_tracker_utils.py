@@ -130,13 +130,6 @@ class TestMessageFormatting:
         assert "test_process" in msg
         assert "SAMPLE123" in msg
 
-    def test_format_legacy_sample_warning(self):
-        """Test formatting a legacy sample warning."""
-        msg = tu.format_legacy_sample_warning("2511-09")
-        assert "[WARNING]" in msg
-        assert "Legacy sample format detected" in msg
-        assert "2511-09" in msg
-
 
 class TestUserValidation:
     """Test cases for user name validation."""
@@ -227,33 +220,51 @@ class TestParseInput:
         assert data_type == "BATCH"
         assert data_id == "BATCH001"
 
-    def test_legacy_sample_format(self):
-        """Test parsing legacy sample format (####-## or ####-###)."""
+    def test_bare_sample_with_hyphen(self):
+        """Old-format bare sample IDs (####-## / ####-###) are SAMPLE."""
         data_type, data_id = tu.parse_input("2511-09")
-        assert data_type == "SAMPLE_LEGACY"
+        assert data_type == "SAMPLE"
         assert data_id == "2511-09"
 
-    def test_legacy_sample_various_patterns(self):
-        """Test various legacy sample patterns."""
-        # Valid legacy format (2 digits after dash)
-        data_type, data_id = tu.parse_input("1234-56")
-        assert data_type == "SAMPLE_LEGACY"
-        assert data_id == "1234-56"
+    @pytest.mark.parametrize("qr_text", [
+        "1234-56", "1234-567", "123456", "1234567",
+    ])
+    def test_bare_sample_valid_patterns(self, qr_text):
+        """Bare IDs with or without hyphen are accepted as-is."""
+        assert tu.parse_input(qr_text) == ("SAMPLE", qr_text)
 
-        # Valid legacy format (3 digits after dash)
-        data_type, data_id = tu.parse_input("1234-567")
-        assert data_type == "SAMPLE_LEGACY"
-        assert data_id == "1234-567"
+    @pytest.mark.parametrize("qr_text", [
+        "123-45",       # only 3 digits before dash
+        "12345-67",     # 5 digits before dash
+        "1234-5678",    # 4 digits after dash
+        "12345",        # too short without hyphen
+        "12345678",     # too long without hyphen
+        "1234--56",     # double hyphen
+        "2601A23",      # non-numeric
+        "ftlb234",      # process name without P%: prefix
+    ])
+    def test_bare_sample_invalid_patterns(self, qr_text):
+        """Bare strings not matching the sample pattern are rejected."""
+        assert tu.parse_input(qr_text) == (None, None)
 
-        # Invalid patterns (should not match)
-        data_type, data_id = tu.parse_input("123-45")  # Only 3 digits before dash
-        assert data_type is None
+    @pytest.mark.parametrize("qr_text,expected_id", [
+        ("S%:2601-01", "2601-01"),
+        ("S%:2601123", "2601123"),
+        ("S%:ABC123", "ABC123"),
+    ])
+    def test_prefixed_sample_still_supported(self, qr_text, expected_id):
+        """S%: prefixed labels remain valid (backwards compatibility)."""
+        assert tu.parse_input(qr_text) == ("SAMPLE", expected_id)
 
-        data_type, data_id = tu.parse_input("12345-67")  # 5 digits before dash
-        assert data_type is None
+    def test_prefixed_and_bare_give_same_id(self):
+        """The S%: prefix is stripped, so both forms log identical IDs."""
+        assert tu.parse_input("S%:2601123") == tu.parse_input("2601123")
+        assert tu.parse_input("S%:2601-12") == tu.parse_input("2601-12")
 
-        data_type, data_id = tu.parse_input("1234-5678")  # 4 digits after dash
-        assert data_type is None
+    @pytest.mark.parametrize("qr_text", ["S%: 2601-01", "S%:\t2601123", "S%:"])
+    def test_prefixed_sample_rejects_space_or_empty(self, qr_text):
+        """Whitespace after S%: (or no ID) must not log a malformed ID."""
+        assert tu.parse_input(qr_text) == (None, None)
 
     def test_case_sensitive_prefix(self):
         """Test that prefix must match exactly (case-sensitive)."""
@@ -269,8 +280,9 @@ class TestParseInput:
         ("P%:testing", "PROCESS", "testing"),
         ("S%:999", "SAMPLE", "999"),
         ("B%:test", "BATCH", "test"),
-        ("2511-09", "SAMPLE_LEGACY", "2511-09"),
-        ("9999-99", "SAMPLE_LEGACY", "9999-99"),
+        ("2511-09", "SAMPLE", "2511-09"),
+        ("9999-99", "SAMPLE", "9999-99"),
+        ("2601123", "SAMPLE", "2601123"),
     ])
     def test_multiple_valid_inputs(self, input_str, expected_type, expected_id):
         """Test multiple valid input combinations."""
@@ -371,9 +383,26 @@ class TestCheckout:
         with pytest.raises(ValueError, match="overflow"):
             tu.generate_consecutive_sample_ids("2503-998", 3)
 
-    def test_no_dash_raises(self):
+    @pytest.mark.parametrize("start,count,expected", [
+        ("2503015", 3, ["2503015", "2503016", "2503017"]),
+        ("2503098", 3, ["2503098", "2503099", "2503100"]),
+        ("250307", 3, ["250307", "250308", "250309"]),
+    ])
+    def test_hyphenless_range(self, start, count, expected):
+        """Hyphenless IDs increment the digits after YYMM, no hyphen added."""
+        assert tu.generate_consecutive_sample_ids(start, count) == expected
+
+    def test_hyphenless_overflow_does_not_roll_into_yymm(self):
+        """2503999 + 2 must not become 2504000 (month change)."""
+        with pytest.raises(ValueError, match="overflow"):
+            tu.generate_consecutive_sample_ids("2503999", 2)
+
+    @pytest.mark.parametrize("bad_id", [
+        "25031", "25030150", "2503A15", "ABC123", "2503-",
+    ])
+    def test_malformed_id_raises(self, bad_id):
         with pytest.raises(ValueError):
-            tu.generate_consecutive_sample_ids("2503015", 1)
+            tu.generate_consecutive_sample_ids(bad_id, 1)
 
     def test_non_numeric_suffix_raises(self):
         with pytest.raises(ValueError):
@@ -404,6 +433,8 @@ class TestCheckout:
             'Timestamp': ts or datetime.datetime.now().strftime(tu.DATE_FORMAT),
             'User': user,
             'SampleID': sid,
+            'Pattern': 'Pixel',
+            'TCO': 'Sz-ITO-20',
         }
 
     def test_get_checkout_log_filename(self):
@@ -425,6 +456,8 @@ class TestCheckout:
         assert len(rows) == 1
         assert rows[0]["SampleID"] == "2503-015"
         assert rows[0]["User"] == "rdaxini"
+        assert rows[0]["Pattern"] == "Pixel"
+        assert rows[0]["TCO"] == "Sz-ITO-20"
 
     def test_save_checkout_appends(self, tmp_path):
         tu.save_checkout_to_csv([self._record("rdaxini", "2503-015")], str(tmp_path))
@@ -439,6 +472,129 @@ class TestCheckout:
     def test_save_checkout_empty_returns_false(self, tmp_path):
         success, msg = tu.save_checkout_to_csv([], str(tmp_path))
         assert not success
+
+    def test_save_checkout_upgrades_legacy_header(self, tmp_path):
+        """Older logs without Pattern/TCO are rewritten with the new header."""
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text(
+            "Timestamp,User,SampleID\n2026-04-01 09:00:00,rdaxini,2504-001\n",
+            encoding="utf-8",
+        )
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert success and "1 checkout record" in msg
+        with open(log_file, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        assert [r["SampleID"] for r in rows] == ["2504-001", "2504-002"]
+        assert rows[0]["TCO"] == ""
+        assert rows[1]["Pattern"] == "Pixel"
+
+    def test_save_checkout_upgrades_legacy_header_with_bom(self, tmp_path):
+        """A BOM-prefixed legacy log (e.g. saved by Excel) keeps its timestamps."""
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text(
+            "Timestamp,User,SampleID\n2026-04-01 09:00:00,rdaxini,2504-001\n",
+            encoding="utf-8-sig",
+        )
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert success
+        with open(log_file, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        assert [r["Timestamp"] for r in rows] == [
+            "2026-04-01 09:00:00", "2026-04-02 09:00:00"
+        ]
+        assert [r["SampleID"] for r in rows] == ["2504-001", "2504-002"]
+
+    def test_save_checkout_appends_to_bom_file_with_current_header(self, tmp_path):
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text(
+            "Timestamp,User,SampleID,Pattern,TCO\n"
+            "2026-04-01 09:00:00,rdaxini,2504-001,Module,NSG-FTO-7\n",
+            encoding="utf-8-sig",
+        )
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert success
+        with open(log_file, newline="", encoding="utf-8-sig") as f:
+            rows = list(csv.DictReader(f))
+        assert [r["SampleID"] for r in rows] == ["2504-001", "2504-002"]
+        assert rows[0]["TCO"] == "NSG-FTO-7"
+
+    def test_save_checkout_upgrades_empty_file(self, tmp_path):
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text("", encoding="utf-8")
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert success
+        with open(log_file, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        assert len(rows) == 1 and rows[0]["SampleID"] == "2504-002"
+
+    def test_save_checkout_rejects_unexpected_header(self, tmp_path):
+        """Logs with an unknown layout are not modified and the save fails."""
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        original = (
+            "Timestamp,User,SampleID,Notes\n"
+            "2026-04-01 09:00:00,rdaxini,2504-001,keep me\n"
+        )
+        log_file.write_text(original, encoding="utf-8")
+        before = log_file.read_bytes()
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert not success
+        assert "Unexpected checkout log header" in msg
+        assert log_file.read_bytes() == before
+
+    def test_save_checkout_bad_header_writes_no_other_months(self, tmp_path):
+        """A bad header in one month prevents writes to every month."""
+        bad_file = tmp_path / "checkout_log_2026-04.csv"
+        bad_file.write_text("Foo,Bar\n1,2\n", encoding="utf-8")
+        records = [
+            self._record("rdaxini", "2503-001", ts="2026-03-15 10:00:00"),
+            self._record("rdaxini", "2504-001", ts="2026-04-02 09:00:00"),
+        ]
+        success, msg = tu.save_checkout_to_csv(records, str(tmp_path))
+        assert not success
+        assert not (tmp_path / "checkout_log_2026-03.csv").exists()
+
+    def test_save_checkout_upgrade_failure_preserves_original(
+        self, tmp_path, monkeypatch
+    ):
+        """If the atomic replace fails, the legacy log is left intact."""
+        log_file = tmp_path / "checkout_log_2026-04.csv"
+        log_file.write_text(
+            "Timestamp,User,SampleID\n2026-04-01 09:00:00,rdaxini,2504-001\n",
+            encoding="utf-8",
+        )
+        before = log_file.read_bytes()
+
+        def fail_replace(src, dst):
+            raise OSError("disk full")
+
+        monkeypatch.setattr(tu.os, "replace", fail_replace)
+        record = self._record("rdaxini", "2504-002", ts="2026-04-02 09:00:00")
+        success, msg = tu.save_checkout_to_csv([record], str(tmp_path))
+        assert not success
+        assert "disk full" in msg
+        assert log_file.read_bytes() == before
+        assert [p.name for p in tmp_path.iterdir()] == [log_file.name]
+
+    # --- validate_checkout_details ---
+
+    def test_validate_checkout_details_ok(self):
+        assert tu.validate_checkout_details("Pixel", "Sz-ITO-20") is None
+        assert tu.validate_checkout_details("Module", "custom-TCO") is None
+
+    @pytest.mark.parametrize("pattern, tco, expected", [
+        ("", "Sz-ITO-20", "pattern"),
+        ("Pixel", "", "TCO"),
+        ("Pixel", "   ", "TCO"),
+        ("", "", "pattern"),
+    ])
+    def test_validate_checkout_details_missing(self, pattern, tco, expected):
+        error = tu.validate_checkout_details(pattern, tco)
+        assert error is not None and expected in error
 
     def test_save_checkout_routes_to_monthly_files(self, tmp_path):
         """Records with different months are written to separate files."""
@@ -565,9 +721,10 @@ class TestTrayScanAcceptance:
         assert should_accept
         assert error == ""
 
-    def test_accept_legacy_sample_in_tray_mode(self):
-        """Test that SAMPLE_LEGACY scans are accepted in tray mode."""
-        should_accept, error = tu.should_accept_scan_in_tray_mode("SAMPLE_LEGACY", 2, 4)
+    def test_accept_bare_sample_in_tray_mode(self):
+        """Test that bare (unprefixed) sample scans are accepted in tray mode."""
+        data_type, _ = tu.parse_input("2601123")
+        should_accept, error = tu.should_accept_scan_in_tray_mode(data_type, 2, 4)
         assert should_accept
         assert error == ""
 
